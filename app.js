@@ -20,7 +20,9 @@ const state = {
     avoidRepeat: localStorage.getItem('avoidRepeat') === '1',
     lastResultName: null,
     soundOn: localStorage.getItem('soundOn') !== '0',  // 默认开
-    location: null  // 用户位置 {latitude, longitude, city}，由"附近美食"定位后填充
+    location: null,  // 用户位置 {latitude, longitude, city}，由"附近美食"定位后填充
+    nearbyPlaces: [],  // 定位后从地图拉取的真实附近餐饮店（整合进转盘/列表）
+    useNearby: false   // true=转盘/列表用"附近真实店铺"，false=用内置菜单
 };
 
 // DOM 元素
@@ -146,8 +148,16 @@ function updateSelectedCategories() {
     }
 }
 
-// 获取筛选后的美食列表
+// 当前生效的数据集：附近模式用真实店铺，否则用内置菜单
+function getActiveDataset() {
+    return state.useNearby ? state.nearbyPlaces : foodData;
+}
+
+// 获取筛选后的美食列表（附近模式不分类，直接返回全部附近店铺）
 function getFilteredFoods() {
+    if (state.useNearby) {
+        return state.nearbyPlaces;
+    }
     if (state.selectedCategories.length === 0) {
         return foodData;
     }
@@ -173,7 +183,10 @@ function initWheel() {
 function updateWheelCount() {
     const el = document.getElementById('wheel-count');
     if (!el) return;
-    el.textContent = `🎯 当前 ${getFilteredFoods().length} 道菜参与抽取`;
+    const n = getFilteredFoods().length;
+    el.textContent = state.useNearby
+        ? `🎯 附近 ${n} 家店参与抽取`
+        : `🎯 当前 ${n} 道菜参与抽取`;
 }
 
 // 当前转盘上对应的美食列表（抽取时锁定，保证指针与结果一致）
@@ -367,6 +380,12 @@ function showResult(food) {
     // 去外卖平台下单（随机选完直接跳转点单）
     document.getElementById('order-meituan').onclick = () => openDelivery('meituan', food);
     document.getElementById('order-eleme').onclick = () => openDelivery('eleme', food);
+
+    // 附近模式：提示语改为"去这家店下单"
+    const hint = document.querySelector('#result-card .delivery-hint');
+    if (hint) hint.textContent = food.isNearby
+        ? '🛵 去美团/饿了么搜这家店下单'
+        : '🛵 去外卖平台点这道菜';
 }
 
 // 把文字复制到剪贴板，返回 Promise
@@ -464,53 +483,71 @@ function renderFoodGrid() {
     const foodGrid = document.getElementById('food-grid');
 
     const searchTerm = searchInput.value.toLowerCase();
-    const selectedCategory = categoryFilter.querySelector('.category-btn.active').dataset.category;
+    const dataset = getActiveDataset();
 
-    let filteredFoods = foodData;
-
-    // 分类筛选
-    if (selectedCategory !== 'all') {
-        filteredFoods = filteredFoods.filter(food => food.category === selectedCategory);
+    // 附近模式不分类；菜单模式按选中分类筛选
+    let filteredFoods = dataset;
+    if (!state.useNearby) {
+        const selectedCategory = categoryFilter.querySelector('.category-btn.active').dataset.category;
+        if (selectedCategory !== 'all') {
+            filteredFoods = filteredFoods.filter(food => food.category === selectedCategory);
+        }
     }
 
     // 搜索筛选
     if (searchTerm) {
         filteredFoods = filteredFoods.filter(food =>
             food.name.toLowerCase().includes(searchTerm) ||
-            food.category.toLowerCase().includes(searchTerm)
+            (food.category || '').toLowerCase().includes(searchTerm)
         );
     }
 
     // 渲染网格
     if (filteredFoods.length === 0) {
-        foodGrid.innerHTML = '<div class="empty-state"><p>😢 没有找到相关美食</p></div>';
+        const tip = state.useNearby ? '😢 附近暂无可显示的店铺' : '😢 没有找到相关美食';
+        foodGrid.innerHTML = `<div class="empty-state"><p>${tip}</p></div>`;
         return;
     }
 
-    foodGrid.innerHTML = filteredFoods.map(food => {
+    foodGrid.innerHTML = filteredFoods.map((food, i) => {
         const isFavorite = state.favorites.some(f => f.name === food.name);
         return `
-            <div class="food-card" data-name="${food.name}">
-                <div class="favorite-icon" onclick="event.stopPropagation(); toggleFavoriteByName('${food.name}')">
-                    ${isFavorite ? '💖' : '🤍'}
-                </div>
-                <img class="food-card-image" src="${food.image}" alt="${food.name}" loading="lazy" onerror="this.onerror=null; if('${food.imageFallback || ''}') this.src='${food.imageFallback || ''}'">
+            <div class="food-card" data-idx="${i}">
+                <div class="favorite-icon" data-fav="${i}">${isFavorite ? '💖' : '🤍'}</div>
+                <img class="food-card-image" src="${food.image}" alt="${escapeAttr(food.name)}" loading="lazy" onerror="this.onerror=null; if('${food.imageFallback || ''}') this.src='${food.imageFallback || ''}'">
                 <div class="food-card-content">
-                    <div class="food-card-name">${food.name}</div>
-                    <div class="food-card-category">${food.category}</div>
+                    <div class="food-card-name">${escapeHtml(food.name)}</div>
+                    <div class="food-card-category">${escapeHtml(food.category || '')}</div>
                 </div>
             </div>
         `;
     }).join('');
 
-    // 卡片点击事件
-    foodGrid.querySelectorAll('.food-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const foodName = card.dataset.name;
-            const food = foodData.find(f => f.name === foodName);
-            showFoodDetail(food);
+    // 收藏图标点击（阻止冒泡，不触发卡片详情）
+    foodGrid.querySelectorAll('.favorite-icon').forEach(icon => {
+        icon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavorite(filteredFoods[+icon.dataset.fav]);
+            renderFoodGrid();
         });
     });
+
+    // 卡片点击 → 详情/抽中
+    foodGrid.querySelectorAll('.food-card').forEach(card => {
+        card.addEventListener('click', () => {
+            showFoodDetail(filteredFoods[+card.dataset.idx]);
+        });
+    });
+}
+
+// 转义工具（店名可能含引号/尖括号，避免破坏 HTML）
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+function escapeAttr(s) {
+    return escapeHtml(s);
 }
 
 // 显示美食详情
@@ -591,25 +628,30 @@ function initFavoritesPage() {
     if (countLabel) countLabel.textContent = `共 ${state.favorites.length} 个收藏`;
     if (randomBtn) randomBtn.onclick = pickRandomFavorite;
 
-    favoritesGrid.innerHTML = state.favorites.map(food => `
-        <div class="food-card" data-name="${food.name}">
-            <div class="favorite-icon" onclick="event.stopPropagation(); toggleFavoriteByName('${food.name}')">
-                💖
-            </div>
-            <img class="food-card-image" src="${food.image}" alt="${food.name}" loading="lazy" onerror="this.onerror=null; if('${food.imageFallback || ''}') this.src='${food.imageFallback || ''}'">
+    favoritesGrid.innerHTML = state.favorites.map((food, i) => `
+        <div class="food-card" data-idx="${i}">
+            <div class="favorite-icon" data-fav="${i}">💖</div>
+            <img class="food-card-image" src="${food.image}" alt="${escapeAttr(food.name)}" loading="lazy" onerror="this.onerror=null; if('${food.imageFallback || ''}') this.src='${food.imageFallback || ''}'">
             <div class="food-card-content">
-                <div class="food-card-name">${food.name}</div>
-                <div class="food-card-category">${food.category}</div>
+                <div class="food-card-name">${escapeHtml(food.name)}</div>
+                <div class="food-card-category">${escapeHtml(food.category || '')}</div>
             </div>
         </div>
     `).join('');
 
-    // 卡片点击事件
+    // 取消收藏
+    favoritesGrid.querySelectorAll('.favorite-icon').forEach(icon => {
+        icon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavorite(state.favorites[+icon.dataset.fav]);
+            initFavoritesPage();
+        });
+    });
+
+    // 卡片点击事件（直接用收藏里存的完整对象，附近店也兼容）
     favoritesGrid.querySelectorAll('.food-card').forEach(card => {
         card.addEventListener('click', () => {
-            const foodName = card.dataset.name;
-            const food = foodData.find(f => f.name === foodName);
-            showFoodDetail(food);
+            showFoodDetail(state.favorites[+card.dataset.idx]);
         });
     });
 }
@@ -652,23 +694,21 @@ function initHistoryPage() {
         statsEl.innerHTML = `📊 共抽取 <b>${state.history.length}</b> 次 · 最常抽到 <b>${topName}</b>（${topCount} 次）`;
     }
 
-    historyList.innerHTML = state.history.map(item => `
-        <div class="history-item" data-name="${item.name}">
-            <img class="history-item-image" src="${item.image}" alt="${item.name}" onerror="this.onerror=null; if('${item.imageFallback || ''}') this.src='${item.imageFallback || ''}'">
+    historyList.innerHTML = state.history.map((item, i) => `
+        <div class="history-item" data-idx="${i}">
+            <img class="history-item-image" src="${item.image}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null; if('${item.imageFallback || ''}') this.src='${item.imageFallback || ''}'">
             <div class="history-item-content">
-                <div class="history-item-name">${item.name}</div>
+                <div class="history-item-name">${escapeHtml(item.name)}</div>
                 <div class="history-item-time">${formatTime(item.timestamp)}</div>
             </div>
             <button class="history-del" title="删除这条" onclick="event.stopPropagation(); deleteHistoryItem(${item.timestamp})">×</button>
         </div>
     `).join('');
 
-    // 历史项点击事件
+    // 历史项点击事件（用记录里存的完整对象，附近店也兼容）
     historyList.querySelectorAll('.history-item').forEach(item => {
         item.addEventListener('click', () => {
-            const foodName = item.dataset.name;
-            const food = foodData.find(f => f.name === foodName);
-            showFoodDetail(food);
+            showFoodDetail(state.history[+item.dataset.idx]);
         });
     });
 
@@ -875,10 +915,11 @@ function initAvoidRepeat() {
     });
 }
 
-// ============ 附近美食（定位 + 美团外卖）============
-// 纯前端无后端、美团也无公开的「按坐标查餐厅」跨域接口，因此这里做的是：
-// 浏览器定位 -> 反查所在城市/区域并展示 -> 一键打开美团外卖「附近」H5，
-// 由美团用它自己的定位列出你身边的外卖店，去那里挑这道菜下单。
+// ============ 附近美食（定位 → 拉取真实附近店铺 → 整合进转盘/列表）============
+// 重要说明：美团没有对外开放、可跨域调用的「按坐标查餐厅/菜品」接口，纯前端无法
+// 取到美团 App 内的菜单数据（跨域被拦 + 需 App 内置签名与登录态 + 抓取违规）。
+// 因此「附近的美食」改用 OpenStreetMap 的公开数据（Overpass API，免密钥、支持跨域）
+// 拉取你身边真实存在的餐饮店，整合进转盘/列表供抽取；抽中后再跳美团去这家店下单。
 function initNearby() {
     const card = document.getElementById('nearby-card');
     const locateBtn = document.getElementById('locate-btn');
@@ -895,7 +936,15 @@ function initNearby() {
     } catch (e) { /* 数据损坏忽略 */ }
 
     locateBtn.addEventListener('click', requestLocation);
-    goBtn.addEventListener('click', openNearbyMeituan);
+    // 「逛附近」按钮：定位后用真实店铺填充转盘/列表并切到附近模式
+    goBtn.addEventListener('click', () => {
+        if (!state.location) { requestLocation(); return; }
+        loadNearbyPlaces();
+    });
+
+    // 退出附近模式、回到内置菜单
+    const exitBtn = document.getElementById('nearby-exit-btn');
+    if (exitBtn) exitBtn.addEventListener('click', exitNearbyMode);
 }
 
 // 已定位后更新 UI 文案与按钮
@@ -903,8 +952,8 @@ function renderNearby(cityText) {
     const statusEl = document.getElementById('nearby-status');
     const goBtn = document.getElementById('nearby-meituan-btn');
     const locateBtn = document.getElementById('locate-btn');
-    if (statusEl) statusEl.textContent = cityText ? `已定位：${cityText}` : '已定位，去美团看看附近';
-    if (goBtn) goBtn.style.display = 'inline-flex';
+    if (statusEl) statusEl.textContent = cityText ? `已定位：${cityText}` : '已定位，点「发现附近」加载店铺';
+    if (goBtn) { goBtn.style.display = 'inline-flex'; goBtn.textContent = '🍽 发现附近'; }
     if (locateBtn) locateBtn.textContent = '重新定位';
 }
 
@@ -929,10 +978,10 @@ function requestLocation() {
         (pos) => {
             const { latitude, longitude } = pos.coords;
             state.location = { latitude, longitude, city: '' };
-            // 先存坐标，城市名反查成功后再补
             persistLocation();
             renderNearby('');
             reverseGeocode(latitude, longitude);
+            loadNearbyPlaces();  // 定位成功立即拉取附近店铺
         },
         (err) => {
             const msg = {
@@ -948,7 +997,6 @@ function requestLocation() {
 }
 
 // 反查城市/区域名（OpenStreetMap Nominatim，免密钥、支持跨域）。
-// 失败不影响主流程，仅是没有城市文案而已。
 function reverseGeocode(lat, lon) {
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=14&accept-language=zh-CN`;
     const ctrl = new AbortController();
@@ -965,10 +1013,9 @@ function reverseGeocode(lat, lon) {
                 state.location.city = text;
                 persistLocation();
             }
-            renderNearby(text);
-            if (text) showToast(`已定位到 ${text}`);
+            if (!state.useNearby) renderNearby(text);
         })
-        .catch(() => { /* 反查失败：保留坐标，UI 显示通用文案即可 */ })
+        .catch(() => { /* 反查失败不影响主流程 */ })
         .finally(() => clearTimeout(timer));
 }
 
@@ -979,11 +1026,176 @@ function persistLocation() {
     } catch (e) { /* 隐私模式等写入失败，忽略 */ }
 }
 
-// 打开美团外卖「附近」：移动端走 H5（自带定位与附近列表），桌面走外卖站
-function openNearbyMeituan() {
-    const url = isMobile() ? 'https://i.waimai.meituan.com' : 'https://waimai.meituan.com';
-    showToast('已打开美团外卖，看看附近有什么');
-    window.open(url, '_blank');
+// 两点间距离（米），用于把附近店铺按远近排序
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000, toRad = d => d * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return Math.round(2 * R * Math.asin(Math.sqrt(a)));
+}
+
+// OSM 餐饮类型 -> 中文品类（用于展示与生成图标）
+function cuisineLabel(tags) {
+    const c = (tags.cuisine || '').toLowerCase();
+    const map = {
+        chinese: '中餐', noodle: '面馆', dumpling: '饺子', hotpot: '火锅', barbecue: '烧烤',
+        burger: '汉堡', pizza: '披萨', japanese: '日料', korean: '韩餐', sushi: '寿司',
+        coffee_shop: '咖啡', cafe: '咖啡', dessert: '甜品', ice_cream: '冰淇淋',
+        chicken: '炸鸡', seafood: '海鲜', sichuan: '川菜', cantonese: '粤菜', asian: '亚洲菜'
+    };
+    for (const k in map) if (c.includes(k)) return map[k];
+    const amenity = tags.amenity;
+    if (amenity === 'cafe') return '咖啡/茶';
+    if (amenity === 'fast_food') return '快餐';
+    if (amenity === 'bar' || amenity === 'pub') return '酒馆';
+    return '餐厅';
+}
+
+// 拉取附近真实店铺（Overpass API：免密钥、支持跨域），整合进转盘/列表
+function loadNearbyPlaces() {
+    if (!state.location) { requestLocation(); return; }
+    const statusEl = document.getElementById('nearby-status');
+    const { latitude: lat, longitude: lon } = state.location;
+
+    if (statusEl) statusEl.textContent = '正在搜索附近的店…';
+    showToast('正在搜索你身边的餐饮店…');
+
+    // 半径 1000m 内的餐厅/快餐/咖啡等（只查 node、轻量查询，避免公共服务器 504 超时）
+    const radius = 1000;
+    const query = `[out:json][timeout:15];node["amenity"~"^(restaurant|fast_food|cafe|bar|pub|food_court)$"](around:${radius},${lat},${lon});out 80;`;
+
+    // 多个公共镜像，逐个回退（Overpass 公共节点常限流/超时，多备几个更稳）
+    const endpoints = [
+        'https://overpass-api.de/api/interpreter',
+        'https://overpass.kumi.systems/api/interpreter',
+        'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+        'https://overpass.private.coffee/api/interpreter'
+    ];
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 30000);
+
+    // GET 方式对 Overpass 缓存更友好；逐镜像回退，非 JSON(限流页)也视为失败转下一个
+    const tryFetch = (i) => fetch(endpoints[i] + '?data=' + encodeURIComponent(query), { signal: ctrl.signal })
+        .then(r => r.text())
+        .then(t => {
+            if (t.trim().startsWith('{')) return JSON.parse(t);
+            return Promise.reject('non-json');
+        })
+        .catch(err => {
+            if (i + 1 < endpoints.length) return tryFetch(i + 1);
+            throw err;
+        });
+
+    tryFetch(0)
+        .then(data => {
+            const seen = new Set();
+            const places = (data.elements || [])
+                .map(el => {
+                    const tags = el.tags || {};
+                    const name = (tags.name || tags['name:zh'] || '').trim();
+                    if (!name) return null;
+                    const plat = el.lat || (el.center && el.center.lat);
+                    const plon = el.lon || (el.center && el.center.lon);
+                    if (plat == null) return null;
+                    const dist = haversine(lat, lon, plat, plon);
+                    const category = cuisineLabel(tags);
+                    return { name, category, dist,
+                             address: tags['addr:street'] || '', tags };
+                })
+                .filter(Boolean)
+                .filter(p => { if (seen.has(p.name)) return false; seen.add(p.name); return true; })
+                .sort((a, b) => a.dist - b.dist)
+                .slice(0, 60)
+                .map(p => ({
+                    name: p.name,
+                    category: p.category,
+                    description: `距你约 ${p.dist < 1000 ? p.dist + ' 米' : (p.dist / 1000).toFixed(1) + ' 公里'}${p.address ? ' · ' + p.address : ''}`,
+                    image: placeIcon(p.category, p.name),
+                    imageFallback: '',
+                    isNearby: true
+                }));
+
+            if (places.length === 0) {
+                if (statusEl) statusEl.textContent = '附近暂未找到收录的店铺，可换个位置或去美团看看';
+                showToast('附近暂无地图收录的店铺');
+                return;
+            }
+            enterNearbyMode(places);
+        })
+        .catch(() => {
+            if (statusEl) statusEl.textContent = '附近店铺加载失败，请重试';
+            showToast('加载附近店铺失败，请检查网络后重试');
+        })
+        .finally(() => clearTimeout(timer));
+}
+
+// 进入附近模式：用真实店铺填充转盘/列表
+function enterNearbyMode(places) {
+    state.nearbyPlaces = places;
+    state.useNearby = true;
+    state.selectedCategories = [];
+
+    const statusEl = document.getElementById('nearby-status');
+    const exitBtn = document.getElementById('nearby-exit-btn');
+    const goBtn = document.getElementById('nearby-meituan-btn');
+    if (statusEl) statusEl.textContent = `已加载附近 ${places.length} 家店，可抽取`;
+    if (exitBtn) exitBtn.style.display = 'inline-flex';
+    if (goBtn) goBtn.textContent = '🔄 重新加载';
+
+    document.getElementById('nearby-card').classList.add('nearby-active');
+    toggleCategoryUI(false);  // 附近模式隐藏内置分类筛选
+
+    drawWheel();
+    updateWheelCount();
+    if (state.currentTab === 'list') renderFoodGrid();
+    switchTab('wheel');
+    showToast(`附近 ${places.length} 家店已就位，开抽吧！`);
+}
+
+// 退出附近模式，回到内置菜单
+function exitNearbyMode() {
+    state.useNearby = false;
+    state.nearbyPlaces = [];
+    const exitBtn = document.getElementById('nearby-exit-btn');
+    const goBtn = document.getElementById('nearby-meituan-btn');
+    if (exitBtn) exitBtn.style.display = 'none';
+    if (goBtn) goBtn.textContent = '🍽 发现附近';
+    document.getElementById('nearby-card').classList.remove('nearby-active');
+    renderNearby(state.location ? state.location.city : '');
+    toggleCategoryUI(true);
+    drawWheel();
+    updateWheelCount();
+    if (state.currentTab === 'list') renderFoodGrid();
+    showToast('已切回内置菜单');
+}
+
+// 切换"内置分类筛选 / 列表分类条"的显隐（附近模式下隐藏）
+function toggleCategoryUI(show) {
+    const filters = document.querySelector('#wheel-tab .filters');
+    const catFilter = document.getElementById('category-filter');
+    if (filters) filters.style.display = show ? '' : 'none';
+    if (catFilter) catFilter.style.display = show ? '' : 'none';
+}
+
+// 为附近店铺生成一张带品类图标的本地图片（SVG data URI，无需图片文件、不裂图）
+function placeIcon(category, name) {
+    const palette = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#BB8FCE', '#F7DC6F', '#74B9FF', '#55EFC4'];
+    let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const bg = palette[h % palette.length];
+    const emojiMap = {
+        '面馆': '🍜', '火锅': '🍲', '烧烤': '🍢', '汉堡': '🍔', '披萨': '🍕', '日料': '🍣',
+        '寿司': '🍣', '韩餐': '🍚', '咖啡': '☕', '咖啡/茶': '☕', '甜品': '🍰', '冰淇淋': '🍦',
+        '炸鸡': '🍗', '海鲜': '🦐', '快餐': '🍱', '饺子': '🥟', '酒馆': '🍻', '中餐': '🥘'
+    };
+    const emoji = emojiMap[category] || '🍴';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+        <rect width="400" height="300" fill="${bg}"/>
+        <text x="200" y="150" font-size="120" text-anchor="middle" dominant-baseline="central">${emoji}</text>
+        <text x="200" y="250" font-size="22" fill="#fff" text-anchor="middle" font-family="sans-serif">${escapeHtml(category)}</text>
+    </svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 function initShakeDetection() {
     if (!window.DeviceMotionEvent) return;

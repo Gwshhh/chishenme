@@ -1011,3 +1011,21 @@ body.dark-mode .nearby-btn {
     background: #1a1a1a;
 }
 
+/* 退出附近模式按钮 */
+.nearby-btn.nearby-exit {
+    border-color: #bbb;
+    color: #888;
+}
+
+/* 附近模式激活时整张卡片高亮 */
+.nearby-card.nearby-active {
+    background: linear-gradient(135deg, #fff0d9 0%, #ffe0e6 100%);
+    border-color: #ffc999;
+}
+
+body.dark-mode .nearby-card.nearby-active {
+    background: linear-gradient(135deg, #3a2f1f 0%, #3a2226 100%);
+    border-color: #5a4632;
+}
+
+
