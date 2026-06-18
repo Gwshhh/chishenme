@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="今天吃什么？随机选择美食，解决选择困难症">
+    <title>今天吃什么 - 美食转盘</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-actions">
+                <button class="icon-btn" id="sound-toggle" title="开关音效">🔊</button>
+                <button class="icon-btn" id="theme-toggle" title="切换深色模式">🌙</button>
+            </div>
+            <h1>🍜 今天吃什么</h1>
+            <p class="subtitle">让转盘帮你决定！</p>
+        </header>
+
+        <!-- 导航标签 -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="wheel">🎰 转盘</button>
+            <button class="tab-btn" data-tab="list">📋 列表</button>
+            <button class="tab-btn" data-tab="favorites">⭐ 收藏<span class="tab-badge" id="fav-badge"></span></button>
+            <button class="tab-btn" data-tab="history">📜 历史</button>
+        </nav>
+
+        <!-- 转盘页面 -->
+        <div class="tab-content active" id="wheel-tab">
+            <!-- 今日推荐 -->
+            <div class="today-pick" id="today-pick">
+                <div class="today-pick-info">
+                    <span class="today-pick-label">🍀 今日推荐</span>
+                    <span class="today-pick-name" id="today-pick-name"></span>
+                </div>
+                <button class="today-pick-btn" id="today-pick-btn">就吃这个</button>
+            </div>
+
+            <!-- 附近美食（定位 + 美团外卖） -->
+            <div class="nearby-card" id="nearby-card">
+                <div class="nearby-info">
+                    <span class="nearby-label">📍 附近美食</span>
+                    <span class="nearby-status" id="nearby-status">点击定位，发现你身边的外卖</span>
+                </div>
+                <div class="nearby-actions">
+                    <button class="nearby-btn" id="locate-btn">定位</button>
+                    <button class="nearby-btn nearby-go" id="nearby-meituan-btn" style="display: none;">🛵 逛附近</button>
+                </div>
+            </div>
+
+            <!-- 筛选器 -->
+            <div class="filters">
+                <label>
+                    <input type="checkbox" id="filter-all" checked> 全部
+                </label>
+                <div class="filter-chips" id="filter-chips"></div>
+                <label class="avoid-repeat">
+                    <input type="checkbox" id="avoid-repeat"> 避免连续重复
+                </label>
+            </div>
+
+            <!-- 转盘容器 -->
+            <div class="wheel-container">
+                <p class="wheel-count" id="wheel-count"></p>
+                <div class="wheel-wrapper">
+                    <canvas id="wheel-canvas"></canvas>
+                    <div class="wheel-pointer">▼</div>
+                </div>
+                <button class="spin-btn" id="spin-btn">
+                    <span>开始抽取</span>
+                </button>
+            </div>
+
+            <!-- 结果显示 -->
+            <div class="result-card" id="result-card" style="display: none;">
+                <div class="result-image-wrapper">
+                    <img id="result-image" src="" alt="美食图片">
+                </div>
+                <h2 id="result-name"></h2>
+                <p class="result-category" id="result-category"></p>
+                <p class="result-description" id="result-description"></p>
+                <div class="result-actions">
+                    <button class="action-btn" id="add-favorite-btn">⭐ 收藏</button>
+                    <button class="action-btn" id="spin-again-btn">🔄 再抽一次</button>
+                    <button class="action-btn" id="share-btn">📋 分享</button>
+                </div>
+                <div class="delivery-links">
+                    <span class="delivery-hint">🛵 去外卖平台点这道菜</span>
+                    <div class="delivery-btns">
+                        <button class="delivery-btn meituan" id="order-meituan">美团外卖</button>
+                        <button class="delivery-btn eleme" id="order-eleme">饿了么</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 列表页面 -->
+        <div class="tab-content" id="list-tab">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="🔍 搜索美食...">
+            </div>
+            <div class="category-filter" id="category-filter"></div>
+            <div class="food-grid" id="food-grid"></div>
+        </div>
+
+        <!-- 收藏页面 -->
+        <div class="tab-content" id="favorites-tab">
+            <div class="favorites-controls" id="favorites-controls">
+                <span class="fav-count-label" id="fav-count-label"></span>
+                <button class="random-fav-btn" id="random-fav-btn">🎲 帮我从收藏里挑</button>
+            </div>
+            <div class="empty-state" id="empty-favorites">
+                <p>😋 还没有收藏的美食</p>
+                <p>快去转盘或列表页添加吧！</p>
+            </div>
+            <div class="food-grid" id="favorites-grid"></div>
+        </div>
+
+        <!-- 历史页面 -->
+        <div class="tab-content" id="history-tab">
+            <div class="history-controls">
+                <button class="clear-btn" id="clear-history-btn">清空历史</button>
+            </div>
+            <div class="history-stats" id="history-stats"></div>
+            <div class="empty-state" id="empty-history">
+                <p>📜 还没有抽取记录</p>
+                <p>快去转转盘吧！</p>
+            </div>
+            <div class="history-list" id="history-list"></div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

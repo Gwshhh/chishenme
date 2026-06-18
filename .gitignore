@@ -1,0 +1,12 @@
+# 本地测试专用，切勿发布/提交（含私钥）
+_dev_key.pem
+_dev_cert.pem
+dev_server.js
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 系统文件
+.DS_Store
+Thumbs.db

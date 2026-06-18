@@ -1,0 +1,18 @@
+# 已验证的真实美食照片：
+sushi_real.jpg - 寿司
+pizza_real.jpg - 披萨  
+chicken_real.jpg - 炸鸡
+noodles_real.jpg - 牛肉面/汤面
+stirfry_noodles.jpg - 炒面
+salad_real.jpg - 沙拉
+
+# 需要验证的：
+pasta.jpg
+burger.jpg
+cake.jpg
+icecream.jpg
+coffee_real.jpg
+steak_real.jpg
+milk_tea.jpg
+sandwich.jpg
+kebab.jpg

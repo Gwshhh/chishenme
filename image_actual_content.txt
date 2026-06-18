@@ -1,0 +1,30 @@
+# 21张图片的实际内容：
+
+1. noodles_real.jpg - 牛肉汤面（红汤）
+2. noodles_2.jpg - 虾仁汤面
+3. batch_5.jpg - 虾仁汤面
+4. ramen_real.jpg - 日式拉面（叉烧蛋）
+5. stirfry_noodles.jpg - 炒面
+6. pasta.jpg - 意大利面
+7. burger.jpg - 汉堡
+8. batch_1.jpg - 汉堡配薯条
+9. chicken_real.jpg - 炸鸡
+10. pizza_real.jpg - 披萨
+11. sandwich.jpg - 三明治/潜艇堡
+12. steak_real.jpg - 牛排配菜
+13. grilled_meat.jpg - 牛排配菜（和12一样）
+14. batch_10.jpg - 印度餐（咖喱+飞饼+炸鸡）
+15. sushi_real.jpg - 寿司卷
+16. cake.jpg - 蛋糕
+17. batch_3.jpg - 松饼pancake
+18. icecream.jpg - 冰淇淋
+19. coffee_real.jpg - 咖啡
+20. salad_real.jpg - 健康沙拉碗
+21. batch_6.jpg - 牛油果吐司配蛋
+
+# 问题分析：
+- batch_10.jpg 是印度餐，用作"黄焖鸡米饭"不合适
+- batch_3.jpg 是松饼（西式早餐），用作"煎饼果子"不太合适
+- 缺少：中式米饭类、火锅、真正的烧烤串、饺子、粥
+
+建议：需要下载更多针对性的中国美食图片

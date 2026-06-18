@@ -1,0 +1,86 @@
+# 中式快餐 - 使用饭类/盖浇饭通用图
+黄焖鸡米饭|rice-bowl
+盖浇饭|rice-bowl
+扬州炒饭|fried-rice
+煲仔饭|claypot-rice
+沙县小吃|noodles
+
+# 面食类
+兰州拉面|ramen
+重庆小面|spicy-noodles
+刀削面|noodles
+热干面|sesame-noodles
+云吞面|wonton-noodles
+东北饺子|dumplings
+
+# 小吃类
+麻辣烫|hotpot-skewers
+酸辣粉|spicy-noodles
+麻辣香锅|stir-fry
+肉夹馍|sandwich
+凉皮|cold-noodles
+煎饼果子|crepe
+生煎包|pan-fried-buns
+小笼包|xiaolongbao
+糖葫芦|candied-fruit
+臭豆腐|fried-tofu
+章鱼小丸子|takoyaki
+
+# 川湘菜
+烤鱼|grilled-fish
+水煮鱼|boiled-fish
+红烧肉|braised-pork
+宫保鸡丁|kung-pao-chicken
+回锅肉|twice-cooked-pork
+鱼香肉丝|stir-fry
+
+# 火锅
+重庆火锅|hotpot
+海底捞|hotpot
+呷哺呷哺|hotpot
+潮汕牛肉火锅|hotpot
+
+# 烧烤
+烧烤|bbq
+羊肉串|kebab
+烤鸡翅|chicken-wings
+烤茄子|grilled-vegetables
+
+# 西餐
+牛排|steak
+意大利面|pasta
+披萨|pizza
+汉堡|burger
+炸鸡|fried-chicken
+薯条|fries
+
+# 日韩料理
+寿司|sushi
+拉面|ramen
+天妇罗|tempura
+烤肉|korean-bbq
+石锅拌饭|bibimbap
+韩式炸鸡|fried-chicken
+部队锅|korean-stew
+
+# 粤菜
+早茶|dim-sum
+虾饺|har-gow
+烧鹅|roast-goose
+白切鸡|poached-chicken
+肠粉|rice-rolls
+
+# 甜品饮品
+奶茶|bubble-tea
+咖啡|coffee
+鲜榨果汁|juice
+蛋糕|cake
+冰淇淋|ice-cream
+双皮奶|milk-pudding
+杨枝甘露|mango-dessert
+
+# 轻食
+沙拉|salad
+三明治|sandwich
+健身餐|healthy-bowl
+粥品|congee

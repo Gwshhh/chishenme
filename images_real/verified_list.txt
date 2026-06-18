@@ -1,0 +1,17 @@
+# 已通过人工验证的真实美食照片：
+noodles_real.jpg - 牛肉汤面（带蛋、肉、面条）
+stirfry_noodles.jpg - 炒面（蔬菜炒面）
+sushi_real.jpg - 寿司卷
+pizza_real.jpg - 披萨
+chicken_real.jpg - 炸鸡
+pasta.jpg - 意大利面
+burger.jpg - 汉堡
+steak_real.jpg - 牛排
+cake.jpg - 蛋糕
+icecream.jpg - 冰淇淋
+coffee_real.jpg - 咖啡
+salad_real.jpg - 健康沙拉碗
+sandwich.jpg - 三明治
+fried_rice_real.jpg - 薯条（错误）
+rice_bowl.jpg - 沙拉（错误）
+dumplings_v3.jpg - 热狗（错误）

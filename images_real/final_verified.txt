@@ -1,0 +1,35 @@
+# 已100%验证的真实美食照片：
+# 面食类
+noodles_real.jpg - 牛肉汤面（带蛋）
+noodles_2.jpg - 虾仁汤面
+batch_5.jpg - 虾仁汤面2
+ramen_real.jpg - 日式拉面
+stirfry_noodles.jpg - 炒面
+pasta.jpg - 意大利面
+
+# 快餐类
+burger.jpg - 汉堡
+batch_1.jpg - 汉堡配薯条
+chicken_real.jpg - 炸鸡
+pizza_real.jpg - 披萨
+sandwich.jpg - 三明治
+
+# 正餐类
+steak_real.jpg - 牛排
+grilled_meat.jpg - 牛排配菜
+batch_10.jpg - 印度咖喱餐
+
+# 日料
+sushi_real.jpg - 寿司卷
+
+# 甜品饮品
+cake.jpg - 蛋糕
+batch_3.jpg - 松饼
+icecream.jpg - 冰淇淋
+coffee_real.jpg - 咖啡
+
+# 轻食
+salad_real.jpg - 健康沙拉
+batch_6.jpg - 牛油果吐司
+
+总计：21张已验证的真实美食照片
