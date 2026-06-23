@@ -1,3 +1,8 @@
+// 高德开放平台 Web服务(REST) Key —— 用于"附近美食"按坐标搜周边真实餐饮店。
+// 该接口返回 Access-Control-Allow-Origin:*，纯前端可直接跨域调用，无需后端。
+// 此类 Web 服务 key 本就写在前端、属公开可见，非敏感密钥。
+const AMAP_KEY = 'a6efe2e85bc9027cf51d72e3a20ff9da';
+
 // 安全读取 localStorage（数据损坏时不会导致应用崩溃白屏）
 function loadStored(key) {
     try {
@@ -1074,33 +1079,9 @@ function persistLocation() {
     } catch (e) { /* 隐私模式等写入失败，忽略 */ }
 }
 
-// 两点间距离（米），用于把附近店铺按远近排序
-function haversine(lat1, lon1, lat2, lon2) {
-    const R = 6371000, toRad = d => d * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat / 2) ** 2 +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    return Math.round(2 * R * Math.asin(Math.sqrt(a)));
-}
-
-// OSM 餐饮类型 -> 中文品类（用于展示与生成图标）
-function cuisineLabel(tags) {
-    const c = (tags.cuisine || '').toLowerCase();
-    const map = {
-        chinese: '中餐', noodle: '面馆', dumpling: '饺子', hotpot: '火锅', barbecue: '烧烤',
-        burger: '汉堡', pizza: '披萨', japanese: '日料', korean: '韩餐', sushi: '寿司',
-        coffee_shop: '咖啡', cafe: '咖啡', dessert: '甜品', ice_cream: '冰淇淋',
-        chicken: '炸鸡', seafood: '海鲜', sichuan: '川菜', cantonese: '粤菜', asian: '亚洲菜'
-    };
-    for (const k in map) if (c.includes(k)) return map[k];
-    const amenity = tags.amenity;
-    if (amenity === 'cafe') return '咖啡/茶';
-    if (amenity === 'fast_food') return '快餐';
-    if (amenity === 'bar' || amenity === 'pub') return '酒馆';
-    return '餐厅';
-}
-
-// 拉取附近真实店铺（Overpass API：免密钥、支持跨域），整合进转盘/列表
+// 拉取附近真实店铺（高德地图 Web服务，国内数据齐全、服务器在境内、返回 CORS:* 可前端直调），
+// 整合进转盘/列表。流程：浏览器 GPS(WGS-84) -> 高德坐标转换为 GCJ-02（消除偏移）
+// -> 周边搜索(餐饮大类 050000) 取多页 -> 解析真实店名/品类/距离。
 function loadNearbyPlaces() {
     if (!state.location) { requestLocation(); return; }
     const statusEl = document.getElementById('nearby-status');
@@ -1109,74 +1090,85 @@ function loadNearbyPlaces() {
     if (statusEl) statusEl.textContent = '正在搜索附近的店…';
     showToast('正在搜索你身边的餐饮店…');
 
-    // 半径 1000m 内的餐厅/快餐/咖啡等（只查 node、轻量查询，避免公共服务器 504 超时）
-    const radius = 1000;
-    const query = `[out:json][timeout:15];node["amenity"~"^(restaurant|fast_food|cafe|bar|pub|food_court)$"](around:${radius},${lat},${lon});out 80;`;
+    // 高德请求统一带超时；任一步失败都回退到友好提示
+    const fetchJSON = (url) => {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 12000);
+        return fetch(url, { signal: ctrl.signal })
+            .then(r => r.json())
+            .finally(() => clearTimeout(timer));
+    };
 
-    // 多个公共镜像，逐个回退（Overpass 公共节点常限流/超时，多备几个更稳）
-    const endpoints = [
-        'https://overpass-api.de/api/interpreter',
-        'https://overpass.kumi.systems/api/interpreter',
-        'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-        'https://overpass.private.coffee/api/interpreter'
-    ];
+    // ① GPS(WGS-84) -> 高德 GCJ-02。浏览器定位是 WGS-84，直接喂高德会偏几百米。
+    const convUrl = `https://restapi.amap.com/v3/assistant/coordinate/convert`
+        + `?locations=${lon},${lat}&coordsys=gps&key=${AMAP_KEY}`;
 
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 30000);
-
-    // GET 方式对 Overpass 缓存更友好；逐镜像回退，非 JSON(限流页)也视为失败转下一个
-    const tryFetch = (i) => fetch(endpoints[i] + '?data=' + encodeURIComponent(query), { signal: ctrl.signal })
-        .then(r => r.text())
-        .then(t => {
-            if (t.trim().startsWith('{')) return JSON.parse(t);
-            return Promise.reject('non-json');
+    fetchJSON(convUrl)
+        .then(d => {
+            // 转换失败（额度/网络）就退而用原始坐标，偏移可接受
+            const center = (d && d.status === '1' && d.locations) ? d.locations : `${lon},${lat}`;
+            return center;
         })
-        .catch(err => {
-            if (i + 1 < endpoints.length) return tryFetch(i + 1);
-            throw err;
-        });
-
-    tryFetch(0)
-        .then(data => {
+        .then(center => {
+            // ② 周边搜索餐饮大类（types=050000），半径 1500m，按距离排序，取前 3 页≈75 家
+            const base = `https://restapi.amap.com/v3/place/around`
+                + `?key=${AMAP_KEY}&location=${center}&types=050000`
+                + `&radius=1500&sortrule=distance&offset=25`;
+            const pages = [1, 2, 3].map(p => fetchJSON(`${base}&page=${p}`).catch(() => null));
+            return Promise.all(pages);
+        })
+        .then(results => {
             const seen = new Set();
-            const places = (data.elements || [])
-                .map(el => {
-                    const tags = el.tags || {};
-                    const name = (tags.name || tags['name:zh'] || '').trim();
-                    if (!name) return null;
-                    const plat = el.lat || (el.center && el.center.lat);
-                    const plon = el.lon || (el.center && el.center.lon);
-                    if (plat == null) return null;
-                    const dist = haversine(lat, lon, plat, plon);
-                    const category = cuisineLabel(tags);
-                    return { name, category, dist,
-                             address: tags['addr:street'] || '', tags };
-                })
-                .filter(Boolean)
-                .filter(p => { if (seen.has(p.name)) return false; seen.add(p.name); return true; })
-                .sort((a, b) => a.dist - b.dist)
-                .slice(0, 60)
-                .map(p => ({
-                    name: p.name,
-                    category: p.category,
-                    description: `距你约 ${p.dist < 1000 ? p.dist + ' 米' : (p.dist / 1000).toFixed(1) + ' 公里'}${p.address ? ' · ' + p.address : ''}`,
-                    image: placeIcon(p.category, p.name),
-                    imageFallback: '',
-                    isNearby: true
-                }));
+            const places = [];
+            results.forEach(r => {
+                if (!r || r.status !== '1' || !Array.isArray(r.pois)) return;
+                r.pois.forEach(poi => {
+                    const name = (poi.name || '').trim();
+                    if (!name || seen.has(name)) return;
+                    seen.add(name);
+                    const dist = parseInt(poi.distance, 10);
+                    const distText = isNaN(dist) ? ''
+                        : (dist < 1000 ? `${dist} 米` : `${(dist / 1000).toFixed(1)} 公里`);
+                    const addr = typeof poi.address === 'string' ? poi.address : '';
+                    const category = amapCuisine(poi.type);
+                    places.push({
+                        name,
+                        category,
+                        _dist: isNaN(dist) ? Infinity : dist,
+                        description: `距你约 ${distText}${addr ? ' · ' + addr : ''}`.trim(),
+                        image: placeIcon(category, name),
+                        imageFallback: placeIcon(category, name),
+                        isNearby: true
+                    });
+                });
+            });
+            places.sort((a, b) => a._dist - b._dist);
 
             if (places.length === 0) {
                 if (statusEl) statusEl.textContent = '附近暂未找到收录的店铺，可换个位置或去美团看看';
-                showToast('附近暂无地图收录的店铺');
+                showToast('附近暂无收录的店铺');
                 return;
             }
-            enterNearbyMode(places);
+            enterNearbyMode(places.slice(0, 60));
         })
         .catch(() => {
             if (statusEl) statusEl.textContent = '附近店铺加载失败，请重试';
             showToast('加载附近店铺失败，请检查网络后重试');
-        })
-        .finally(() => clearTimeout(timer));
+        });
+}
+
+// 高德 POI 的 type 文本（如"餐饮服务;咖啡厅;咖啡厅"）映射成简短中文品类，用于卡片与配色
+function amapCuisine(typeStr) {
+    const t = typeStr || '';
+    const rules = [
+        [/咖啡/, '咖啡'], [/茶艺|茶楼|茶馆/, '咖啡/茶'], [/冷饮|甜品|糕饼|蛋糕|冰淇淋/, '甜品'],
+        [/快餐/, '快餐'], [/火锅/, '火锅'], [/烧烤|烤肉/, '烧烤'], [/海鲜/, '海鲜'],
+        [/日本|日料|寿司/, '日料'], [/韩国|韩式/, '韩餐'], [/西餐|披萨|比萨/, '西餐'],
+        [/清真|新疆/, '清真'], [/面|粉/, '面馆'], [/川菜|湘菜|粤菜|中餐|餐厅|饭/, '中餐'],
+        [/酒吧|酒馆/, '酒馆']
+    ];
+    for (const [re, label] of rules) if (re.test(t)) return label;
+    return '餐厅';
 }
 
 // 进入附近模式：用真实店铺填充转盘/列表
