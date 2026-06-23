@@ -355,9 +355,19 @@ function finishSpin(food) {
 
 // 显示结果
 function showResult(food) {
+    // 结果图同样"先卡片、后台升级真照"：手机上立刻有内容，绝不空白
     const img = document.getElementById('result-image');
-    img.onerror = () => { img.onerror = null; if (food.imageFallback) img.src = food.imageFallback; };
-    img.src = food.image;
+    let card = food.imageFallback || '';
+    if (!card.startsWith('data:') && typeof makeNameCard === 'function') card = makeNameCard(food.name);
+    img.onerror = null;
+    img.src = card;
+    if (food.image && food.image !== card) {
+        const pre = new Image();
+        const timer = setTimeout(() => { pre.onload = pre.onerror = null; }, 8000);
+        pre.onload = () => { clearTimeout(timer); img.src = food.image; };
+        pre.onerror = () => { clearTimeout(timer); };
+        pre.src = food.image;
+    }
     document.getElementById('result-name').textContent = food.name;
     document.getElementById('result-category').textContent = food.category;
     document.getElementById('result-description').textContent = food.description || '';
@@ -514,7 +524,7 @@ function renderFoodGrid() {
         return `
             <div class="food-card" data-idx="${i}">
                 <div class="favorite-icon" data-fav="${i}">${isFavorite ? '💖' : '🤍'}</div>
-                <img class="food-card-image" src="${food.image}" alt="${escapeAttr(food.name)}" loading="lazy" onerror="this.onerror=null; if('${food.imageFallback || ''}') this.src='${food.imageFallback || ''}'">
+                ${progressiveImg(food, 'food-card-image')}
                 <div class="food-card-content">
                     <div class="food-card-name">${escapeHtml(food.name)}</div>
                     <div class="food-card-category">${escapeHtml(food.category || '')}</div>
@@ -538,6 +548,8 @@ function renderFoodGrid() {
             showFoodDetail(filteredFoods[+card.dataset.idx]);
         });
     });
+
+    hydrateImages(foodGrid);
 }
 
 // 转义工具（店名可能含引号/尖括号，避免破坏 HTML）
@@ -548,6 +560,40 @@ function escapeHtml(s) {
 }
 function escapeAttr(s) {
     return escapeHtml(s);
+}
+
+// ============ 图片渐进增强（国内手机也一定立刻看到内容）============
+// 思路：<img> 的 src 直接用零网络的菜名/店铺 SVG 卡（瞬间显示，绝不空白/转圈），
+// 真实照片地址存在 data-real 上，渲染后由 hydrateImages() 在后台预加载，
+// 成功才悄悄替换上去；失败或超时就一直保留那张卡。这样无论 GitHub 图片在国内
+// 能否拉到，屏幕上永远先有内容，能拉到就自动升级成真实照片。
+function progressiveImg(food, cls) {
+    // 兜底卡必须是零网络的 data: URI。旧版收藏/历史里存的是文件路径
+    // （images_new/*.jpg），国内可能拉不到，这里统一按菜名/店名现场重生成。
+    let card = food.imageFallback || '';
+    if (!card.startsWith('data:') && typeof makeNameCard === 'function') {
+        card = makeNameCard(food.name);
+    }
+    const real = food.image && food.image !== card ? food.image : '';
+    return `<img class="${cls}" src="${escapeAttr(card)}" `
+        + `data-real="${escapeAttr(real)}" alt="${escapeAttr(food.name)}" `
+        + `loading="lazy" decoding="async">`;
+}
+
+// 后台预加载 data-real 的真实照片，加载成功才替换，失败则保留卡片
+function hydrateImages(container) {
+    if (!container) return;
+    container.querySelectorAll('img[data-real]').forEach(img => {
+        const real = img.getAttribute('data-real');
+        img.removeAttribute('data-real');
+        if (!real) return;
+        const pre = new Image();
+        // 8 秒还没成功就放弃，保留卡片，不让用户一直看转圈
+        const timer = setTimeout(() => { pre.onload = pre.onerror = null; }, 8000);
+        pre.onload = () => { clearTimeout(timer); img.src = real; };
+        pre.onerror = () => { clearTimeout(timer); };
+        pre.src = real;
+    });
 }
 
 // 显示美食详情
@@ -631,13 +677,14 @@ function initFavoritesPage() {
     favoritesGrid.innerHTML = state.favorites.map((food, i) => `
         <div class="food-card" data-idx="${i}">
             <div class="favorite-icon" data-fav="${i}">💖</div>
-            <img class="food-card-image" src="${food.image}" alt="${escapeAttr(food.name)}" loading="lazy" onerror="this.onerror=null; if('${food.imageFallback || ''}') this.src='${food.imageFallback || ''}'">
+            ${progressiveImg(food, 'food-card-image')}
             <div class="food-card-content">
                 <div class="food-card-name">${escapeHtml(food.name)}</div>
                 <div class="food-card-category">${escapeHtml(food.category || '')}</div>
             </div>
         </div>
     `).join('');
+    hydrateImages(favoritesGrid);
 
     // 取消收藏
     favoritesGrid.querySelectorAll('.favorite-icon').forEach(icon => {
@@ -696,7 +743,7 @@ function initHistoryPage() {
 
     historyList.innerHTML = state.history.map((item, i) => `
         <div class="history-item" data-idx="${i}">
-            <img class="history-item-image" src="${item.image}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null; if('${item.imageFallback || ''}') this.src='${item.imageFallback || ''}'">
+            ${progressiveImg(item, 'history-item-image')}
             <div class="history-item-content">
                 <div class="history-item-name">${escapeHtml(item.name)}</div>
                 <div class="history-item-time">${formatTime(item.timestamp)}</div>
@@ -704,6 +751,7 @@ function initHistoryPage() {
             <button class="history-del" title="删除这条" onclick="event.stopPropagation(); deleteHistoryItem(${item.timestamp})">×</button>
         </div>
     `).join('');
+    hydrateImages(historyList);
 
     // 历史项点击事件（用记录里存的完整对象，附近店也兼容）
     historyList.querySelectorAll('.history-item').forEach(item => {

@@ -143,23 +143,52 @@ const IMAGE_ORDER = [
     "梅菜扣肉", "鸡公煲", "小龙虾", "蛋包饭", "咖喱饭", "烤冷面", "关东煮", "手抓饼"
 ];
 
+// 生成"带菜名的内联 SVG 卡片"作为兜底图。
+// 关键：data URI 是零网络的，浏览器无需下载任何文件即可渲染——
+// 因此即使真实照片（images_food/*.jpg）在国内手机上从 GitHub 拉不下来/超时，
+// onerror 回退到这张 SVG 后，屏幕上永远立刻显示一张带菜名的彩色卡，绝不空白、绝不裂图。
+const _fallbackPalette = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F',
+    '#BB8FCE', '#85C1E2', '#F8B88B', '#FAD390', '#6C5CE7', '#A29BFE',
+    '#FD79A8', '#FDCB6E', '#E17055', '#74B9FF', '#55EFC4', '#FF7675'
+];
+function _xmlEscape(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function makeNameCard(name) {
+    let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const bg = _fallbackPalette[h % _fallbackPalette.length];
+    const text = _xmlEscape(name);
+    const fontSize = name.length > 5 ? 44 : 56;
+    // 注意：SVG 内不能出现单引号。encodeURIComponent 不编码单引号，残留的 ' 会截断
+    // app.js 中 onerror="...src='<dataURI>'..." 的单引号属性，破坏回退。故字体名用双引号
+    // （会被编码为 %22）且不加引号包裹字体族。
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">`
+        + `<rect width="400" height="300" fill="${bg}"/>`
+        + `<text x="200" y="135" font-size="56" text-anchor="middle" dominant-baseline="central">🍴</text>`
+        + `<text x="200" y="215" font-size="${fontSize}" fill="#fff" font-weight="bold" `
+        + `text-anchor="middle" dominant-baseline="central" `
+        + `font-family="PingFang SC, Microsoft YaHei, sans-serif">${text}</text>`
+        + `</svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
 // 为每道菜绑定两层图片：
 // ① food.image —— 本地真实成品照片 images_food/food_XX.jpg（由 fetch_real_images.py
 //    从维基百科下载，词条主图即该菜真实成品，准确可靠、离线可用）；
-// ② food.imageFallback —— 带菜名的本地标签卡 images_new/food_XX.jpg，真实图缺失/未下载时
-//    由 app.js 的 onerror 自动回退，绝不裂图、绝不张冠李戴。
-// 两者用同一序号 XX（IMAGE_ORDER 下标+1），与下载脚本严格对应。
+// ② food.imageFallback —— 带菜名的内联 SVG 卡片（零网络，永不空白）。真实图缺失/加载失败时
+//    由 app.js 的 onerror 自动回退，绝不裂图、绝不张冠李戴、国内手机也一定看得到。
 foodData.forEach(food => {
+    food.imageFallback = makeNameCard(food.name);
     const idx = IMAGE_ORDER.indexOf(food.name);
     if (idx === -1) {
         console.error(`[数据错误]「${food.name}」未在 IMAGE_ORDER 中登记，缺少图片。`);
-        food.image = "";
-        food.imageFallback = "";
+        food.image = food.imageFallback;  // 没有真实图槽位，直接用名称卡
         return;
     }
     const nn = String(idx + 1).padStart(2, '0');
     food.image = `images_food/food_${nn}.jpg`;
-    food.imageFallback = `images_new/food_${nn}.jpg`;
 });
 
 // 完整性自检（仅控制台提示，不影响运行）。
