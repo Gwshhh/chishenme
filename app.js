@@ -980,14 +980,20 @@ function initNearby() {
     const goBtn = document.getElementById('nearby-meituan-btn');
     if (!card || !locateBtn || !goBtn) return;
 
-    // 恢复上次定位结果（同一会话/设备免重复授权）
+    // 恢复上次定位结果（同一会话/设备免重复授权），并自动进入附近模式：
+    // 一打开列表/转盘默认就是附近真实餐厅，无需手动点定位。
+    let restored = false;
     try {
         const saved = JSON.parse(localStorage.getItem('location') || 'null');
         if (saved && typeof saved.latitude === 'number') {
             state.location = saved;
             renderNearby(saved.city);
+            loadNearbyPlaces(true);   // 有缓存坐标，直接按当前档拉附近店铺（自动，不打断）
+            restored = true;
         }
     } catch (e) { /* 数据损坏忽略 */ }
+    // 没有缓存坐标则自动发起定位（成功后会自动拉附近并进入附近模式）
+    if (!restored) requestLocation();
 
     locateBtn.addEventListener('click', requestLocation);
     // 「逛附近」按钮：定位后用真实店铺填充转盘/列表并切到附近模式
@@ -1011,7 +1017,7 @@ function initNearby() {
                 localStorage.setItem('nearbyLevel', String(lv));
                 levelWrap.querySelectorAll('.level-btn').forEach(b =>
                     b.classList.toggle('active', b === btn));
-                if (state.location) loadNearbyPlaces();  // 已定位则立即按新档刷新
+                if (state.location) loadNearbyPlaces(true);  // 已定位则立即按新档刷新（自动）
             });
         });
     }
@@ -1053,7 +1059,7 @@ function requestLocation() {
             persistLocation();
             renderNearby('');
             reverseGeocode(latitude, longitude);
-            loadNearbyPlaces();  // 定位成功立即拉取附近店铺
+            loadNearbyPlaces(true);  // 定位成功立即拉取附近店铺（自动，不打断当前页）
         },
         (err) => {
             const msg = {
@@ -1109,7 +1115,7 @@ const NEARBY_LEVELS = {
 // 拉取附近真实店铺（高德地图 Web服务，国内数据齐全、服务器在境内、返回 CORS:* 可前端直调），
 // 整合进转盘/列表。流程：浏览器 GPS(WGS-84) -> 高德坐标转换为 GCJ-02（消除偏移）
 // -> 周边搜索(餐饮大类 050000) 按档位取多页 -> 解析真实店名/品类/距离。
-function loadNearbyPlaces() {
+function loadNearbyPlaces(auto = false) {
     if (!state.location) { requestLocation(); return; }
     const statusEl = document.getElementById('nearby-status');
     const { latitude: lat, longitude: lon } = state.location;
@@ -1206,7 +1212,7 @@ function loadNearbyPlaces() {
                 showToast('附近暂无收录的店铺');
                 return;
             }
-            enterNearbyMode(places.slice(0, lvl.count));
+            enterNearbyMode(places.slice(0, lvl.count), auto);
         })
         .catch(() => {
             if (statusEl) statusEl.textContent = '附近店铺加载失败，请重试';
@@ -1229,7 +1235,7 @@ function amapCuisine(typeStr) {
 }
 
 // 进入附近模式：用真实店铺填充转盘/列表
-function enterNearbyMode(places) {
+function enterNearbyMode(places, auto = false) {
     state.nearbyPlaces = places;
     state.useNearby = true;
     state.selectedCategories = [];
@@ -1246,9 +1252,12 @@ function enterNearbyMode(places) {
 
     drawWheel();
     updateWheelCount();
-    if (state.currentTab === 'list') renderFoodGrid();
-    switchTab('wheel');
-    showToast(`附近 ${places.length} 家店已就位，开抽吧！`);
+    renderFoodGrid();         // 不论当前在哪页，都刷新列表为附近店铺
+    // 自动进入（页面加载触发）时不打断用户、不强制跳转盘页、不弹 toast
+    if (!auto) {
+        switchTab('wheel');
+        showToast(`附近 ${places.length} 家店已就位，开抽吧！`);
+    }
 }
 
 // 退出附近模式，回到内置菜单
