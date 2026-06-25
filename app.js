@@ -1144,7 +1144,7 @@ function loadNearbyPlaces() {
             // 实测档2/档3 全页成功（详见提交说明）。代价是档3约需 6 秒，期间显示进度。
             const base = `https://restapi.amap.com/v3/place/around`
                 + `?key=${AMAP_KEY}&location=${center}&types=050000`
-                + `&radius=${lvl.radius}&sortrule=distance&offset=25`;
+                + `&radius=${lvl.radius}&sortrule=distance&offset=25&extensions=all`;
             const BATCH = 2, GAP = 550;
             const sleep = (ms) => new Promise(res => setTimeout(res, ms));
             const results = [];
@@ -1182,13 +1182,19 @@ function loadNearbyPlaces() {
                         : (dist < 1000 ? `${dist} 米` : `${(dist / 1000).toFixed(1)} 公里`);
                     const addr = typeof poi.address === 'string' ? poi.address : '';
                     const category = amapCuisine(poi.type);
+                    // 高德 extensions=all 返回的真实店铺照片 photos:[{title,url}]，取第一张作主图；
+                    // 拉不到/超时则由 progressiveImg 回退到品类色卡，绝不空白。
+                    // http 图在 https 页面会被当混合内容拦截，强制转 https
+                    const photo = Array.isArray(poi.photos) && poi.photos[0] && poi.photos[0].url
+                        ? poi.photos[0].url.replace(/^http:\/\//, 'https://') : '';
+                    const card = placeIcon(category, name);
                     places.push({
                         name,
                         category,
                         _dist: isNaN(dist) ? Infinity : dist,
                         description: `距你约 ${distText}${addr ? ' · ' + addr : ''}`.trim(),
-                        image: placeIcon(category, name),
-                        imageFallback: placeIcon(category, name),
+                        image: photo || card,    // 有真照用真照，没有就直接用色卡
+                        imageFallback: card,     // 真照加载失败时的兜底
                         isNearby: true
                     });
                 });
