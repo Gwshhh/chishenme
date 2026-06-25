@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="今天吃什么？随机选择美食，解决选择困难症">
     <title>今天吃什么 - 美食转盘</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
     <div class="container">
@@ -49,7 +49,7 @@
                     <button class="nearby-btn nearby-go" id="nearby-meituan-btn" style="display: none;">🍽 发现附近</button>
                     <button class="nearby-btn nearby-exit" id="nearby-exit-btn" style="display: none;">↩ 回菜单</button>
                 </div>
-                <div class="nearby-levels" id="nearby-levels" style="display: none;">
+                <div class="nearby-levels" id="nearby-levels">
                     <span class="nearby-levels-hint">抽取范围</span>
                     <button class="level-btn active" data-level="1">附近 60 家</button>
                     <button class="level-btn" data-level="2">附近 180 家</button>
@@ -142,7 +142,7 @@
     <!-- Toast 提示 -->
     <div class="toast" id="toast"></div>
 
-    <script src="data.js"></script>
-    <script src="app.js"></script>
+    <script src="data.js?v=3"></script>
+    <script src="app.js?v=3"></script>
 </body>
 </html>
