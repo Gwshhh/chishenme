@@ -27,7 +27,8 @@ const state = {
     soundOn: localStorage.getItem('soundOn') !== '0',  // 默认开
     location: null,  // 用户位置 {latitude, longitude, city}，由"附近美食"定位后填充
     nearbyPlaces: [],  // 定位后从地图拉取的真实附近餐饮店（整合进转盘/列表）
-    useNearby: false   // true=转盘/列表用"附近真实店铺"，false=用内置菜单
+    useNearby: false,  // true=转盘/列表用"附近真实店铺"，false=用内置菜单
+    nearbyLevel: parseInt(localStorage.getItem('nearbyLevel'), 10) || 1  // 附近抽取档位 1/2/3
 };
 
 // DOM 元素
@@ -998,6 +999,22 @@ function initNearby() {
     // 退出附近模式、回到内置菜单
     const exitBtn = document.getElementById('nearby-exit-btn');
     if (exitBtn) exitBtn.addEventListener('click', exitNearbyMode);
+
+    // 三档选择：数量越多搜索半径越大；选中后立即按新档重新加载（若已定位）
+    const levelWrap = document.getElementById('nearby-levels');
+    if (levelWrap) {
+        levelWrap.querySelectorAll('.level-btn').forEach(btn => {
+            const lv = parseInt(btn.dataset.level, 10);
+            btn.classList.toggle('active', lv === state.nearbyLevel);
+            btn.addEventListener('click', () => {
+                state.nearbyLevel = lv;
+                localStorage.setItem('nearbyLevel', String(lv));
+                levelWrap.querySelectorAll('.level-btn').forEach(b =>
+                    b.classList.toggle('active', b === btn));
+                if (state.location) loadNearbyPlaces();  // 已定位则立即按新档刷新
+            });
+        });
+    }
 }
 
 // 已定位后更新 UI 文案与按钮
@@ -1008,6 +1025,8 @@ function renderNearby(cityText) {
     if (statusEl) statusEl.textContent = cityText ? `已定位：${cityText}` : '已定位，点「发现附近」加载店铺';
     if (goBtn) { goBtn.style.display = 'inline-flex'; goBtn.textContent = '🍽 发现附近'; }
     if (locateBtn) locateBtn.textContent = '重新定位';
+    const levelWrap = document.getElementById('nearby-levels');
+    if (levelWrap) levelWrap.style.display = 'flex';  // 定位后显示三档选择
 }
 
 // 请求浏览器定位（需 HTTPS 或 localhost；file:// 下多数浏览器禁用）
@@ -1079,16 +1098,25 @@ function persistLocation() {
     } catch (e) { /* 隐私模式等写入失败，忽略 */ }
 }
 
+// 三档"附近范围"：店铺数越多，搜索半径越大、抓取页数越多。
+// 高德 place/around 单页最多 25 条，故页数 = ceil(目标数 / 25)，多抓几页留余量去重。
+const NEARBY_LEVELS = {
+    1: { count: 60,  radius: 1500, pages: 4,  label: '附近 60 家' },
+    2: { count: 180, radius: 3000, pages: 9,  label: '附近 180 家' },
+    3: { count: 360, radius: 5000, pages: 18, label: '附近 360 家' }
+};
+
 // 拉取附近真实店铺（高德地图 Web服务，国内数据齐全、服务器在境内、返回 CORS:* 可前端直调），
 // 整合进转盘/列表。流程：浏览器 GPS(WGS-84) -> 高德坐标转换为 GCJ-02（消除偏移）
-// -> 周边搜索(餐饮大类 050000) 取多页 -> 解析真实店名/品类/距离。
+// -> 周边搜索(餐饮大类 050000) 按档位取多页 -> 解析真实店名/品类/距离。
 function loadNearbyPlaces() {
     if (!state.location) { requestLocation(); return; }
     const statusEl = document.getElementById('nearby-status');
     const { latitude: lat, longitude: lon } = state.location;
+    const lvl = NEARBY_LEVELS[state.nearbyLevel] || NEARBY_LEVELS[1];
 
-    if (statusEl) statusEl.textContent = '正在搜索附近的店…';
-    showToast('正在搜索你身边的餐饮店…');
+    if (statusEl) statusEl.textContent = `正在搜索${lvl.label}…`;
+    showToast(`正在搜索${lvl.label}…`);
 
     // 高德请求统一带超时；任一步失败都回退到友好提示
     const fetchJSON = (url) => {
@@ -1110,12 +1138,35 @@ function loadNearbyPlaces() {
             return center;
         })
         .then(center => {
-            // ② 周边搜索餐饮大类（types=050000），半径 1500m，按距离排序，取前 3 页≈75 家
+            // ② 周边搜索餐饮大类（types=050000），半径/页数按档位放大，按距离排序。
+            // 关键：高德个人 key 对并发很敏感，一次性并发多页会触发 QPS 限制(错误码 10021)
+            // 导致大量页失败、拉不满目标数。故改为「每批 2 页、批间隔 550ms」逐批拉取，
+            // 实测档2/档3 全页成功（详见提交说明）。代价是档3约需 6 秒，期间显示进度。
             const base = `https://restapi.amap.com/v3/place/around`
                 + `?key=${AMAP_KEY}&location=${center}&types=050000`
-                + `&radius=1500&sortrule=distance&offset=25`;
-            const pages = [1, 2, 3].map(p => fetchJSON(`${base}&page=${p}`).catch(() => null));
-            return Promise.all(pages);
+                + `&radius=${lvl.radius}&sortrule=distance&offset=25`;
+            const BATCH = 2, GAP = 550;
+            const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+            const results = [];
+
+            // 逐批拉取，批内并发 BATCH 页，批间隔 GAP 毫秒
+            return (async () => {
+                for (let start = 1; start <= lvl.pages; start += BATCH) {
+                    const batch = [];
+                    for (let p = start; p < start + BATCH && p <= lvl.pages; p++) {
+                        batch.push(fetchJSON(`${base}&page=${p}`).catch(() => null));
+                    }
+                    const got = await Promise.all(batch);
+                    results.push(...got);
+                    // 多档时给个进度感（按已请求页数估算），让用户知道在加载
+                    if (statusEl && lvl.pages > 4) {
+                        const done = Math.min(start + BATCH - 1, lvl.pages);
+                        statusEl.textContent = `正在搜索${lvl.label}…(${Math.round(done / lvl.pages * 100)}%)`;
+                    }
+                    if (start + BATCH <= lvl.pages) await sleep(GAP);
+                }
+                return results;
+            })();
         })
         .then(results => {
             const seen = new Set();
@@ -1149,7 +1200,7 @@ function loadNearbyPlaces() {
                 showToast('附近暂无收录的店铺');
                 return;
             }
-            enterNearbyMode(places.slice(0, 60));
+            enterNearbyMode(places.slice(0, lvl.count));
         })
         .catch(() => {
             if (statusEl) statusEl.textContent = '附近店铺加载失败，请重试';
