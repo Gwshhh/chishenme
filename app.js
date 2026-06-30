@@ -430,29 +430,96 @@ function shareResult(food) {
     );
 }
 
-// 跳转外卖平台：复制菜名 + 打开平台（平台不开放按菜名直达，故复制后到站内粘贴搜索）。
-// 移动端打开各平台的 H5「附近」站点，由平台用自身定位展示你身边能点这道菜的店。
+// 跳转外卖平台下单。核心目标：在手机上把抽中的店/菜带进美团（或饿了么）App。
+// 平台不提供「按店名直达店铺页」的公开接口，因此策略是：复制店名 → 唤起 App 的
+// 搜索页并预填关键词 → 用户点一下搜索结果里的店即可下单。
+// 唤起方式按平台分流（这是「以前跳不动」的真正原因——旧版用 iframe 触发 scheme，
+// 现代浏览器已基本屏蔽 iframe 发起的 scheme 跳转）：
+//   · 安卓：用 intent:// 唤起，未安装由系统自动跳 H5 兜底，最稳、无需计时器；
+//   · iOS/其它：在用户手势内直接 location.href=scheme，配合可见性检测回退 H5；
+//   · 微信/QQ 等内置浏览器禁止唤起外部 App，直接引导用「浏览器打开」。
+// App scheme/包名非官方文档、可能随版本变化，故 H5 回退是「永远能落地」的保障。
 function openDelivery(platform, food) {
-    const mobile = isMobile();
-    const sites = {
-        meituan: {
-            url: mobile ? 'https://i.waimai.meituan.com' : 'https://waimai.meituan.com',
-            name: '美团外卖'
-        },
-        eleme: {
-            url: mobile ? 'https://h5.ele.me' : 'https://www.ele.me',
-            name: '饿了么'
-        }
-    };
-    const site = sites[platform];
-    if (!site) return;
+    const keyword = food.name;
+    const enc = encodeURIComponent(keyword);
 
-    const near = state.location ? '附近' : '';
-    const go = () => {
-        showToast(`已复制【${food.name}】，在${site.name}${near}粘贴搜索即可`);
-        window.open(site.url, '_blank');
-    };
-    copyText(food.name).then(go, go);  // 复制失败也照常跳转
+    // 平台配置：App scheme、安卓包名、intent 的 host/query、H5 兜底站
+    const cfg = platform === 'eleme'
+        ? {
+            name: '饿了么',
+            schemeName: 'eleme',
+            pkg: 'me.ele',
+            host: 'search',
+            query: `keyword=${enc}`,
+            scheme: `eleme://search?keyword=${enc}`,
+            h5: 'https://h5.ele.me'
+        }
+        : {
+            name: '美团外卖',
+            // 唤起独立「美团外卖」App 的搜索页（包名 com.sankuai.meituan.takeoutnew）
+            schemeName: 'meituanwaimai',
+            pkg: 'com.sankuai.meituan.takeoutnew',
+            host: 'waimai.meituan.com/search',
+            query: `queryword=${enc}`,
+            scheme: `meituanwaimai://waimai.meituan.com/search?queryword=${enc}`,
+            h5: 'https://i.waimai.meituan.com'
+        };
+
+    // 桌面端：开网页版，复制名字后粘贴搜索
+    if (!isMobile()) {
+        const webUrl = platform === 'eleme' ? 'https://www.ele.me' : 'https://waimai.meituan.com';
+        copyText(keyword).finally(() => {
+            showToast(`已复制【${keyword}】，在${cfg.name}粘贴搜索即可`);
+            window.open(webUrl, '_blank');
+        });
+        return;
+    }
+
+    // 微信/QQ 等内置浏览器会拦截外部 App 唤起，提示用户改用系统浏览器打开
+    if (/MicroMessenger|QQ\//i.test(navigator.userAgent)) {
+        copyText(keyword).finally(() => {
+            showToast(`已复制【${keyword}】，请点右上「···」选「在浏览器打开」后再下单`);
+        });
+        return;
+    }
+
+    copyText(keyword).finally(() => {
+        showToast(`已复制【${keyword}】，正在打开${cfg.name}…`);
+        launchApp(cfg);
+    });
+}
+
+// 唤起外卖 App：安卓走 intent://（系统自动兜底 H5），iOS/其它走 scheme+计时回退。
+function launchApp(cfg) {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    // 安卓最稳方案：intent:// 带 package 精确唤起，未安装则由 browser_fallback_url
+    // 让系统自动打开 H5。无需计时器/可见性猜测，不会误跳。
+    if (isAndroid) {
+        const fb = encodeURIComponent(cfg.h5);
+        const intent = `intent://${cfg.host}?${cfg.query}`
+            + `#Intent;scheme=${cfg.schemeName};package=${cfg.pkg};`
+            + `S.browser_fallback_url=${fb};end`;
+        try { window.location.href = intent; return; } catch (e) { /* 落到下方通用逻辑 */ }
+    }
+
+    // iOS / 其它：用户手势内直接跳 scheme（比 iframe 可靠）。唤起成功页面会切到
+    // 后台（hidden/pagehide/blur 任一触发），此时取消回退；否则 1.6s 后打开 H5。
+    let left = false;
+    const mark = () => { left = true; };
+    const onVis = () => { if (document.hidden) mark(); };
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('pagehide', mark);
+    window.addEventListener('blur', mark);
+
+    setTimeout(() => {
+        document.removeEventListener('visibilitychange', onVis);
+        window.removeEventListener('pagehide', mark);
+        window.removeEventListener('blur', mark);
+        if (!left && !document.hidden) window.location.href = cfg.h5;
+    }, 1600);
+
+    try { window.location.href = cfg.scheme; } catch (e) { window.location.href = cfg.h5; }
 }
 
 // 粗略判断移动端（决定打开 H5 还是桌面站）
@@ -1201,7 +1268,11 @@ function loadNearbyPlaces(auto = false) {
                         description: `距你约 ${distText}${addr ? ' · ' + addr : ''}`.trim(),
                         image: photo || card,    // 有真照用真照，没有就直接用色卡
                         imageFallback: card,     // 真照加载失败时的兜底
-                        isNearby: true
+                        isNearby: true,
+                        // 保留高德返回的店铺坐标(GCJ-02 "lng,lat")与地址，
+                        // 跳转外卖时用于唤起 App 并尽量定位到这家店
+                        location: typeof poi.location === 'string' ? poi.location : '',
+                        address: addr
                     });
                 });
             });
