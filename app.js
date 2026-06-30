@@ -439,9 +439,26 @@ function shareResult(food) {
 //   · 安卓：用 intent:// 唤起，未安装由系统自动跳 H5 兜底，最稳、无需计时器；
 //   · iOS/其它：在用户手势内直接 location.href=scheme，配合可见性检测回退 H5；
 //   · 微信/QQ 等内置浏览器禁止唤起外部 App，直接引导用「浏览器打开」。
+// 清洗高德店名，提高在美团/饿了么搜到的概率（这是"附近店搜不到"的最大头）。
+// 高德店名常带分店后缀，如"肯德基(中关村万达店)""海底捞火锅(西单大悦城店)"，
+// 拿一长串去美团搜常零结果；去掉括号后缀只留核心品牌名，命中率明显提高。
+// 同时去掉常见的"·"分隔尾巴和多余空白。处理后若为空（极少数纯括号名）则退回原名。
+function cleanShopName(name) {
+    let s = String(name || '').trim();
+    // 去掉中英文括号及其中内容（分店/地标后缀），全局去除（可能有多组）
+    s = s.replace(/[（(][^（）()]*[）)]/g, '');
+    // 去掉"·"及之后的尾巴（如"瑞幸咖啡·中关村店"）
+    s = s.replace(/[·・].*$/, '');
+    // 折叠多余空白
+    s = s.replace(/\s+/g, ' ').trim();
+    return s || String(name || '').trim();
+}
+
 // App scheme/包名非官方文档、可能随版本变化，故 H5 回退是「永远能落地」的保障。
 function openDelivery(platform, food) {
-    const keyword = food.name;
+    // 附近店用「清洗后的店名」去搜（去掉"(XX店)"分店后缀），命中率高很多；
+    // 内置菜品仍用原名（就是菜名本身）。
+    const keyword = food.isNearby ? cleanShopName(food.name) : food.name;
     const enc = encodeURIComponent(keyword);
 
     // 平台配置：App scheme、安卓包名、intent 的 host/query、H5 兜底站
@@ -1278,6 +1295,8 @@ function loadNearbyPlaces(auto = false) {
                 r.pois.forEach(poi => {
                     const name = (poi.name || '').trim();
                     if (!name || seen.has(name)) return;
+                    // 路线 A：剔除酒吧/茶馆等基本不上外卖的业态，降低抽中后搜不到的概率
+                    if (isUnlikelyDelivery(poi.type, name)) return;
                     seen.add(name);
                     const dist = parseInt(poi.distance, 10);
                     const distText = isNaN(dist) ? ''
@@ -1318,6 +1337,16 @@ function loadNearbyPlaces(auto = false) {
             if (statusEl) statusEl.textContent = '附近店铺加载失败，请重试';
             showToast('加载附近店铺失败，请检查网络后重试');
         });
+}
+
+// 路线 A 命中率优化：剔除「基本不在美团外卖上」的业态，避免抽中后搜不到。
+// 酒吧/酒馆/茶馆/咖啡馆/夜店这类多为堂食，跳美团外卖经常无结果；纯饮品店也常缺。
+// 返回 true 表示「应当从附近列表里剔除」。判断同时看高德 type 文本与店名关键词。
+function isUnlikelyDelivery(typeStr, name) {
+    const t = (typeStr || '') + ' ' + (name || '');
+    // 明确偏堂食/非外卖的业态关键词
+    const exclude = /酒吧|清吧|夜店|酒馆|livehouse|KTV|茶艺|茶楼|茶馆|茶室|网咖|网吧|桌游|剧本杀|会所|食堂/i;
+    return exclude.test(t);
 }
 
 // 高德 POI 的 type 文本（如"餐饮服务;咖啡厅;咖啡厅"）映射成简短中文品类，用于卡片与配色
