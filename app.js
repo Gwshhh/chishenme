@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHistoryPage();
     initThemeToggle();
     initSoundToggle();
+    initAudioUnlock();
     initTodayPick();
     initAvoidRepeat();
     initNearby();
@@ -455,13 +456,15 @@ function openDelivery(platform, food) {
             h5: 'https://h5.ele.me'
         }
         : {
-            name: '美团外卖',
-            // 唤起独立「美团外卖」App 的搜索页（包名 com.sankuai.meituan.takeoutnew）
-            schemeName: 'meituanwaimai',
-            pkg: 'com.sankuai.meituan.takeoutnew',
-            host: 'waimai.meituan.com/search',
-            query: `queryword=${enc}`,
-            scheme: `meituanwaimai://waimai.meituan.com/search?queryword=${enc}`,
+            name: '美团',
+            // 唤起「美团」主 App（com.sankuai.meituan，里面就能点外卖）——多数人装的是
+            // 主 App 而非独立「美团外卖」App，赌主 App 命中率更高；唤起后落到 App 内
+            // 搜索页，店名已复制，粘贴即可。装独立外卖 App 的，主 App 一般也在。
+            schemeName: 'imeituan',
+            pkg: 'com.sankuai.meituan',
+            host: 'www.meituan.com/search/result',
+            query: `q=${enc}`,
+            scheme: `imeituan://www.meituan.com/search/result?q=${enc}`,
             h5: 'https://i.waimai.meituan.com'
         };
 
@@ -952,6 +955,7 @@ function initThemeToggle() {
 
 // ============ 音效（Web Audio，无需音频文件）============
 let audioCtx = null;
+let audioUnlocked = false;
 
 function getAudioCtx() {
     if (!audioCtx) {
@@ -959,6 +963,31 @@ function getAudioCtx() {
         if (AC) audioCtx = new AC();
     }
     return audioCtx;
+}
+
+// 手机浏览器（尤其 iOS）要求 AudioContext 必须在「用户手势的同步调用栈」里被
+// resume/play 才能解锁发声。转盘的「滴答」是在 requestAnimationFrame 回调里发的，
+// 已脱离点击手势，故不解锁就一直静音。这里在用户首次触摸/点击页面时就解锁：
+// 创建并 resume 上下文，再播一段 0 音量的空音，把音频通道彻底激活。
+function initAudioUnlock() {
+    const unlock = () => {
+        if (audioUnlocked) return;
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') ctx.resume();
+        // 播放一个静音 buffer，iOS 上这是真正解锁音频的关键一步
+        try {
+            const buf = ctx.createBuffer(1, 1, 22050);
+            const src = ctx.createBufferSource();
+            src.buffer = buf;
+            src.connect(ctx.destination);
+            src.start(0);
+        } catch (e) { /* 忽略 */ }
+        audioUnlocked = true;
+    };
+    // 首次触摸/点击/按键都尝试解锁，once 触发后自动移除
+    ['touchend', 'touchstart', 'click', 'keydown'].forEach(evt =>
+        document.addEventListener(evt, unlock, { once: false, passive: true }));
 }
 
 function beep(freq, durationMs, type = 'square', gainVal = 0.04) {
