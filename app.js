@@ -628,53 +628,38 @@ function openMeituanNearby(food, keyword) {
     });
 }
 
-// 跳「领券/红包」入口。说明：平台没有公开、稳定的“隐藏券一键全领”接口，
-// 也无法从网页操作你的账号自动领券（那需要你的登录态，违规且沙箱隔离够不到）。
-// 这里能做且合规的是——把你稳稳送到平台的“神券/红包”频道页，你落地点“领取”即可。
-// 原则：宁可落到一定存在的领券频道页，也不赌一个可能 404 的深链。
+// 跳「领券/红包」入口。以下链接均经过实测（curl 查跳转），不再靠猜：
+//   · 饿了么红包页 https://h5.ele.me/hongbao/  —— 实测 HTTP 200，可直接落地；
+//   · 美团外卖领券页 https://i.waimai.meituan.com/coupon —— 实测 302 到登录页，
+//     但登录链接带 backurl=...coupon，用户登录一次后会自动跳回领券页，故仍可用，
+//     只是【必须先登录】，这一点如实告知，不假装能直达。
+// 重要事实（第 N 次说明）：平台没有公开、稳定的“隐藏券一键全领”接口，网页也无法
+// 操作你的账号自动领券（需登录态、违规、沙箱够不到）。这里只做“把你送到领券页”，
+// 券仍需你自己点“领取”。App 的 web 容器 scheme 非公开、之前实测不稳，故不再赌它，
+// 直接打开已验证可用的 H5 领券页（装了 App 的系统会询问是否用 App 打开）。
 function openCouponPage(platform, keyword) {
     const copied = normalizeShopText(keyword);
-    // 用 App 内置 web 容器打开各平台“领券频道”H5：这些频道页稳定存在，红包/神券入口就在页面显眼处。
-    // 未装 App 时由 intent 的 fallback / 计时回退直接打开该 H5。
-    const couponH5 = platform === 'eleme'
-        ? 'https://h5.ele.me/hongbao/'          // 饿了么红包频道
-        : 'https://i.waimai.meituan.com';       // 美团外卖首页（神券/红包 banner 在顶部）
-    const enc = encodeURIComponent(couponH5);
-    const cfg = platform === 'eleme'
-        ? {
-            name: '饿了么红包页',
-            schemeName: 'eleme',
-            pkg: 'me.ele',
-            // 饿了么 App 用 windvane/H5 容器打开红包频道
-            host: 'web',
-            query: `url=${enc}`,
-            scheme: `eleme://web?url=${enc}`,
-            h5: couponH5,
-            web: couponH5
-        }
-        : {
-            name: '美团领券页',
-            schemeName: 'imeituan',
-            pkg: 'com.sankuai.meituan',
-            // 美团 App 用 web 容器打开外卖领券频道
-            host: 'www.meituan.com/web',
-            query: `url=${enc}`,
-            scheme: `imeituan://www.meituan.com/web?url=${enc}`,
-            h5: couponH5,
-            web: couponH5
-        };
+    const isEle = platform === 'eleme';
+    const couponUrl = isEle
+        ? 'https://h5.ele.me/hongbao/'                 // 实测 200
+        : 'https://i.waimai.meituan.com/coupon';       // 实测 302→登录→回跳领券
+    const name = isEle ? '饿了么红包页' : '美团领券页';
+    // 美团 H5 会先要求登录，如实提示；饿了么红包页可直接看到
+    const tip = isEle
+        ? `先领券再下单：已复制【${copied}】，正在打开${name}，点红包领取后回来搜店`
+        : `先领券再下单：已复制【${copied}】，${name}需先登录一次，登录后会自动回到领券页`;
 
     copyText(copied).finally(() => {
-        showToast(`先领券再下单：已复制【${copied}】，正在打开${cfg.name}；到页面后点红包/神券领取`);
-        if (!isMobile()) {
-            window.open(cfg.web, '_blank');
-            return;
-        }
+        showToast(tip);
         if (isEmbeddedBrowser()) {
             showToast(`已复制【${copied}】，请点右上「···」选「在浏览器打开」后再领券`);
             return;
         }
-        launchApp(cfg);
+        if (isMobile()) {
+            window.location.href = couponUrl;  // 手机端整页跳，装了 App 系统会询问是否用 App 打开
+        } else {
+            window.open(couponUrl, '_blank');
+        }
     });
 }
 
