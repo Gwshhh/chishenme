@@ -436,7 +436,6 @@ function setupDeliveryActions(food) {
     const couponGuide = document.getElementById('coupon-guide');
     const mtCouponBtn = document.getElementById('order-meituan-coupon');
     const eleCouponBtn = document.getElementById('order-eleme-coupon');
-    const couponSearchBtn = document.getElementById('order-coupon-search');
     const hint = document.querySelector('#result-card .delivery-hint');
     const keywords = buildDeliveryKeywords(food);
     const primary = keywords[0] || food.name;
@@ -462,7 +461,6 @@ function setupDeliveryActions(food) {
     if (couponGuide) couponGuide.style.display = 'block';
     if (mtCouponBtn) mtCouponBtn.onclick = () => openCouponPage('meituan', primary);
     if (eleCouponBtn) eleCouponBtn.onclick = () => openCouponPage('eleme', primary);
-    if (couponSearchBtn) couponSearchBtn.onclick = () => searchCouponKeyword(food, primary);
 
     let altIndex = 1;
     if (altBtn) {
@@ -632,28 +630,42 @@ function openMeituanNearby(food, keyword) {
 
 function openCouponPage(platform, keyword) {
     const copied = normalizeShopText(keyword);
-    const url = platform === 'eleme'
-        ? 'https://h5.ele.me'
-        : 'https://i.waimai.meituan.com';
-    const name = platform === 'eleme' ? '饿了么红包页' : '美团领券页';
-    copyText(copied).finally(() => {
-        showToast(`先领券再下单：已复制【${copied}】，正在打开${name}`);
-        if (isMobile()) {
-            window.location.href = url;
-        } else {
-            window.open(url, '_blank');
+    const cfg = platform === 'eleme'
+        ? {
+            name: '饿了么红包页',
+            schemeName: 'eleme',
+            pkg: 'me.ele',
+            host: 'search',
+            query: `keyword=${encodeURIComponent(copied)}`,
+            scheme: `eleme://search?keyword=${encodeURIComponent(copied)}`,
+            h5: 'https://h5.ele.me',
+            web: 'https://www.ele.me'
         }
+        : {
+            name: '美团 App 领券页',
+            schemeName: 'imeituan',
+            pkg: 'com.sankuai.meituan',
+            host: 'www.meituan.com',
+            query: '',
+            scheme: 'imeituan://www.meituan.com',
+            h5: 'https://i.waimai.meituan.com',
+            web: 'https://waimai.meituan.com'
+        };
+
+    copyText(copied).finally(() => {
+        showToast(`先领券再下单：已复制【${copied}】，正在打开${cfg.name}`);
+        if (!isMobile()) {
+            window.open(cfg.web, '_blank');
+            return;
+        }
+        if (isEmbeddedBrowser()) {
+            showToast(`已复制【${copied}】，请在浏览器打开后再唤起 App 领券`);
+            return;
+        }
+        launchApp(cfg);
     });
 }
 
-function searchCouponKeyword(food, keyword) {
-    const copied = normalizeShopText(keyword || buildDeliveryKeywords(food)[0] || (food && food.name));
-    const query = encodeURIComponent(`${copied} 优惠券 红包 满减`);
-    copyText(copied).finally(() => {
-        showToast(`已复制【${copied}】，可在平台内搜索店名并检查红包/满减`);
-        window.open(`https://www.baidu.com/s?wd=${query}`, '_blank');
-    });
-}
 
 function isEmbeddedBrowser() {
     return /MicroMessenger|QQ\//i.test(navigator.userAgent);
