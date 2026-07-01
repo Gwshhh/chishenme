@@ -628,44 +628,50 @@ function openMeituanNearby(food, keyword) {
     });
 }
 
+// 跳「领券/红包」入口。说明：平台没有公开、稳定的“隐藏券一键全领”接口，
+// 也无法从网页操作你的账号自动领券（那需要你的登录态，违规且沙箱隔离够不到）。
+// 这里能做且合规的是——把你稳稳送到平台的“神券/红包”频道页，你落地点“领取”即可。
+// 原则：宁可落到一定存在的领券频道页，也不赌一个可能 404 的深链。
 function openCouponPage(platform, keyword) {
     const copied = normalizeShopText(keyword);
+    // 用 App 内置 web 容器打开各平台“领券频道”H5：这些频道页稳定存在，红包/神券入口就在页面显眼处。
+    // 未装 App 时由 intent 的 fallback / 计时回退直接打开该 H5。
+    const couponH5 = platform === 'eleme'
+        ? 'https://h5.ele.me/hongbao/'          // 饿了么红包频道
+        : 'https://i.waimai.meituan.com';       // 美团外卖首页（神券/红包 banner 在顶部）
+    const enc = encodeURIComponent(couponH5);
     const cfg = platform === 'eleme'
         ? {
             name: '饿了么红包页',
             schemeName: 'eleme',
             pkg: 'me.ele',
-            host: 'search',
-            query: `keyword=${encodeURIComponent(copied)}`,
-            scheme: `eleme://search?keyword=${encodeURIComponent(copied)}`,
-            h5: 'https://h5.ele.me',
-            web: 'https://www.ele.me'
+            // 饿了么 App 用 windvane/H5 容器打开红包频道
+            host: 'web',
+            query: `url=${enc}`,
+            scheme: `eleme://web?url=${enc}`,
+            h5: couponH5,
+            web: couponH5
         }
-        : (() => {
-            // 美团没有公开稳定的隐藏券 deep link；这里用美团 App 的 web 容器打开外卖券入口，
-            // 不支持该入口时再回退到外卖券 H5；若平台改版，则落到登录/外卖页。
-            const couponUrl = 'https://i.waimai.meituan.com/coupon';
-            const encodedUrl = encodeURIComponent(couponUrl);
-            return {
-                name: '美团 App 领券页',
-                schemeName: 'imeituan',
-                pkg: 'com.sankuai.meituan',
-                host: 'www.meituan.com/web',
-                query: `url=${encodedUrl}`,
-                scheme: `imeituan://www.meituan.com/web?url=${encodedUrl}`,
-                h5: couponUrl,
-                web: couponUrl
-            };
-        })();
+        : {
+            name: '美团领券页',
+            schemeName: 'imeituan',
+            pkg: 'com.sankuai.meituan',
+            // 美团 App 用 web 容器打开外卖领券频道
+            host: 'www.meituan.com/web',
+            query: `url=${enc}`,
+            scheme: `imeituan://www.meituan.com/web?url=${enc}`,
+            h5: couponH5,
+            web: couponH5
+        };
 
     copyText(copied).finally(() => {
-        showToast(`先领券再下单：已复制【${copied}】，正在打开${cfg.name}；未直达时点红包/神券入口`);
+        showToast(`先领券再下单：已复制【${copied}】，正在打开${cfg.name}；到页面后点红包/神券领取`);
         if (!isMobile()) {
             window.open(cfg.web, '_blank');
             return;
         }
         if (isEmbeddedBrowser()) {
-            showToast(`已复制【${copied}】，请在浏览器打开后再唤起 App 领券`);
+            showToast(`已复制【${copied}】，请点右上「···」选「在浏览器打开」后再领券`);
             return;
         }
         launchApp(cfg);
