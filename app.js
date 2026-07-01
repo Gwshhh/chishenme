@@ -641,16 +641,22 @@ function openCouponPage(platform, keyword) {
             h5: 'https://h5.ele.me',
             web: 'https://www.ele.me'
         }
-        : {
-            name: '美团 App 领券页',
-            schemeName: 'imeituan',
-            pkg: 'com.sankuai.meituan',
-            host: 'www.meituan.com',
-            query: '',
-            scheme: 'imeituan://www.meituan.com',
-            h5: 'https://i.waimai.meituan.com',
-            web: 'https://waimai.meituan.com'
-        };
+        : (() => {
+            // 美团没有公开稳定的隐藏券 deep link；这里用美团 App 的 web 容器打开外卖券入口，
+            // 不支持该入口时再回退到外卖 H5 首页，避免只落到美团主首页。
+            const couponUrl = 'https://i.waimai.meituan.com/openh5/coupon';
+            const encodedUrl = encodeURIComponent(couponUrl);
+            return {
+                name: '美团 App 领券页',
+                schemeName: 'imeituan',
+                pkg: 'com.sankuai.meituan',
+                host: 'www.meituan.com/web',
+                query: `url=${encodedUrl}`,
+                scheme: `imeituan://www.meituan.com/web?url=${encodedUrl}`,
+                h5: couponUrl,
+                web: couponUrl
+            };
+        })();
 
     copyText(copied).finally(() => {
         showToast(`先领券再下单：已复制【${copied}】，正在打开${cfg.name}`);
@@ -678,7 +684,8 @@ function launchApp(cfg) {
     // 让系统自动打开 H5。无需计时器/可见性猜测，不会误跳。
     if (isAndroid) {
         const fb = encodeURIComponent(cfg.h5);
-        const intent = `intent://${cfg.host}?${cfg.query}`
+        const target = cfg.query ? `intent://${cfg.host}?${cfg.query}` : `intent://${cfg.host}`;
+        const intent = target
             + `#Intent;scheme=${cfg.schemeName};package=${cfg.pkg};`
             + `S.browser_fallback_url=${fb};end`;
         try { window.location.href = intent; return; } catch (e) { /* 落到下方通用逻辑 */ }
