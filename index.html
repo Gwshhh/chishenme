@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="今天吃什么？随机选择美食，解决选择困难症">
     <title>今天吃什么 - 美食转盘</title>
-    <link rel="stylesheet" href="styles.css?v=9">
+    <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
     <div class="container">
@@ -95,9 +95,26 @@
                 </div>
                 <div class="delivery-links">
                     <span class="delivery-hint">🛵 去外卖平台点这道菜</span>
+                    <div class="coupon-guide" id="coupon-guide" style="display: none;">
+                        <div class="coupon-guide-title">先领券再下单</div>
+                        <ol class="coupon-steps">
+                            <li>先点领券</li>
+                            <li>再搜店名</li>
+                            <li>下单前检查满减/红包</li>
+                        </ol>
+                        <div class="coupon-actions">
+                            <button class="coupon-btn meituan" id="order-meituan-coupon">打开美团领券页</button>
+                            <button class="coupon-btn eleme" id="order-eleme-coupon">打开饿了么红包页</button>
+                            <button class="coupon-btn search" id="order-coupon-search">复制店名并搜券</button>
+                        </div>
+                    </div>
                     <div class="delivery-btns">
                         <button class="delivery-btn meituan" id="order-meituan">美团外卖</button>
                         <button class="delivery-btn eleme" id="order-eleme">饿了么</button>
+                    </div>
+                    <div class="delivery-assist" id="delivery-assist" style="display: none;">
+                        <button class="delivery-assist-btn" id="order-meituan-alt">换词搜美团</button>
+                        <button class="delivery-assist-btn" id="order-meituan-nearby">美团附近</button>
                     </div>
                 </div>
             </div>
@@ -142,7 +159,7 @@
     <!-- Toast 提示 -->
     <div class="toast" id="toast"></div>
 
-    <script src="data.js?v=9"></script>
-    <script src="app.js?v=9"></script>
+    <script src="data.js?v=10"></script>
+    <script src="app.js?v=10"></script>
 </body>
 </html>

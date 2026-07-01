@@ -915,8 +915,131 @@ body.dark-mode .history-del {
     box-shadow: 0 4px 12px rgba(0, 150, 255, 0.35);
 }
 
+.coupon-guide {
+    margin: 0 0 12px;
+    padding: 12px;
+    border: 1px solid #ffe3a3;
+    border-radius: 8px;
+    background: #fff8e6;
+    text-align: left;
+}
+
+.coupon-guide-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #8a5a00;
+    margin-bottom: 8px;
+}
+
+.coupon-steps {
+    margin: 0 0 10px 18px;
+    padding: 0;
+    color: #6b5a34;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.coupon-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.coupon-btn {
+    min-height: 36px;
+    padding: 8px 9px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.coupon-btn:active {
+    transform: scale(0.97);
+}
+
+.coupon-btn.meituan {
+    background: #ffdf65;
+    color: #4f3900;
+    border-color: #f0c63a;
+}
+
+.coupon-btn.eleme {
+    background: #e8f5ff;
+    color: #006fbd;
+    border-color: #b8dcff;
+}
+
+.coupon-btn.search {
+    background: #f5f5f5;
+    color: #444;
+    border-color: #ddd;
+}
+
+.delivery-assist {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+.delivery-assist-btn {
+    flex: 1;
+    min-height: 36px;
+    padding: 8px 10px;
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+    background: #fff;
+    color: #555;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.delivery-assist-btn:active {
+    transform: scale(0.97);
+}
+
+.delivery-assist-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
 body.dark-mode .delivery-links {
     border-top-color: #444;
+}
+
+body.dark-mode .delivery-assist-btn {
+    background: #242424;
+    border-color: #444;
+    color: #ddd;
+}
+
+body.dark-mode .coupon-guide {
+    background: #2a2517;
+    border-color: #5b4720;
+}
+
+body.dark-mode .coupon-guide-title {
+    color: #ffd36a;
+}
+
+body.dark-mode .coupon-steps {
+    color: #e2d1a8;
+}
+
+body.dark-mode .coupon-btn.search {
+    background: #242424;
+    border-color: #444;
+    color: #ddd;
+}
+
+@media (max-width: 430px) {
+    .coupon-actions {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ============ 附近美食（定位 + 美团外卖）============ */

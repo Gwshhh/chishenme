@@ -394,15 +394,8 @@ function showResult(food) {
     // 分享/复制结果
     document.getElementById('share-btn').onclick = () => shareResult(food);
 
-    // 去外卖平台下单（随机选完直接跳转点单）
-    document.getElementById('order-meituan').onclick = () => openDelivery('meituan', food);
-    document.getElementById('order-eleme').onclick = () => openDelivery('eleme', food);
-
-    // 附近模式：提示语改为"去这家店下单"
-    const hint = document.querySelector('#result-card .delivery-hint');
-    if (hint) hint.textContent = food.isNearby
-        ? '🛵 去美团/饿了么搜这家店下单'
-        : '🛵 去外卖平台点这道菜';
+    // 去外卖平台下单。附近店额外给「换词」和「美团附近」兜底，避免店名搜不到后卡住。
+    setupDeliveryActions(food);
 }
 
 // 把文字复制到剪贴板，返回 Promise
@@ -432,37 +425,149 @@ function shareResult(food) {
 }
 
 // 跳转外卖平台下单。核心目标：在手机上把抽中的店/菜带进美团（或饿了么）App。
-// 平台不提供「按店名直达店铺页」的公开接口，因此策略是：复制店名 → 唤起 App 的
-// 搜索页并预填关键词 → 用户点一下搜索结果里的店即可下单。
-// 唤起方式按平台分流（这是「以前跳不动」的真正原因——旧版用 iframe 触发 scheme，
-// 现代浏览器已基本屏蔽 iframe 发起的 scheme 跳转）：
-//   · 安卓：用 intent:// 唤起，未安装由系统自动跳 H5 兜底，最稳、无需计时器；
-//   · iOS/其它：在用户手势内直接 location.href=scheme，配合可见性检测回退 H5；
-//   · 微信/QQ 等内置浏览器禁止唤起外部 App，直接引导用「浏览器打开」。
-// 清洗高德店名，提高在美团/饿了么搜到的概率（这是"附近店搜不到"的最大头）。
-// 高德店名常带分店后缀，如"肯德基(中关村万达店)""海底捞火锅(西单大悦城店)"，
-// 拿一长串去美团搜常零结果；去掉括号后缀只留核心品牌名，命中率明显提高。
-// 同时去掉常见的"·"分隔尾巴和多余空白。处理后若为空（极少数纯括号名）则退回原名。
-function cleanShopName(name) {
-    let s = String(name || '').trim();
-    // 去掉中英文括号及其中内容（分店/地标后缀），全局去除（可能有多组）
-    s = s.replace(/[（(][^（）()]*[）)]/g, '');
-    // 去掉"·"及之后的尾巴（如"瑞幸咖啡·中关村店"）
-    s = s.replace(/[·・].*$/, '');
-    // 折叠多余空白
-    s = s.replace(/\s+/g, ' ').trim();
-    return s || String(name || '').trim();
+// 纯前端无法确认某个高德 POI 是否存在于美团外卖商家库，所以这里不做“假直达”。
+// 策略是：优先复制最可能命中的搜索词；附近店额外提供换词搜索与美团附近页兜底。
+function setupDeliveryActions(food) {
+    const meituanBtn = document.getElementById('order-meituan');
+    const elemeBtn = document.getElementById('order-eleme');
+    const assist = document.getElementById('delivery-assist');
+    const altBtn = document.getElementById('order-meituan-alt');
+    const nearbyBtn = document.getElementById('order-meituan-nearby');
+    const couponGuide = document.getElementById('coupon-guide');
+    const mtCouponBtn = document.getElementById('order-meituan-coupon');
+    const eleCouponBtn = document.getElementById('order-eleme-coupon');
+    const couponSearchBtn = document.getElementById('order-coupon-search');
+    const hint = document.querySelector('#result-card .delivery-hint');
+    const keywords = buildDeliveryKeywords(food);
+    const primary = keywords[0] || food.name;
+
+    if (meituanBtn) {
+        meituanBtn.textContent = food.isNearby ? '美团搜店' : '美团外卖';
+        meituanBtn.onclick = () => openDelivery('meituan', food, { keyword: primary, couponReminder: food.isNearby });
+    }
+    if (elemeBtn) {
+        elemeBtn.textContent = food.isNearby ? '饿了么搜店' : '饿了么';
+        elemeBtn.onclick = () => openDelivery('eleme', food, { keyword: primary, couponReminder: food.isNearby });
+    }
+
+    if (!food.isNearby) {
+        if (hint) hint.textContent = '🛵 去外卖平台点这道菜';
+        if (assist) assist.style.display = 'none';
+        if (couponGuide) couponGuide.style.display = 'none';
+        return;
+    }
+
+    if (hint) hint.textContent = `🛵 优先搜【${shortKeyword(primary)}】；搜不到就换词或看美团附近`;
+    if (assist) assist.style.display = 'flex';
+    if (couponGuide) couponGuide.style.display = 'block';
+    if (mtCouponBtn) mtCouponBtn.onclick = () => openCouponPage('meituan', primary);
+    if (eleCouponBtn) eleCouponBtn.onclick = () => openCouponPage('eleme', primary);
+    if (couponSearchBtn) couponSearchBtn.onclick = () => searchCouponKeyword(food, primary);
+
+    let altIndex = 1;
+    if (altBtn) {
+        altBtn.disabled = keywords.length < 2;
+        altBtn.title = keywords.length > 1 ? `备选：${keywords.slice(1).join(' / ')}` : '暂无其它搜索词';
+        altBtn.onclick = () => {
+            const keyword = keywords[altIndex] || primary;
+            altIndex = altIndex + 1 >= keywords.length ? 1 : altIndex + 1;
+            openDelivery('meituan', food, { keyword, couponReminder: true });
+        };
+    }
+    if (nearbyBtn) nearbyBtn.onclick = () => openMeituanNearby(food, primary);
 }
 
-// App scheme/包名非官方文档、可能随版本变化，故 H5 回退是「永远能落地」的保障。
-function openDelivery(platform, food) {
-    // 附近店用「清洗后的店名」去搜（去掉"(XX店)"分店后缀），命中率高很多；
-    // 内置菜品仍用原名（就是菜名本身）。
-    const keyword = food.isNearby ? cleanShopName(food.name) : food.name;
-    const enc = encodeURIComponent(keyword);
+function shortKeyword(keyword) {
+    const s = String(keyword || '').trim();
+    return s.length > 10 ? `${s.slice(0, 10)}…` : s;
+}
 
-    // 平台配置：App scheme、安卓包名、intent 的 host/query、H5 兜底站
-    const cfg = platform === 'eleme'
+function normalizeShopText(value) {
+    return String(value || '')
+        .normalize('NFKC')
+        .replace(/[\u200b\u200c\u200d\ufeff]/g, '')
+        .replace(/[【】\[\]「」『』]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// 清洗高德店名，提高在美团/饿了么搜到的概率。
+// 高德 POI 常带分店、商场、楼层、编号等尾巴；美团外卖更吃“品牌/主品类”搜索。
+function cleanShopName(name) {
+    let s = String(name || '').normalize('NFKC').trim();
+    const original = normalizeShopText(s);
+    s = s.replace(/[（(【\[][^（）()【】\[\]]*[）)】\]]/g, ' ');
+    s = s.replace(/[·・丨|｜].*$/, ' ');
+    s = s.replace(/[\-—–_]+\s*[^\-—–_]*(店|广场|商场|中心|大厦|校区|园区|路|街|号).*$/i, ' ');
+    s = s.replace(/(外卖专营店|外卖店|餐饮店|小吃店|美食店|总店|旗舰店|加盟店)$/g, ' ');
+    s = normalizeShopText(s);
+    return s || original;
+}
+
+function extractDishKeyword(food) {
+    const text = `${food.name || ''} ${food.category || ''} ${food.sourceType || ''}`;
+    const rules = [
+        /黄焖鸡米饭|黄焖鸡|鸡公煲|麻辣烫|麻辣香锅|冒菜|酸菜鱼|烤鱼|水煮鱼|螺蛳粉|酸辣粉|米线|过桥米线/,
+        /兰州拉面|牛肉面|重庆小面|刀削面|热干面|拌面|炸酱面|面馆|粉面|面/,
+        /盖浇饭|煲仔饭|卤肉饭|炒饭|便当|快餐|盒饭|简餐|粥|饺子|馄饨|包子|肠粉|煎饼/,
+        /炸鸡|汉堡|披萨|比萨|寿司|日料|韩餐|烤肉|烧烤|火锅|串串|麻辣拌|沙县小吃/,
+        /奶茶|茶饮|咖啡|甜品|蛋糕|烘焙|冰淇淋|果茶/
+    ];
+    for (const re of rules) {
+        const m = text.match(re);
+        if (m) return m[0] === '面馆' || m[0] === '粉面' ? '面' : m[0];
+    }
+    return '';
+}
+
+function categorySearchKeyword(category) {
+    const c = String(category || '');
+    if (/面馆/.test(c)) return '面';
+    if (/快餐/.test(c)) return '快餐';
+    if (/甜品/.test(c)) return '甜品';
+    if (/烧烤/.test(c)) return '烧烤';
+    if (/火锅/.test(c)) return '火锅';
+    if (/西餐/.test(c)) return '披萨 汉堡';
+    if (/日料/.test(c)) return '寿司';
+    if (/韩餐/.test(c)) return '韩餐';
+    if (/清真/.test(c)) return '清真';
+    return '';
+}
+
+function uniqueKeywords(values) {
+    const seen = new Set();
+    const out = [];
+    values.forEach(value => {
+        const keyword = normalizeShopText(value).replace(/\s+/g, ' ').trim();
+        if (!keyword || keyword.length < 2) return;
+        const key = keyword.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        out.push(keyword);
+    });
+    return out;
+}
+
+function buildDeliveryKeywords(food) {
+    if (!food || !food.isNearby) return uniqueKeywords([food && food.name]);
+    const rawName = String(food.name || '');
+    const original = normalizeShopText(rawName);
+    const core = cleanShopName(rawName);
+    const dish = extractDishKeyword(food);
+    const category = categorySearchKeyword(food.category);
+    return uniqueKeywords([
+        ...(Array.isArray(food.searchKeywords) ? food.searchKeywords : []),
+        core,
+        original,
+        dish && core && !core.includes(dish) ? `${core} ${dish}` : '',
+        dish,
+        category
+    ]);
+}
+
+function getPlatformConfig(platform, keyword) {
+    const enc = encodeURIComponent(keyword);
+    return platform === 'eleme'
         ? {
             name: '饿了么',
             schemeName: 'eleme',
@@ -470,45 +575,89 @@ function openDelivery(platform, food) {
             host: 'search',
             query: `keyword=${enc}`,
             scheme: `eleme://search?keyword=${enc}`,
-            h5: 'https://h5.ele.me'
+            h5: 'https://h5.ele.me',
+            web: 'https://www.ele.me'
         }
         : {
             name: '美团',
-            // 唤起「美团」主 App（com.sankuai.meituan，里面就能点外卖）——多数人装的是
-            // 主 App 而非独立「美团外卖」App，赌主 App 命中率更高；唤起后落到 App 内
-            // 搜索页，店名已复制，粘贴即可。装独立外卖 App 的，主 App 一般也在。
             schemeName: 'imeituan',
             pkg: 'com.sankuai.meituan',
             host: 'www.meituan.com/search/result',
             query: `q=${enc}`,
             scheme: `imeituan://www.meituan.com/search/result?q=${enc}`,
-            h5: 'https://i.waimai.meituan.com'
+            h5: 'https://i.waimai.meituan.com',
+            web: 'https://waimai.meituan.com'
         };
+}
 
-    // 桌面端：开网页版，复制名字后粘贴搜索
+// App scheme/包名非官方文档、可能随版本变化，故 H5 回退是「永远能落地」的保障。
+function openDelivery(platform, food, options = {}) {
+    const keyword = normalizeShopText(options.keyword || buildDeliveryKeywords(food)[0] || (food && food.name));
+    const cfg = getPlatformConfig(platform, keyword);
+    const lead = options.couponReminder ? '先领券再下单：' : '';
+
     if (!isMobile()) {
-        const webUrl = platform === 'eleme' ? 'https://www.ele.me' : 'https://waimai.meituan.com';
         copyText(keyword).finally(() => {
-            showToast(`已复制【${keyword}】，在${cfg.name}粘贴搜索即可`);
-            window.open(webUrl, '_blank');
+            showToast(`${lead}已复制【${keyword}】，在${cfg.name}粘贴搜索即可`);
+            window.open(cfg.web, '_blank');
         });
         return;
     }
 
-    // 微信/QQ 等内置浏览器会拦截外部 App 唤起，提示用户改用系统浏览器打开
-    if (/MicroMessenger|QQ\//i.test(navigator.userAgent)) {
+    if (isEmbeddedBrowser()) {
         copyText(keyword).finally(() => {
-            showToast(`已复制【${keyword}】，请点右上「···」选「在浏览器打开」后再下单`);
+            showToast(`${lead}已复制【${keyword}】，请点右上「···」选「在浏览器打开」后再下单`);
         });
         return;
     }
 
     copyText(keyword).finally(() => {
-        showToast(`已复制【${keyword}】，正在打开${cfg.name}…`);
+        showToast(`${lead}已复制【${keyword}】，正在打开${cfg.name}…`);
         launchApp(cfg);
     });
 }
 
+function openMeituanNearby(food, keyword) {
+    const copied = normalizeShopText(keyword || buildDeliveryKeywords(food)[0] || (food && food.name));
+    const url = isMobile() ? 'https://i.waimai.meituan.com' : 'https://waimai.meituan.com';
+    copyText(copied).finally(() => {
+        showToast(`已复制【${copied}】，打开美团附近后可按距离找或粘贴搜索`);
+        if (isMobile()) {
+            window.location.href = url;
+        } else {
+            window.open(url, '_blank');
+        }
+    });
+}
+
+function openCouponPage(platform, keyword) {
+    const copied = normalizeShopText(keyword);
+    const url = platform === 'eleme'
+        ? 'https://h5.ele.me'
+        : 'https://i.waimai.meituan.com';
+    const name = platform === 'eleme' ? '饿了么红包页' : '美团领券页';
+    copyText(copied).finally(() => {
+        showToast(`先领券再下单：已复制【${copied}】，正在打开${name}`);
+        if (isMobile()) {
+            window.location.href = url;
+        } else {
+            window.open(url, '_blank');
+        }
+    });
+}
+
+function searchCouponKeyword(food, keyword) {
+    const copied = normalizeShopText(keyword || buildDeliveryKeywords(food)[0] || (food && food.name));
+    const query = encodeURIComponent(`${copied} 优惠券 红包 满减`);
+    copyText(copied).finally(() => {
+        showToast(`已复制【${copied}】，可在平台内搜索店名并检查红包/满减`);
+        window.open(`https://www.baidu.com/s?wd=${query}`, '_blank');
+    });
+}
+
+function isEmbeddedBrowser() {
+    return /MicroMessenger|QQ\//i.test(navigator.userAgent);
+}
 // 唤起外卖 App：安卓走 intent://（系统自动兜底 H5），iOS/其它走 scheme+计时回退。
 function launchApp(cfg) {
     const isAndroid = /Android/i.test(navigator.userAgent);
@@ -1320,7 +1469,9 @@ function loadNearbyPlaces(auto = false) {
                         // 保留高德返回的店铺坐标(GCJ-02 "lng,lat")与地址，
                         // 跳转外卖时用于唤起 App 并尽量定位到这家店
                         location: typeof poi.location === 'string' ? poi.location : '',
-                        address: addr
+                        address: addr,
+                        sourceType: typeof poi.type === 'string' ? poi.type : '',
+                        searchKeywords: buildDeliveryKeywords({ name, category, sourceType: poi.type, isNearby: true })
                     });
                 });
             });
@@ -1344,9 +1495,12 @@ function loadNearbyPlaces(auto = false) {
 // 返回 true 表示「应当从附近列表里剔除」。判断同时看高德 type 文本与店名关键词。
 function isUnlikelyDelivery(typeStr, name) {
     const t = (typeStr || '') + ' ' + (name || '');
-    // 明确偏堂食/非外卖的业态关键词
-    const exclude = /酒吧|清吧|夜店|酒馆|livehouse|KTV|茶艺|茶楼|茶馆|茶室|网咖|网吧|桌游|剧本杀|会所|食堂/i;
-    return exclude.test(t);
+    // 明确偏堂食/非外卖或美团外卖覆盖不稳定的业态关键词。
+    const exclude = /酒吧|清吧|夜店|酒馆|livehouse|KTV|茶艺|茶楼|茶馆|茶室|网咖|网吧|桌游|剧本杀|会所|食堂|棋牌|台球|水吧|烟酒|便利店|超市/i;
+    if (exclude.test(t)) return true;
+    // 纯咖啡/纯茶空间经常只有到店消费；奶茶、甜品、蛋糕等仍保留。
+    if (/咖啡|咖啡厅|咖啡馆|茶饮|饮品|冷饮/.test(t) && !/奶茶|甜品|蛋糕|烘焙|面包|果茶|茶饮/.test(t)) return true;
+    return false;
 }
 
 // 高德 POI 的 type 文本（如"餐饮服务;咖啡厅;咖啡厅"）映射成简短中文品类，用于卡片与配色
