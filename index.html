@@ -1,161 +1,164 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="浠婂ぉ鍚冧粈涔堬紵闅忔満閫夋嫨缇庨锛岃В鍐抽€夋嫨鍥伴毦鐥?>
-    <title>浠婂ぉ鍚冧粈涔?- 缇庨杞洏</title>
+    <meta name="description" content="今天吃什么？随机选择美食，解决选择困难症">
+    <title>今天吃什么 - 美食转盘</title>
     <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
     <div class="container">
-        <!-- 澶撮儴 -->
+        <!-- 头部 -->
         <header class="header">
             <div class="header-actions">
-                <button class="icon-btn" id="sound-toggle" title="寮€鍏抽煶鏁?>馃攰</button>
-                <button class="icon-btn" id="theme-toggle" title="鍒囨崲娣辫壊妯″紡">馃寵</button>
+                <button class="icon-btn" id="sound-toggle" title="开关音效">🔊</button>
+                <button class="icon-btn" id="theme-toggle" title="切换深色模式">🌙</button>
             </div>
-            <h1>馃崪 浠婂ぉ鍚冧粈涔?/h1>
-            <p class="subtitle">璁╄浆鐩樺府浣犲喅瀹氾紒</p>
+            <h1>🍜 今天吃什么</h1>
+            <p class="subtitle">让转盘帮你决定！</p>
         </header>
 
-        <!-- 瀵艰埅鏍囩 -->
+        <!-- 导航标签 -->
         <nav class="nav-tabs">
-            <button class="tab-btn active" data-tab="wheel">馃幇 杞洏</button>
-            <button class="tab-btn" data-tab="list">馃搵 鍒楄〃</button>
-            <button class="tab-btn" data-tab="favorites">猸?鏀惰棌<span class="tab-badge" id="fav-badge"></span></button>
-            <button class="tab-btn" data-tab="history">馃摐 鍘嗗彶</button>
+            <button class="tab-btn active" data-tab="wheel">🎰 转盘</button>
+            <button class="tab-btn" data-tab="list">📋 列表</button>
+            <button class="tab-btn" data-tab="favorites">⭐ 收藏<span class="tab-badge" id="fav-badge"></span></button>
+            <button class="tab-btn" data-tab="history">📜 历史</button>
         </nav>
 
-        <!-- 杞洏椤甸潰 -->
+        <!-- 转盘页面 -->
         <div class="tab-content active" id="wheel-tab">
-            <!-- 浠婃棩鎺ㄨ崘 -->
+            <!-- 今日推荐 -->
             <div class="today-pick" id="today-pick">
                 <div class="today-pick-info">
-                    <span class="today-pick-label">馃崁 浠婃棩鎺ㄨ崘</span>
+                    <span class="today-pick-label">🍀 今日推荐</span>
                     <span class="today-pick-name" id="today-pick-name"></span>
                 </div>
-                <button class="today-pick-btn" id="today-pick-btn">灏卞悆杩欎釜</button>
+                <button class="today-pick-btn" id="today-pick-btn">就吃这个</button>
             </div>
 
-            <!-- 闄勮繎缇庨锛堝畾浣?+ 缇庡洟澶栧崠锛?-->
+            <!-- 附近美食（定位 + 美团外卖） -->
             <div class="nearby-card" id="nearby-card">
                 <div class="nearby-info">
-                    <span class="nearby-label">馃搷 闄勮繎缇庨</span>
-                    <span class="nearby-status" id="nearby-status">鐐瑰嚮瀹氫綅锛屽彂鐜颁綘韬竟鐨勫鍗?/span>
+                    <span class="nearby-label">📍 附近美食</span>
+                    <span class="nearby-status" id="nearby-status">点击定位，发现你身边的外卖</span>
                 </div>
                 <div class="nearby-actions">
-                    <button class="nearby-btn" id="locate-btn">瀹氫綅</button>
-                    <button class="nearby-btn nearby-go" id="nearby-meituan-btn" style="display: none;">馃嵔 鍙戠幇闄勮繎</button>
-                    <button class="nearby-btn nearby-exit" id="nearby-exit-btn" style="display: none;">鈫?鍥炶彍鍗?/button>
+                    <button class="nearby-btn" id="locate-btn">定位</button>
+                    <button class="nearby-btn nearby-go" id="nearby-meituan-btn" style="display: none;">🍽 发现附近</button>
+                    <button class="nearby-btn nearby-exit" id="nearby-exit-btn" style="display: none;">↩ 回菜单</button>
                 </div>
                 <div class="nearby-levels" id="nearby-levels">
-                    <span class="nearby-levels-hint">鎶藉彇鑼冨洿</span>
-                    <button class="level-btn active" data-level="1">闄勮繎 60 瀹?/button>
-                    <button class="level-btn" data-level="2">闄勮繎 180 瀹?/button>
-                    <button class="level-btn" data-level="3">闄勮繎 360 瀹?/button>
+                    <span class="nearby-levels-hint">抽取范围</span>
+                    <button class="level-btn active" data-level="1">附近 60 家</button>
+                    <button class="level-btn" data-level="2">附近 180 家</button>
+                    <button class="level-btn" data-level="3">附近 360 家</button>
                 </div>
             </div>
 
-            <!-- 绛涢€夊櫒 -->
+            <!-- 筛选器 -->
             <div class="filters">
                 <label>
-                    <input type="checkbox" id="filter-all" checked> 鍏ㄩ儴
+                    <input type="checkbox" id="filter-all" checked> 全部
                 </label>
                 <div class="filter-chips" id="filter-chips"></div>
                 <label class="avoid-repeat">
-                    <input type="checkbox" id="avoid-repeat"> 閬垮厤杩炵画閲嶅
+                    <input type="checkbox" id="avoid-repeat"> 避免连续重复
                 </label>
             </div>
 
-            <!-- 杞洏瀹瑰櫒 -->
+            <!-- 转盘容器 -->
             <div class="wheel-container">
                 <p class="wheel-count" id="wheel-count"></p>
                 <div class="wheel-wrapper">
                     <canvas id="wheel-canvas"></canvas>
-                    <div class="wheel-pointer">鈻?/div>
+                    <div class="wheel-pointer">▼</div>
                 </div>
                 <button class="spin-btn" id="spin-btn">
-                    <span>寮€濮嬫娊鍙?/span>
+                    <span>开始抽取</span>
                 </button>
             </div>
 
-            <!-- 缁撴灉鏄剧ず -->
+            <!-- 结果显示 -->
             <div class="result-card" id="result-card" style="display: none;">
                 <div class="result-image-wrapper">
-                    <img id="result-image" src="" alt="缇庨鍥剧墖">
+                    <img id="result-image" src="" alt="美食图片">
                 </div>
                 <h2 id="result-name"></h2>
                 <p class="result-category" id="result-category"></p>
                 <p class="result-description" id="result-description"></p>
                 <div class="result-actions">
-                    <button class="action-btn" id="add-favorite-btn">猸?鏀惰棌</button>
-                    <button class="action-btn" id="spin-again-btn">馃攧 鍐嶆娊涓€娆?/button>
-                    <button class="action-btn" id="share-btn">馃搵 鍒嗕韩</button>
+                    <button class="action-btn" id="add-favorite-btn">⭐ 收藏</button>
+                    <button class="action-btn" id="spin-again-btn">🔄 再抽一次</button>
+                    <button class="action-btn" id="share-btn">📋 分享</button>
                 </div>
                 <div class="delivery-links">
-                    <span class="delivery-hint">馃浀 鍘诲鍗栧钩鍙扮偣杩欓亾鑿?/span>
+                    <span class="delivery-hint">🛵 去外卖平台点这道菜</span>
                     <div class="coupon-guide" id="coupon-guide" style="display: none;">
-                        <div class="coupon-guide-title">鍏堥鍒稿啀涓嬪崟</div>
+                        <div class="coupon-guide-title">先领券再下单</div>
                         <ol class="coupon-steps">
-                            <li>鍏堢偣棰嗗埜</li>
-                            <li>鍐嶆悳搴楀悕</li>
-                            <li>涓嬪崟鍓嶆鏌ユ弧鍑?绾㈠寘</li>
+                            <li>先点领券</li>
+                            <li>再搜店名</li>
+                            <li>下单前检查满减/红包</li>
                         </ol>
                         <div class="coupon-actions">
-                            <button class="coupon-btn meituan" id="order-meituan-coupon">缇庡洟棰嗗埜锛堥渶鍏堢櫥褰曪級</button>
-                            <button class="coupon-btn eleme" id="order-eleme-coupon">楗夸簡涔堢孩鍖呴〉</button>
+                            <button class="coupon-btn meituan" id="order-meituan-coupon">美团领券(需先登录)</button>
+                            <button class="coupon-btn eleme" id="order-eleme-coupon">饿了么红包页</button>
                         </div>
                     </div>
                     <div class="delivery-btns">
-                        <button class="delivery-btn meituan" id="order-meituan">缇庡洟澶栧崠</button>
-                        <button class="delivery-btn eleme" id="order-eleme">楗夸簡涔?/button>
+                        <button class="delivery-btn meituan" id="order-meituan">美团外卖</button>
+                        <button class="delivery-btn eleme" id="order-eleme">饿了么</button>
                     </div>
                     <div class="delivery-assist" id="delivery-assist" style="display: none;">
-                        <button class="delivery-assist-btn" id="order-meituan-alt">鎹㈣瘝鎼滅編鍥?/button>
-                        <button class="delivery-assist-btn" id="order-meituan-nearby">缇庡洟闄勮繎</button>
+                        <button class="delivery-assist-btn" id="order-meituan-alt">换词搜美团</button>
+                        <button class="delivery-assist-btn" id="order-meituan-nearby">美团附近</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 鍒楄〃椤甸潰 -->
+        <!-- 列表页面 -->
         <div class="tab-content" id="list-tab">
             <div class="search-box">
-                <input type="text" id="search-input" placeholder="馃攳 鎼滅储缇庨...">
+                <input type="text" id="search-input" placeholder="🔍 搜索美食...">
             </div>
             <div class="category-filter" id="category-filter"></div>
             <div class="food-grid" id="food-grid"></div>
         </div>
 
-        <!-- 鏀惰棌椤甸潰 -->
+        <!-- 收藏页面 -->
         <div class="tab-content" id="favorites-tab">
             <div class="favorites-controls" id="favorites-controls">
                 <span class="fav-count-label" id="fav-count-label"></span>
-                <button class="random-fav-btn" id="random-fav-btn">馃幉 甯垜浠庢敹钘忛噷鎸?/button>
+                <button class="random-fav-btn" id="random-fav-btn">🎲 帮我从收藏里挑</button>
             </div>
             <div class="empty-state" id="empty-favorites">
-                <p>馃構 杩樻病鏈夋敹钘忕殑缇庨</p>
-                <p>蹇幓杞洏鎴栧垪琛ㄩ〉娣诲姞鍚э紒</p>
+                <p>😋 还没有收藏的美食</p>
+                <p>快去转盘或列表页添加吧！</p>
             </div>
             <div class="food-grid" id="favorites-grid"></div>
         </div>
 
-        <!-- 鍘嗗彶椤甸潰 -->
+        <!-- 历史页面 -->
         <div class="tab-content" id="history-tab">
             <div class="history-controls">
-                <button class="clear-btn" id="clear-history-btn">娓呯┖鍘嗗彶</button>
+                <button class="clear-btn" id="clear-history-btn">清空历史</button>
             </div>
             <div class="history-stats" id="history-stats"></div>
             <div class="empty-state" id="empty-history">
-                <p>馃摐 杩樻病鏈夋娊鍙栬褰?/p>
-                <p>蹇幓杞浆鐩樺惂锛?/p>
+                <p>📜 还没有抽取记录</p>
+                <p>快去转转盘吧！</p>
             </div>
             <div class="history-list" id="history-list"></div>
         </div>
     </div>
 
-    <!-- Toast 鎻愮ず -->
+    <!-- Toast 提示 -->
     <div class="toast" id="toast"></div>
 
     <script src="data.js?v=15"></script>
