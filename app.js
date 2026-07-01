@@ -643,8 +643,8 @@ function openCouponPage(platform, keyword) {
         }
         : (() => {
             // 美团没有公开稳定的隐藏券 deep link；这里用美团 App 的 web 容器打开外卖券入口，
-            // 不支持该入口时再回退到外卖 H5 首页，避免只落到美团主首页。
-            const couponUrl = 'https://i.waimai.meituan.com/openh5/coupon';
+            // 不支持该入口时再回退到外卖券 H5；若平台改版，则落到登录/外卖页。
+            const couponUrl = 'https://i.waimai.meituan.com/coupon';
             const encodedUrl = encodeURIComponent(couponUrl);
             return {
                 name: '美团 App 领券页',
@@ -659,7 +659,7 @@ function openCouponPage(platform, keyword) {
         })();
 
     copyText(copied).finally(() => {
-        showToast(`先领券再下单：已复制【${copied}】，正在打开${cfg.name}`);
+        showToast(`先领券再下单：已复制【${copied}】，正在打开${cfg.name}；未直达时点红包/神券入口`);
         if (!isMobile()) {
             window.open(cfg.web, '_blank');
             return;
