@@ -187,8 +187,8 @@ function updateWheelCount() {
     if (!el) return;
     const n = getFilteredFoods().length;
     el.textContent = state.useNearby
-        ? `🎯 附近 ${n} 家店参与抽取`
-        : `🎯 当前 ${n} 道菜参与抽取`;
+        ? `附近 ${n} 家店参与抽取`
+        : `当前 ${n} 道菜参与抽取`;
 }
 
 // 当前转盘上对应的美食列表（抽取时锁定，保证指针与结果一致）
@@ -333,7 +333,12 @@ function buildWheelCache(foods, dpr) {
         }
     }
 
-    // ⑥ 外圈灯珠（金白交替，转起来有奖轮氛围）
+    // ⑥ 金色细环穿过灯珠 + 外圈灯珠（金白交替，奖轮氛围）
+    c.beginPath();
+    c.arc(cx, cy, rimR - 6.5, 0, 2 * Math.PI);
+    c.strokeStyle = 'rgba(255, 213, 132, 0.28)';
+    c.lineWidth = 1;
+    c.stroke();
     const dots = 28;
     for (let i = 0; i < dots; i++) {
         const a = (i / dots) * 2 * Math.PI;
@@ -395,38 +400,55 @@ function drawWheelPointer(dpr, rotation) {
         const phase = (((rotation % arc) + arc) % arc) / arc;   // 当前格内相位 0..1
         tilt = 0.30 * Math.max(0, 1 - phase * 3);
     }
-    ctx.translate(cx, 6);
+    ctx.translate(cx, 7);
     ctx.rotate(tilt);
-    ctx.translate(-cx, -6);
+    ctx.translate(-cx, -7);
 
-    // 泪滴形：上半圆鼓包 + 收尖伸入扇区
-    ctx.beginPath();
-    ctx.arc(cx, 14, 11, Math.PI * 0.75, Math.PI * 0.25, false);
-    ctx.lineTo(cx, 38);
-    ctx.closePath();
+    // 泪滴针形：上半圆鼓包 + 收尖深入扇区
+    const path = () => {
+        ctx.beginPath();
+        ctx.arc(cx, 15, 11.5, Math.PI * 0.78, Math.PI * 0.22, false);
+        ctx.lineTo(cx, 44);
+        ctx.closePath();
+    };
 
-    const g = ctx.createLinearGradient(0, 2, 0, 38);
-    g.addColorStop(0, '#FF6F4C');
-    g.addColorStop(1, '#E42A47');
+    // ① 投影
+    path();
     ctx.shadowColor = 'rgba(60, 10, 20, 0.35)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetY = 2;
-    ctx.fillStyle = g;
+    ctx.shadowBlur = 7;
+    ctx.shadowOffsetY = 3;
+    ctx.fillStyle = '#E42A47';
     ctx.fill();
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
 
-    // 白描边把指针从花色扇区中衬出来
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
-    ctx.lineWidth = 2.5;
+    // ② 暗色发丝外轮廓（把白边从浅色扇区里衬出来）
+    path();
+    ctx.strokeStyle = 'rgba(60, 10, 20, 0.30)';
+    ctx.lineWidth = 5;
     ctx.lineJoin = 'round';
     ctx.stroke();
 
-    // 顶部白点点缀
+    // ③ 白描边
+    path();
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // ④ 渐变本体
+    path();
+    const g = ctx.createLinearGradient(0, 3, 0, 44);
+    g.addColorStop(0, '#FF7A45');
+    g.addColorStop(1, '#E01F3D');
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // ⑤ 顶部高光点
     ctx.beginPath();
-    ctx.arc(cx, 13, 3.6, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.arc(cx, 13.5, 3.8, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.fill();
 
     ctx.restore();
@@ -717,13 +739,13 @@ function setupDeliveryActions(food) {
     }
 
     if (!food.isNearby) {
-        if (hint) hint.textContent = '🛵 去外卖平台点这道菜';
+        if (hint) hint.textContent = '去外卖平台点这道菜';
         if (assist) assist.style.display = 'none';
         if (couponGuide) couponGuide.style.display = 'none';
         return;
     }
 
-    if (hint) hint.textContent = `🛵 优先搜【${shortKeyword(primary)}】；搜不到就换词或看美团附近`;
+    if (hint) hint.textContent = `优先搜【${shortKeyword(primary)}】；搜不到就换词或看美团附近`;
     if (assist) assist.style.display = 'flex';
     if (couponGuide) couponGuide.style.display = 'block';
     if (mtCouponBtn) mtCouponBtn.onclick = () => openCouponPage('meituan', primary);
@@ -1258,7 +1280,7 @@ function initHistoryPage() {
         let topName = '', topCount = 0;
         Object.keys(counts).forEach(n => { if (counts[n] > topCount) { topCount = counts[n]; topName = n; } });
         statsEl.style.display = 'block';
-        statsEl.innerHTML = `📊 共抽取 <b>${state.history.length}</b> 次 · 最常抽到 <b>${topName}</b>（${topCount} 次）`;
+        statsEl.innerHTML = `共抽取 <b>${state.history.length}</b> 次 · 最常抽到 <b>${topName}</b>（${topCount} 次）`;
     }
 
     historyList.innerHTML = state.history.map((item, i) => `
@@ -1578,7 +1600,7 @@ function renderNearby(cityText) {
     const goBtn = document.getElementById('nearby-meituan-btn');
     const locateBtn = document.getElementById('locate-btn');
     if (statusEl) statusEl.textContent = cityText ? `已定位：${cityText}` : '已定位，点「发现附近」加载店铺';
-    if (goBtn) { goBtn.style.display = 'inline-flex'; goBtn.textContent = '🍽 发现附近'; }
+    if (goBtn) { goBtn.style.display = 'inline-flex'; goBtn.textContent = '发现附近'; }
     if (locateBtn) locateBtn.textContent = '重新定位';
     const levelWrap = document.getElementById('nearby-levels');
     if (levelWrap) levelWrap.style.display = 'flex';  // 定位后显示三档选择
@@ -1815,7 +1837,7 @@ function enterNearbyMode(places, auto = false) {
     const goBtn = document.getElementById('nearby-meituan-btn');
     if (statusEl) statusEl.textContent = `已加载附近 ${places.length} 家店，可抽取`;
     if (exitBtn) exitBtn.style.display = 'inline-flex';
-    if (goBtn) goBtn.textContent = '🔄 重新加载';
+    if (goBtn) goBtn.textContent = '重新加载';
 
     document.getElementById('nearby-card').classList.add('nearby-active');
     toggleCategoryUI(false);  // 附近模式隐藏内置分类筛选
@@ -1837,7 +1859,7 @@ function exitNearbyMode() {
     const exitBtn = document.getElementById('nearby-exit-btn');
     const goBtn = document.getElementById('nearby-meituan-btn');
     if (exitBtn) exitBtn.style.display = 'none';
-    if (goBtn) goBtn.textContent = '🍽 发现附近';
+    if (goBtn) goBtn.textContent = '发现附近';
     document.getElementById('nearby-card').classList.remove('nearby-active');
     renderNearby(state.location ? state.location.city : '');
     toggleCategoryUI(true);

@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#FF7A45">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%8D%9C%3C/text%3E%3C/svg%3E">
     <title>今天吃什么 - 美食转盘</title>
-    <link rel="stylesheet" href="styles.css?v=20">
+    <link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
     <div class="container">
@@ -20,16 +20,28 @@
                 <button class="icon-btn" id="sound-toggle" title="开关音效" aria-label="开关音效">🔊</button>
                 <button class="icon-btn" id="theme-toggle" title="切换深色模式" aria-label="切换深色模式">🌙</button>
             </div>
-            <h1>🍜 今天吃什么</h1>
+            <h1><svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M9.5 3.5c0 1.2-1.4 1.8 0 3.5M14.5 3.5c0 1.2-1.4 1.8 0 3.5"/></svg>今天吃什么</h1>
             <p class="subtitle">让转盘帮你决定！</p>
         </header>
 
         <!-- 导航标签 -->
         <nav class="nav-tabs">
-            <button class="tab-btn active" data-tab="wheel">🎰 转盘</button>
-            <button class="tab-btn" data-tab="list">📋 列表</button>
-            <button class="tab-btn" data-tab="favorites">⭐ 收藏<span class="tab-badge" id="fav-badge"></span></button>
-            <button class="tab-btn" data-tab="history">📜 历史</button>
+            <button class="tab-btn active" data-tab="wheel">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.4 4.2M12 12l-7.4 4.2"/></svg>
+                <span>转盘</span>
+            </button>
+            <button class="tab-btn" data-tab="list">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h15M4.5 12h15M4.5 17.5h9"/></svg>
+                <span>列表</span>
+            </button>
+            <button class="tab-btn" data-tab="favorites">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8l2.5 5.1 5.6.8-4 4 .9 5.6-5-2.7-5 2.7.9-5.6-4-4 5.6-.8z"/></svg>
+                <span>收藏</span><span class="tab-badge" id="fav-badge"></span>
+            </button>
+            <button class="tab-btn" data-tab="history">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2"/></svg>
+                <span>历史</span>
+            </button>
         </nav>
 
         <!-- 转盘页面 -->
@@ -37,7 +49,7 @@
             <!-- 今日推荐 -->
             <div class="today-pick" id="today-pick">
                 <div class="today-pick-info">
-                    <span class="today-pick-label">🍀 今日推荐</span>
+                    <span class="today-pick-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8z"/><path d="M18.5 15l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z"/></svg>今日推荐</span>
                     <span class="today-pick-name" id="today-pick-name"></span>
                 </div>
                 <button class="today-pick-btn" id="today-pick-btn">就吃这个</button>
@@ -46,13 +58,13 @@
             <!-- 附近美食（定位 + 美团外卖） -->
             <div class="nearby-card" id="nearby-card">
                 <div class="nearby-info">
-                    <span class="nearby-label">📍 附近美食</span>
+                    <span class="nearby-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.2-6.5-9.8a6.5 6.5 0 0 1 13 0C18.5 15.8 12 21 12 21z"/><circle cx="12" cy="11" r="2.4"/></svg>附近美食</span>
                     <span class="nearby-status" id="nearby-status">点击定位，发现你身边的外卖</span>
                 </div>
                 <div class="nearby-actions">
                     <button class="nearby-btn" id="locate-btn">定位</button>
-                    <button class="nearby-btn nearby-go" id="nearby-meituan-btn" style="display: none;">🍽 发现附近</button>
-                    <button class="nearby-btn nearby-exit" id="nearby-exit-btn" style="display: none;">↩ 回菜单</button>
+                    <button class="nearby-btn nearby-go" id="nearby-meituan-btn" style="display: none;">发现附近</button>
+                    <button class="nearby-btn nearby-exit" id="nearby-exit-btn" style="display: none;">回菜单</button>
                 </div>
                 <div class="nearby-levels" id="nearby-levels">
                     <span class="nearby-levels-hint">抽取范围</span>
@@ -98,7 +110,7 @@
                     <button class="action-btn" id="share-btn">📋 分享</button>
                 </div>
                 <div class="delivery-links">
-                    <span class="delivery-hint">🛵 去外卖平台点这道菜</span>
+                    <span class="delivery-hint">去外卖平台点这道菜</span>
                     <div class="coupon-guide" id="coupon-guide" style="display: none;">
                         <div class="coupon-guide-title">先领券再下单</div>
                         <ol class="coupon-steps">
@@ -136,7 +148,7 @@
         <div class="tab-content" id="favorites-tab">
             <div class="favorites-controls" id="favorites-controls">
                 <span class="fav-count-label" id="fav-count-label"></span>
-                <button class="random-fav-btn" id="random-fav-btn">🎲 帮我从收藏里挑</button>
+                <button class="random-fav-btn" id="random-fav-btn">帮我从收藏里挑</button>
             </div>
             <div class="empty-state" id="empty-favorites">
                 <p>😋 还没有收藏的美食</p>
@@ -162,7 +174,7 @@
     <!-- Toast 提示 -->
     <div class="toast" id="toast"></div>
 
-    <script src="data.js?v=20"></script>
-    <script src="app.js?v=20"></script>
+    <script src="data.js?v=21"></script>
+    <script src="app.js?v=21"></script>
 </body>
 </html>

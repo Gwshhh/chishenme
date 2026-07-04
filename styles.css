@@ -212,11 +212,27 @@ input[type="checkbox"] {
 
 .header h1 {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     font-size: 30px;
     margin-bottom: 8px;
     font-weight: 800;
     letter-spacing: 1px;
     text-shadow: 0 2px 12px rgba(120, 20, 40, 0.25);
+}
+
+/* 定制 Logo（线性图标风，与整套图标同语言） */
+.header .logo {
+    width: 30px;
+    height: 30px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 6px rgba(120, 20, 40, 0.25));
 }
 
 .subtitle {
@@ -240,19 +256,42 @@ input[type="checkbox"] {
 
 .tab-btn {
     flex: 1;
-    padding: 15px 6px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 11px 6px 12px;
     border: none;
     background: transparent;
-    font-size: 14px;
+    font-size: 12px;
     cursor: pointer;
     transition: color 0.25s;
     color: var(--t2);
     position: relative;
 }
 
+/* 线性图标：随文字色联动，激活时描边加粗并淡淡填充 */
+.tab-btn svg {
+    width: 21px;
+    height: 21px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.25s;
+}
+
 .tab-btn.active {
     color: var(--brand-text);
     font-weight: 700;
+}
+
+.tab-btn.active svg {
+    stroke-width: 2;
+    fill: currentColor;
+    fill-opacity: 0.14;
+    transform: translateY(-1px);
 }
 
 /* 居中小胶囊指示条 */
@@ -272,22 +311,23 @@ input[type="checkbox"] {
     background: var(--brand-soft);
 }
 
-/* 收藏数角标 */
+/* 收藏数角标（挂在图标右上角） */
 .tab-badge {
     display: none;
     align-items: center;
     justify-content: center;
-    min-width: 18px;
-    height: 18px;
+    position: absolute;
+    top: 5px;
+    left: calc(50% + 7px);
+    min-width: 17px;
+    height: 17px;
     padding: 0 5px;
-    margin-left: 4px;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 700;
     line-height: 1;
     color: white;
     background: var(--brand-grad);
     border-radius: 9px;
-    vertical-align: middle;
     box-shadow: 0 2px 6px rgba(240, 67, 90, 0.35);
 }
 
@@ -430,6 +470,7 @@ input[type="checkbox"] {
     color: white;
     border: none;
     padding: 16px 52px;
+    min-width: 232px;
     font-size: 17px;
     font-weight: 700;
     letter-spacing: 4px;
@@ -1156,10 +1197,25 @@ body.dark-mode .favorite-icon {
 }
 
 .today-pick-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-size: 12px;
     color: #C07C13;
     font-weight: 700;
     letter-spacing: 0.5px;
+}
+
+.today-pick-label svg,
+.nearby-label svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
 }
 
 body.dark-mode .today-pick-label {
@@ -1221,6 +1277,9 @@ body.dark-mode .today-pick-label {
 }
 
 .nearby-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-size: 12px;
     color: #2E90E5;
     font-weight: 700;
@@ -1354,9 +1413,18 @@ body.dark-mode .today-pick-label {
         font-size: 25px;
     }
 
+    .header .logo {
+        width: 26px;
+        height: 26px;
+    }
+
     .tab-btn {
-        font-size: 13px;
-        padding: 13px 4px 12px;
+        padding: 10px 4px 11px;
+    }
+
+    .tab-btn svg {
+        width: 20px;
+        height: 20px;
     }
 
     .tab-content {
