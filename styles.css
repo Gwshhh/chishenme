@@ -1636,8 +1636,26 @@ body.dark-mode .today-pick-label {
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 480px) {
+    /* 手机端：右上三颗按钮缩小并独占顶条，标题从按钮下方开始，绝不重叠 */
     .header {
-        padding: 28px 20px 24px;
+        padding: 56px 20px 22px;
+    }
+
+    .header-actions {
+        top: 12px;
+        right: 12px;
+        gap: 6px;
+    }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 17px;
+    }
+
+    .icon-btn svg {
+        width: 17px;
+        height: 17px;
     }
 
     .header h1 {
@@ -1743,14 +1761,18 @@ body.dark-mode .today-pick-label {
     padding-top: calc(34px + env(safe-area-inset-top, 0px));
 }
 
-@media (max-width: 480px) {
-    .header {
-        padding-top: calc(28px + env(safe-area-inset-top, 0px));
-    }
-}
-
 .header-actions {
     top: calc(14px + env(safe-area-inset-top, 0px));
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding-top: calc(56px + env(safe-area-inset-top, 0px));
+    }
+
+    .header-actions {
+        top: calc(12px + env(safe-area-inset-top, 0px));
+    }
 }
 
 .tab-content {

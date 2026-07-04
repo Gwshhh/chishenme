@@ -4,7 +4,7 @@
 const AMAP_KEY = 'a6efe2e85bc9027cf51d72e3a20ff9da';
 
 // 应用版本（随每次发布更新，页面底部角标展示，用于确认缓存是否已更新）
-const APP_VERSION = 'v25';
+const APP_VERSION = 'v26';
 
 // 安全读取 localStorage（数据损坏时不会导致应用崩溃白屏）
 function loadStored(key) {
