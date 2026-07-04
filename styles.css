@@ -541,11 +541,11 @@ input[type="checkbox"] {
 
 .result-image-wrapper {
     position: relative;
-    width: 100%;
-    height: 210px;
-    border-radius: var(--r-m);
+    height: 230px;
+    /* 通栏大图：抵消卡片内边距，顶满卡片边缘，更有杂志感 */
+    margin: -18px -18px 4px;
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
     overflow: hidden;
-    margin-bottom: 4px;
     background: var(--surface-2);
 }
 
@@ -1412,7 +1412,7 @@ body.dark-mode .today-pick-label {
     }
 
     .result-image-wrapper {
-        height: 180px;
+        height: 195px;
     }
 }
 
@@ -1443,4 +1443,27 @@ body.dark-mode .today-pick-label {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+/* ---------- 刘海屏/全面屏安全区 ---------- */
+.header {
+    padding-top: calc(34px + env(safe-area-inset-top, 0px));
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding-top: calc(28px + env(safe-area-inset-top, 0px));
+    }
+}
+
+.header-actions {
+    top: calc(14px + env(safe-area-inset-top, 0px));
+}
+
+.tab-content {
+    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+}
+
+.toast {
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
