@@ -3,6 +3,9 @@
 // 此类 Web 服务 key 本就写在前端、属公开可见，非敏感密钥。
 const AMAP_KEY = 'a6efe2e85bc9027cf51d72e3a20ff9da';
 
+// 应用版本（随每次发布更新，页面底部角标展示，用于确认缓存是否已更新）
+const APP_VERSION = 'v25';
+
 // 安全读取 localStorage（数据损坏时不会导致应用崩溃白屏）
 function loadStored(key) {
     try {
@@ -27,6 +30,7 @@ const state = {
     mealFilter: 'all',  // 时段筛选：早/午/晚/夜/all，进入页面时按当前时间自动定
     lastResultName: null,
     soundOn: localStorage.getItem('soundOn') !== '0',  // 默认开
+    colorTheme: localStorage.getItem('colorTheme') || 'sunset',  // 可选配色主题
     weather: null,  // 天气 {tempC, kind: 'rain'|'hot'|'cold'|'mild', text}，定位后拉取
     location: null,  // 用户位置 {latitude, longitude, city}，由"附近美食"定位后填充
     nearbyPlaces: [],  // 定位后从地图拉取的真实附近餐饮店（整合进转盘/列表）
@@ -36,6 +40,11 @@ const state = {
 
 // DOM 元素
 let canvas, ctx, spinBtn, resultCard;
+
+// 尽早应用已保存的配色主题，避免首屏闪回默认色（脚本在 body 末尾，此时 body 已存在）
+if (state.colorTheme && state.colorTheme !== 'sunset') {
+    document.body.dataset.theme = state.colorTheme;
+}
 
 // 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
@@ -49,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFavoritesPage();
     initHistoryPage();
     initThemeToggle();
+    initThemePicker();
     initSoundToggle();
     initAudioUnlock();
     initTodayPick();
@@ -451,9 +461,10 @@ function drawWheelHub(dpr) {
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
 
+    const brand = themeBrand();
     const g = ctx.createLinearGradient(cx - 26, cy - 26, cx + 26, cy + 26);
-    g.addColorStop(0, '#FF8A4C');
-    g.addColorStop(1, '#D92667');
+    g.addColorStop(0, brand[0]);
+    g.addColorStop(1, brand[2]);
     ctx.beginPath();
     ctx.arc(cx, cy, 26, 0, 2 * Math.PI);
     ctx.fillStyle = g;
@@ -495,11 +506,12 @@ function drawWheelPointer(dpr, rotation) {
     };
 
     // ① 投影
+    const brand = themeBrand();
     path();
     ctx.shadowColor = 'rgba(60, 10, 20, 0.35)';
     ctx.shadowBlur = 7;
     ctx.shadowOffsetY = 3;
-    ctx.fillStyle = '#E42A47';
+    ctx.fillStyle = brand[1];
     ctx.fill();
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
@@ -522,8 +534,8 @@ function drawWheelPointer(dpr, rotation) {
     // ④ 渐变本体
     path();
     const g = ctx.createLinearGradient(0, 3, 0, 44);
-    g.addColorStop(0, '#FF7A45');
-    g.addColorStop(1, '#E01F3D');
+    g.addColorStop(0, brand[0]);
+    g.addColorStop(1, brand[2]);
     ctx.fillStyle = g;
     ctx.fill();
 
@@ -821,7 +833,8 @@ function celebrate() {
         }
     }
 
-    const colors = ['#FF8A4C', '#F0435A', '#FFD584', '#12A5A5', '#3E7CB1', '#D9538C', '#47A25A', '#FFFFFF'];
+    const brand = themeBrand();
+    const colors = [brand[0], brand[1], brand[2], '#FFD584', '#FFFFFF', brand[0], brand[1], brand[2]];
     const parts = [];
     for (let i = 0; i < 80; i++) {
         const ang = Math.random() * 2 * Math.PI;
@@ -1375,9 +1388,23 @@ function initSponsor() {
 
 // ============ PWA：注册 Service Worker（可安装、可离线） ============
 function registerServiceWorker() {
+    const verEl = document.getElementById('app-version');
+    if (verEl) verEl.textContent = APP_VERSION;
+
     if (!('serviceWorker' in navigator)) return;
     if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
-    navigator.serviceWorker.register('sw.js').catch(() => { /* 注册失败不影响正常使用 */ });
+    navigator.serviceWorker.register('sw.js').then(reg => {
+        // 新版本 SW 接管时给个提示，用户就知道刷新拿到的是最新版
+        reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', () => {
+                if (nw.state === 'activated' && navigator.serviceWorker.controller) {
+                    showToast('已更新到最新版本 ✓');
+                }
+            });
+        });
+    }).catch(() => { /* 注册失败不影响正常使用 */ });
 }
 
 // 跳转外卖平台下单。核心目标：在手机上把抽中的店/菜带进美团（或饿了么）App。
@@ -2119,10 +2146,71 @@ function initThemeToggle() {
     });
 }
 
-// 手机浏览器地址栏/状态栏颜色跟随主题
+// 手机浏览器地址栏/状态栏颜色跟随主题与配色
 function syncThemeColor() {
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = document.body.classList.contains('dark-mode') ? '#1B1713' : '#FF7A45';
+    if (!meta) return;
+    meta.content = document.body.classList.contains('dark-mode')
+        ? '#1B1713'
+        : themeBrand()[1];
+}
+
+// ============ 可选配色主题 ============
+// 每套主题只重定义 CSS 设计令牌（styles.css 的 body[data-theme] 块），
+// 组件样式一份通用；转盘中心/指针/彩带的 Canvas 颜色从这里同步。
+const COLOR_THEMES = [
+    { key: 'sunset',  name: '落日珊瑚', g: ['#FF8A4C', '#F0435A', '#D92667'] },
+    { key: 'celadon', name: '青瓷',     g: ['#3EC1A8', '#16897D', '#0F6B66'] },
+    { key: 'indigo',  name: '靛蓝',     g: ['#6C8CFF', '#4A5FE8', '#3543C4'] },
+    { key: 'violet',  name: '紫棠',     g: ['#B06AF5', '#8B31E8', '#6C1FC0'] },
+    { key: 'amber',   name: '琥珀',     g: ['#F7B733', '#E8960C', '#C27200'] },
+    { key: 'rouge',   name: '胭脂',     g: ['#FF5E7E', '#E03A5E', '#B22347'] }
+];
+
+// 当前主题的三个渐变色 [亮, 中, 深]
+function themeBrand() {
+    const t = COLOR_THEMES.find(x => x.key === state.colorTheme);
+    return (t || COLOR_THEMES[0]).g;
+}
+
+function applyColorTheme(key, silent) {
+    const theme = COLOR_THEMES.find(t => t.key === key) || COLOR_THEMES[0];
+    state.colorTheme = theme.key;
+    localStorage.setItem('colorTheme', theme.key);
+    if (theme.key === 'sunset') {
+        delete document.body.dataset.theme;   // 默认主题走 :root 令牌
+    } else {
+        document.body.dataset.theme = theme.key;
+    }
+    syncThemeColor();
+    drawWheel();   // 转盘中心与指针立即换色
+    if (!silent) showToast(`已换上「${theme.name}」主题`);
+}
+
+function initThemePicker() {
+    applyColorTheme(state.colorTheme, true);   // 恢复上次选择
+    const btn = document.getElementById('theme-picker-btn');
+    if (btn) btn.addEventListener('click', openThemePicker);
+}
+
+function openThemePicker() {
+    const items = COLOR_THEMES.map(t => `
+        <button type="button" class="theme-swatch ${t.key === state.colorTheme ? 'active' : ''}"
+            onclick="pickTheme('${t.key}')">
+            <span class="swatch-ball" style="background:linear-gradient(135deg, ${t.g[0]} 0%, ${t.g[1]} 58%, ${t.g[2]} 100%)"></span>
+            <span>${t.name}</span>
+        </button>`).join('');
+    openModal(`
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h3 class="modal-title">选择主题</h3>
+        <div class="theme-grid">${items}</div>
+        <p class="mgr-tip">主题与深色模式可自由组合——右上角月亮按钮切换明暗，两两搭配共 12 种外观。</p>
+    `);
+}
+
+function pickTheme(key) {
+    applyColorTheme(key);
+    openThemePicker();   // 重开以刷新选中态
 }
 
 // ============ 音效（Web Audio，无需音频文件）============

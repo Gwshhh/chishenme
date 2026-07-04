@@ -12,13 +12,14 @@
     <link rel="apple-touch-icon" href="icon.svg">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%8D%9C%3C/text%3E%3C/svg%3E">
     <title>今天吃什么 - 美食转盘</title>
-    <link rel="stylesheet" href="styles.css?v=24">
+    <link rel="stylesheet" href="styles.css?v=25">
 </head>
 <body>
     <div class="container">
         <!-- 头部 -->
         <header class="header">
             <div class="header-actions">
+                <button class="icon-btn" id="theme-picker-btn" title="选择主题" aria-label="选择主题"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.2 0 2-.9 2-2 0-.55-.2-1-.58-1.4-.38-.4-.62-.85-.62-1.35a2 2 0 0 1 2-2h2.3a3.4 3.4 0 0 0 3.4-3.4C20.5 6.7 16.7 3.5 12 3.5z"/><circle cx="7.6" cy="10.6" r="1.15"/><circle cx="11.2" cy="7.4" r="1.15"/><circle cx="15.8" cy="9.4" r="1.15"/></svg></button>
                 <button class="icon-btn" id="sound-toggle" title="开关音效" aria-label="开关音效">🔊</button>
                 <button class="icon-btn" id="theme-toggle" title="切换深色模式" aria-label="切换深色模式">🌙</button>
             </div>
@@ -186,10 +187,13 @@
         </div>
     </div>
 
+    <!-- 版本角标：一眼确认当前加载的是哪个版本 -->
+    <footer class="app-foot">今天吃什么 · <span id="app-version"></span></footer>
+
     <!-- Toast 提示 -->
     <div class="toast" id="toast"></div>
 
-    <script src="data.js?v=24"></script>
-    <script src="app.js?v=24"></script>
+    <script src="data.js?v=25"></script>
+    <script src="app.js?v=25"></script>
 </body>
 </html>

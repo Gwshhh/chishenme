@@ -13,6 +13,7 @@
     --brand-grad: linear-gradient(135deg, #FF8A4C 0%, #F0435A 58%, #D92667 100%);
     --brand-text: #E23B4E;              /* 品牌色文字（浅底上用） */
     --brand-soft: rgba(240, 67, 90, 0.09);
+    --brand-rgb: 240, 67, 90;           /* 品牌阴影用的 RGB 三元组 */
     --ring: rgba(240, 67, 90, 0.18);    /* 聚焦光环 */
 
     /* 页面 / 表面 */
@@ -68,6 +69,140 @@ body.dark-mode {
     --shadow-s: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.28);
     --shadow-m: 0 2px 6px rgba(0, 0, 0, 0.40), 0 12px 28px rgba(0, 0, 0, 0.36);
     --shadow-l: 0 10px 24px rgba(0, 0, 0, 0.46), 0 28px 56px rgba(0, 0, 0, 0.42);
+}
+
+/* ---------- 可选主题（与深色模式自由组合） ----------
+   结构：body[data-theme] 定义明暗通用的品牌色；
+        :not(.dark-mode) 定义浅色专属；body.dark-mode[data-theme] 定义深色专属 */
+
+/* 青瓷 —— 温润的釉青，宋瓷气质 */
+body[data-theme="celadon"] {
+    --brand-1: #3EC1A8;
+    --brand-2: #16897D;
+    --brand-3: #0F6B66;
+    --brand-grad: linear-gradient(135deg, #3EC1A8 0%, #16897D 58%, #0F6B66 100%);
+    --brand-rgb: 22, 137, 125;
+}
+
+body[data-theme="celadon"]:not(.dark-mode) {
+    --brand-text: #0E7E71;
+    --brand-soft: rgba(22, 137, 125, 0.10);
+    --ring: rgba(22, 137, 125, 0.20);
+    --bg-body: linear-gradient(168deg, #F0F5F1 0%, #E2ECE5 100%);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(120, 205, 178, 0.50) 0%, rgba(120, 205, 178, 0) 62%);
+    --bg-app: #F9FCFA;
+    --surface-2: #EDF4EF;
+}
+
+body.dark-mode[data-theme="celadon"] {
+    --brand-text: #5FD6C2;
+    --brand-soft: rgba(95, 214, 194, 0.12);
+    --ring: rgba(95, 214, 194, 0.22);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(62, 193, 168, 0.10) 0%, rgba(62, 193, 168, 0) 62%);
+}
+
+/* 靛蓝 —— 沉稳的群青，商务质感 */
+body[data-theme="indigo"] {
+    --brand-1: #6C8CFF;
+    --brand-2: #4A5FE8;
+    --brand-3: #3543C4;
+    --brand-grad: linear-gradient(135deg, #6C8CFF 0%, #4A5FE8 58%, #3543C4 100%);
+    --brand-rgb: 74, 95, 232;
+}
+
+body[data-theme="indigo"]:not(.dark-mode) {
+    --brand-text: #4353D9;
+    --brand-soft: rgba(74, 95, 232, 0.10);
+    --ring: rgba(74, 95, 232, 0.18);
+    --bg-body: linear-gradient(168deg, #F1F3FA 0%, #E4E8F5 100%);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(148, 170, 255, 0.50) 0%, rgba(148, 170, 255, 0) 62%);
+    --bg-app: #FAFBFE;
+    --surface-2: #EEF1F8;
+}
+
+body.dark-mode[data-theme="indigo"] {
+    --brand-text: #96A7FF;
+    --brand-soft: rgba(150, 167, 255, 0.13);
+    --ring: rgba(150, 167, 255, 0.24);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(108, 140, 255, 0.10) 0%, rgba(108, 140, 255, 0) 62%);
+}
+
+/* 紫棠 —— 华贵的葡萄紫，夜宴气息 */
+body[data-theme="violet"] {
+    --brand-1: #B06AF5;
+    --brand-2: #8B31E8;
+    --brand-3: #6C1FC0;
+    --brand-grad: linear-gradient(135deg, #B06AF5 0%, #8B31E8 58%, #6C1FC0 100%);
+    --brand-rgb: 139, 49, 232;
+}
+
+body[data-theme="violet"]:not(.dark-mode) {
+    --brand-text: #8A2ED9;
+    --brand-soft: rgba(139, 49, 232, 0.10);
+    --ring: rgba(139, 49, 232, 0.18);
+    --bg-body: linear-gradient(168deg, #F5F1FA 0%, #EBE2F6 100%);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(190, 150, 245, 0.45) 0%, rgba(190, 150, 245, 0) 62%);
+    --bg-app: #FCFAFE;
+    --surface-2: #F3EEF9;
+}
+
+body.dark-mode[data-theme="violet"] {
+    --brand-text: #C9A2FF;
+    --brand-soft: rgba(201, 162, 255, 0.13);
+    --ring: rgba(201, 162, 255, 0.24);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(176, 106, 245, 0.10) 0%, rgba(176, 106, 245, 0) 62%);
+}
+
+/* 琥珀 —— 蜜蜡与晨光，温暖贵气 */
+body[data-theme="amber"] {
+    --brand-1: #F7B733;
+    --brand-2: #E8960C;
+    --brand-3: #C27200;
+    --brand-grad: linear-gradient(135deg, #F7B733 0%, #E8960C 58%, #C27200 100%);
+    --brand-rgb: 232, 150, 12;
+}
+
+body[data-theme="amber"]:not(.dark-mode) {
+    --brand-text: #B0700A;
+    --brand-soft: rgba(232, 150, 12, 0.12);
+    --ring: rgba(232, 150, 12, 0.22);
+    --bg-body: linear-gradient(168deg, #F8F3E7 0%, #F0E6D0 100%);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(247, 196, 96, 0.55) 0%, rgba(247, 196, 96, 0) 62%);
+    --bg-app: #FEFCF6;
+    --surface-2: #F6F0E2;
+}
+
+body.dark-mode[data-theme="amber"] {
+    --brand-text: #F5C453;
+    --brand-soft: rgba(245, 196, 83, 0.13);
+    --ring: rgba(245, 196, 83, 0.24);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(232, 150, 12, 0.10) 0%, rgba(232, 150, 12, 0) 62%);
+}
+
+/* 胭脂 —— 古典中国红调的玫红，浓而不艳 */
+body[data-theme="rouge"] {
+    --brand-1: #FF5E7E;
+    --brand-2: #E03A5E;
+    --brand-3: #B22347;
+    --brand-grad: linear-gradient(135deg, #FF5E7E 0%, #E03A5E 58%, #B22347 100%);
+    --brand-rgb: 224, 58, 94;
+}
+
+body[data-theme="rouge"]:not(.dark-mode) {
+    --brand-text: #D42F55;
+    --brand-soft: rgba(224, 58, 94, 0.10);
+    --ring: rgba(224, 58, 94, 0.18);
+    --bg-body: linear-gradient(168deg, #FAF0F2 0%, #F4E0E5 100%);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(255, 150, 170, 0.50) 0%, rgba(255, 150, 170, 0) 62%);
+    --bg-app: #FEFAFB;
+    --surface-2: #F7EEF0;
+}
+
+body.dark-mode[data-theme="rouge"] {
+    --brand-text: #FF8FA6;
+    --brand-soft: rgba(255, 143, 166, 0.13);
+    --ring: rgba(255, 143, 166, 0.24);
+    --bg-glow: radial-gradient(1100px 520px at 18% -8%, rgba(255, 94, 126, 0.10) 0%, rgba(255, 94, 126, 0) 62%);
 }
 
 /* ---------- 基础 ---------- */
@@ -328,7 +463,7 @@ input[type="checkbox"] {
     color: white;
     background: var(--brand-grad);
     border-radius: 9px;
-    box-shadow: 0 2px 6px rgba(240, 67, 90, 0.35);
+    box-shadow: 0 2px 6px rgba(var(--brand-rgb), 0.35);
 }
 
 /* ---------- 标签内容 ---------- */
@@ -395,7 +530,7 @@ input[type="checkbox"] {
     color: white;
     border-color: transparent;
     font-weight: 600;
-    box-shadow: 0 3px 10px rgba(240, 67, 90, 0.30);
+    box-shadow: 0 3px 10px rgba(var(--brand-rgb), 0.30);
 }
 
 @media (hover: hover) {
@@ -506,7 +641,7 @@ input[type="checkbox"] {
     text-indent: 4px; /* 平衡 letter-spacing 造成的视觉偏移 */
     border-radius: 99px;
     cursor: pointer;
-    box-shadow: 0 10px 24px rgba(233, 64, 88, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 0 10px 24px rgba(var(--brand-rgb), 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
     transition: transform 0.25s, box-shadow 0.25s;
     position: relative;
     overflow: hidden;
@@ -532,7 +667,7 @@ input[type="checkbox"] {
 
 .spin-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(233, 64, 88, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 0 14px 30px rgba(var(--brand-rgb), 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .spin-btn:active {
@@ -664,7 +799,7 @@ input[type="checkbox"] {
     background: var(--brand-grad);
     color: white;
     border-color: transparent;
-    box-shadow: 0 4px 14px rgba(240, 67, 90, 0.30);
+    box-shadow: 0 4px 14px rgba(var(--brand-rgb), 0.30);
 }
 
 .action-btn:active {
@@ -679,7 +814,7 @@ input[type="checkbox"] {
     }
     .action-btn:first-child:hover {
         color: white;
-        box-shadow: 0 6px 18px rgba(240, 67, 90, 0.40);
+        box-shadow: 0 6px 18px rgba(var(--brand-rgb), 0.40);
     }
 }
 
@@ -895,7 +1030,7 @@ body.dark-mode .coupon-guide-title {
     color: white;
     border-color: transparent;
     font-weight: 600;
-    box-shadow: 0 3px 10px rgba(240, 67, 90, 0.30);
+    box-shadow: 0 3px 10px rgba(var(--brand-rgb), 0.30);
 }
 
 @media (hover: hover) {
@@ -1046,13 +1181,13 @@ body.dark-mode .favorite-icon {
     font-weight: 600;
     border-radius: 99px;
     cursor: pointer;
-    box-shadow: 0 5px 14px rgba(240, 67, 90, 0.32);
+    box-shadow: 0 5px 14px rgba(var(--brand-rgb), 0.32);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .random-fav-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 18px rgba(240, 67, 90, 0.40);
+    box-shadow: 0 8px 18px rgba(var(--brand-rgb), 0.40);
 }
 
 .random-fav-btn:active {
@@ -1798,7 +1933,7 @@ body.dark-mode .today-pick-label {
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 6px 16px rgba(240, 67, 90, 0.30);
+    box-shadow: 0 6px 16px rgba(var(--brand-rgb), 0.30);
     transition: transform 0.2s;
 }
 
@@ -2044,4 +2179,75 @@ body.dark-mode .today-pick-label {
 .sponsor-desc {
     font-size: 12px;
     color: var(--t3);
+}
+
+/* ---------- 主题选择器 ---------- */
+.icon-btn svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.theme-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 6px 12px;
+    background: var(--surface-2);
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--r-m);
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--t2);
+    transition: all 0.2s;
+}
+
+.theme-swatch:active {
+    transform: scale(0.95);
+}
+
+.theme-swatch.active {
+    border-color: var(--brand-2);
+    color: var(--brand-text);
+    box-shadow: 0 0 0 3px var(--ring);
+    background: var(--surface);
+}
+
+@media (hover: hover) {
+    .theme-swatch:hover {
+        border-color: var(--brand-2);
+        transform: translateY(-2px);
+    }
+}
+
+.swatch-ball {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.35), 0 3px 8px rgba(0, 0, 0, 0.20);
+}
+
+/* 版本角标 */
+.app-foot {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 14px 0 calc(18px + env(safe-area-inset-bottom, 0px));
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--t3);
+    opacity: 0.85;
 }
