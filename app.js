@@ -589,9 +589,40 @@ function weatherBoost(food) {
     return rule.re.test(text) ? 1.6 : 1;
 }
 
+// WMO 天气码 → 中文描述 + 图标键
+function weatherCodeInfo(code) {
+    if (code === 0) return { desc: '晴', icon: 'sun' };
+    if (code === 1) return { desc: '基本晴', icon: 'sun' };
+    if (code === 2) return { desc: '多云', icon: 'suncloud' };
+    if (code === 3) return { desc: '阴', icon: 'cloud' };
+    if (code === 45 || code === 48) return { desc: '雾', icon: 'fog' };
+    if (code >= 51 && code <= 57) return { desc: '毛毛雨', icon: 'drizzle' };
+    if (code >= 61 && code <= 65) return { desc: '雨', icon: 'rain' };
+    if (code === 66 || code === 67) return { desc: '冻雨', icon: 'rain' };
+    if (code >= 71 && code <= 77) return { desc: '雪', icon: 'snow' };
+    if (code >= 80 && code <= 82) return { desc: '阵雨', icon: 'rain' };
+    if (code === 85 || code === 86) return { desc: '阵雪', icon: 'snow' };
+    if (code >= 95) return { desc: '雷阵雨', icon: 'thunder' };
+    return { desc: '多云', icon: 'cloud' };
+}
+
+// 与整站同语言的线性天气图标（stroke 跟随文字色）
+const WEATHER_ICONS = {
+    sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg>',
+    suncloud: '<svg viewBox="0 0 24 24"><path d="M5.3 9.8a4 4 0 1 1 7-3.2M2.9 6.4l1.5.6M9.2 1.9l-.6 1.5"/><path d="M8 20h8.6a3.4 3.4 0 0 0 .5-6.8A5 5 0 0 0 7.5 14 3 3 0 0 0 8 20z"/></svg>',
+    cloud: '<svg viewBox="0 0 24 24"><path d="M6.5 19h10.1a3.9 3.9 0 0 0 .5-7.8A6 6 0 0 0 5.5 13 3 3 0 0 0 6.5 19z"/></svg>',
+    fog: '<svg viewBox="0 0 24 24"><path d="M6.5 12h10.1a3.9 3.9 0 0 0 .5-7.8A6 6 0 0 0 5.5 6"/><path d="M4 16h16M6 19.5h12"/></svg>',
+    drizzle: '<svg viewBox="0 0 24 24"><path d="M6.5 14h10.1a3.9 3.9 0 0 0 .5-7.8A6 6 0 0 0 5.5 8 3 3 0 0 0 6.5 14z"/><path d="M9 17.5v1.5M13 17.5v1.5M11 20.5V22"/></svg>',
+    rain: '<svg viewBox="0 0 24 24"><path d="M6.5 13h10.1a3.9 3.9 0 0 0 .5-7.8A6 6 0 0 0 5.5 7 3 3 0 0 0 6.5 13z"/><path d="M8.5 16l-1 4M12.5 16l-1 4M16.5 16l-1 4"/></svg>',
+    snow: '<svg viewBox="0 0 24 24"><path d="M6.5 13h10.1a3.9 3.9 0 0 0 .5-7.8A6 6 0 0 0 5.5 7 3 3 0 0 0 6.5 13z"/><path d="M8.5 17.2h.01M12 19.4h.01M15.5 17.2h.01M10 21.4h.01M14 21.4h.01"/></svg>',
+    thunder: '<svg viewBox="0 0 24 24"><path d="M6.5 13h10.1a3.9 3.9 0 0 0 .5-7.8A6 6 0 0 0 5.5 7 3 3 0 0 0 6.5 13z"/><path d="M12.5 14.5L10 18.5h3l-1.8 3.8"/></svg>'
+};
+
+const ICON_PIN_SMALL = '<svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.2-6.5-9.8a6.5 6.5 0 0 1 13 0C18.5 15.8 12 21 12 21z"/><circle cx="12" cy="11" r="2.4"/></svg>';
+
 function fetchWeather(lat, lon) {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
-        + `&current=temperature_2m,weather_code&timezone=auto`;
+        + `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto`;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 8000);
     fetch(url, { signal: ctrl.signal })
@@ -607,27 +638,42 @@ function fetchWeather(lat, lon) {
             if (raining) kind = 'rain';
             else if (t >= 30) kind = 'hot';
             else if (t <= 8) kind = 'cold';
-            const kindText = { rain: '雨雪', hot: '高温', cold: '低温', mild: '' }[kind];
+            const info = weatherCodeInfo(code);
             state.weather = {
                 tempC: Math.round(t),
+                feelsC: typeof cur.apparent_temperature === 'number' ? Math.round(cur.apparent_temperature) : null,
+                wind: typeof cur.wind_speed_10m === 'number' ? cur.wind_speed_10m : null,
                 kind,
-                text: kind === 'mild'
-                    ? `${Math.round(t)}℃`
-                    : `${Math.round(t)}℃ ${kindText} · ${WEATHER_RULES[kind].label}`
+                desc: info.desc,
+                icon: info.icon
             };
-            renderWeatherHint();
+            renderNearbyMeta();
         })
         .catch(() => { /* 天气拉取失败不影响主流程 */ })
         .finally(() => clearTimeout(timer));
 }
 
-// 把天气提示追加到"附近美食"卡的状态行
-function renderWeatherHint() {
-    if (!state.weather) return;
-    const statusEl = document.getElementById('nearby-status');
-    if (!statusEl) return;
-    const base = statusEl.textContent.replace(/\s*·\s*\d+-?\d*℃.*$/, '');
-    statusEl.textContent = `${base} · ${state.weather.text}`;
+// "附近美食"卡的信息行：定位（城市·区域）+ 天气（图标 描述 气温 体感 风）+ 推荐加成
+function renderNearbyMeta() {
+    const el = document.getElementById('nearby-meta');
+    if (!el) return;
+    const parts = [];
+    if (state.location && state.location.city) {
+        parts.push(`<span class="meta-item meta-loc">${ICON_PIN_SMALL}${escapeHtml(state.location.city)}</span>`);
+    }
+    const w = state.weather;
+    if (w) {
+        const feels = (typeof w.feelsC === 'number' && Math.abs(w.feelsC - w.tempC) >= 2)
+            ? `（体感 ${w.feelsC}℃）` : '';
+        const wind = (typeof w.wind === 'number' && w.wind >= 12)
+            ? ` · 风 ${Math.round(w.wind)}km/h` : '';
+        const boost = (w.kind !== 'mild' && WEATHER_RULES[w.kind])
+            ? `<span class="meta-boost">${WEATHER_RULES[w.kind].label}</span>` : '';
+        parts.push(`<span class="meta-item wx-${w.icon}">${WEATHER_ICONS[w.icon] || ''}`
+            + `${w.desc} ${w.tempC}℃${feels}${wind}</span>${boost}`);
+    }
+    el.innerHTML = parts.join('');
+    el.style.display = parts.length ? 'flex' : 'none';
 }
 
 // 转盘旋转动画
@@ -2222,6 +2268,7 @@ function initNearby() {
         if (saved && typeof saved.latitude === 'number') {
             state.location = saved;
             renderNearby(saved.city);
+            renderNearbyMeta();       // 缓存里的城市立即上屏，天气随后补充
             loadNearbyPlaces(true);   // 有缓存坐标，直接按当前档拉附近店铺（自动，不打断）
             fetchWeather(saved.latitude, saved.longitude);
             restored = true;
@@ -2328,6 +2375,7 @@ function reverseGeocode(lat, lon) {
                 persistLocation();
             }
             if (!state.useNearby) renderNearby(text);
+            renderNearbyMeta();
         })
         .catch(() => { /* 反查失败不影响主流程 */ })
         .finally(() => clearTimeout(timer));
@@ -2500,10 +2548,7 @@ function enterNearbyMode(places, auto = false) {
     const statusEl = document.getElementById('nearby-status');
     const exitBtn = document.getElementById('nearby-exit-btn');
     const goBtn = document.getElementById('nearby-meituan-btn');
-    if (statusEl) {
-        statusEl.textContent = `已加载附近 ${places.length} 家店，可抽取`
-            + (state.weather ? ` · ${state.weather.text}` : '');
-    }
+    if (statusEl) statusEl.textContent = `已加载附近 ${places.length} 家店，可抽取`;
     if (exitBtn) exitBtn.style.display = 'inline-flex';
     if (goBtn) goBtn.textContent = '重新加载';
 

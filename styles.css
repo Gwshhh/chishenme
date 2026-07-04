@@ -1324,6 +1324,73 @@ body.dark-mode .today-pick-label {
     text-overflow: ellipsis;
 }
 
+/* 定位 + 天气信息行 */
+.nearby-meta {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    margin-top: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--t2);
+}
+
+.nearby-meta .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.nearby-meta svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+.nearby-meta .meta-loc {
+    color: #2E90E5;
+}
+
+/* 各天气的专属色（图标与文字同色，深浅两主题都可读） */
+.nearby-meta .wx-sun,
+.nearby-meta .wx-suncloud,
+.nearby-meta .wx-thunder {
+    color: #E8930C;
+}
+
+.nearby-meta .wx-cloud,
+.nearby-meta .wx-fog {
+    color: var(--t2);
+}
+
+.nearby-meta .wx-rain,
+.nearby-meta .wx-drizzle {
+    color: #3E8DE8;
+}
+
+.nearby-meta .wx-snow {
+    color: #6FA8DC;
+}
+
+/* 天气触发的推荐加成标签 */
+.meta-boost {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 99px;
+    background: var(--brand-soft);
+    color: var(--brand-text);
+    font-size: 11px;
+    font-weight: 700;
+}
+
 .nearby-actions {
     display: flex;
     gap: 8px;
