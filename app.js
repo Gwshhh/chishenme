@@ -23,8 +23,11 @@ const state = {
     isSpinning: false,
     currentResult: null,
     avoidRepeat: localStorage.getItem('avoidRepeat') === '1',
+    fatigueDecay: localStorage.getItem('fatigueDecay') !== '0',  // 吃腻衰减，默认开
+    mealFilter: 'all',  // 时段筛选：早/午/晚/夜/all，进入页面时按当前时间自动定
     lastResultName: null,
     soundOn: localStorage.getItem('soundOn') !== '0',  // 默认开
+    weather: null,  // 天气 {tempC, kind: 'rain'|'hot'|'cold'|'mild', text}，定位后拉取
     location: null,  // 用户位置 {latitude, longitude, city}，由"附近美食"定位后填充
     nearbyPlaces: [],  // 定位后从地图拉取的真实附近餐饮店（整合进转盘/列表）
     useNearby: false,  // true=转盘/列表用"附近真实店铺"，false=用内置菜单
@@ -37,8 +40,10 @@ let canvas, ctx, spinBtn, resultCard;
 // 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     initElements();
+    mergeCustomFoods();   // 先合并自定义菜单，分类筛选才能包含自定义分类
     initTabs();
     initFilters();
+    initMealFilter();
     initWheel();
     initListPage();
     initFavoritesPage();
@@ -47,9 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initSoundToggle();
     initAudioUnlock();
     initTodayPick();
+    initSponsor();
     initAvoidRepeat();
+    initFatigueDecay();
+    initTournament();
+    initCustomMenu();
     initNearby();
     initShakeDetection();
+    registerServiceWorker();
     updateUI();
 });
 
@@ -97,10 +107,29 @@ function switchTab(tabName) {
 
 // 初始化筛选器
 function initFilters() {
+    renderFilterChips();
+
+    // "全部"复选框
+    const filterAll = document.getElementById('filter-all');
+    filterAll.addEventListener('change', () => {
+        if (filterAll.checked) {
+            state.selectedCategories = [];
+            document.querySelectorAll('.filter-chip input').forEach(input => {
+                input.checked = false;
+                input.closest('.filter-chip').classList.remove('active');
+            });
+            drawWheel();
+            updateWheelCount();
+        }
+    });
+}
+
+// 渲染分类筹码（自定义菜单变化后可重复调用）
+function renderFilterChips() {
     const filterChips = document.getElementById('filter-chips');
     const filterAll = document.getElementById('filter-all');
+    filterChips.innerHTML = '';
 
-    // 渲染分类筛选项
     categories.forEach(category => {
         const chip = document.createElement('label');
         chip.className = 'filter-chip';
@@ -127,19 +156,6 @@ function initFilters() {
 
         filterChips.appendChild(chip);
     });
-
-    // "全部"复选框
-    filterAll.addEventListener('change', () => {
-        if (filterAll.checked) {
-            state.selectedCategories = [];
-            document.querySelectorAll('.filter-chip').forEach(chip => {
-                chip.classList.remove('active');
-                chip.querySelector('input').checked = false;
-            });
-            drawWheel();
-            updateWheelCount();
-        }
-    });
 }
 
 // 更新选中的分类
@@ -160,15 +176,81 @@ function getActiveDataset() {
     return state.useNearby ? state.nearbyPlaces : foodData;
 }
 
-// 获取筛选后的美食列表（附近模式不分类，直接返回全部附近店铺）
+// 获取筛选后的美食列表（附近模式不分类不分时段，直接返回全部附近店铺）
 function getFilteredFoods() {
     if (state.useNearby) {
         return state.nearbyPlaces;
     }
-    if (state.selectedCategories.length === 0) {
-        return foodData;
+    let foods = foodData;
+    if (state.mealFilter && state.mealFilter !== 'all') {
+        foods = foods.filter(food => foodHasMeal(food, state.mealFilter));
     }
-    return foodData.filter(food => state.selectedCategories.includes(food.category));
+    if (state.selectedCategories.length > 0) {
+        foods = foods.filter(food => state.selectedCategories.includes(food.category));
+    }
+    return foods;
+}
+
+// ============ 时段感知候选池 ============
+// 早上打开只出早餐、深夜只出夜宵：所有菜默认适合午/晚，
+// 早餐/夜宵按 data.js 的 MEAL_EXTRA 清单收窄。可手动切换或选"不限"。
+const MEAL_DEFS = [
+    { key: '早', label: '早餐' },
+    { key: '午', label: '午餐' },
+    { key: '晚', label: '晚餐' },
+    { key: '夜', label: '夜宵' },
+    { key: 'all', label: '不限' }
+];
+
+function currentMealKey() {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 10) return '早';
+    if (h >= 10 && h < 16) return '午';
+    if (h >= 16 && h < 21) return '晚';
+    return '夜';
+}
+
+function foodHasMeal(food, meal) {
+    if (meal === '午' || meal === '晚') return true;   // 全部菜默认适合正餐
+    const list = typeof MEAL_EXTRA === 'object' ? MEAL_EXTRA[meal] : null;
+    return Array.isArray(list) && list.includes(food.name);
+}
+
+function initMealFilter() {
+    const wrap = document.getElementById('meal-chips');
+    if (!wrap) return;
+    state.mealFilter = currentMealKey();   // 打开页面即按当前时间智能筛选
+
+    wrap.innerHTML = MEAL_DEFS.map(m =>
+        `<button type="button" class="filter-chip meal-chip" data-meal="${m.key}">${m.label}</button>`
+    ).join('');
+
+    wrap.querySelectorAll('.meal-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            state.mealFilter = btn.dataset.meal;
+            renderMealFilter();
+            drawWheel();
+            updateWheelCount();
+        });
+    });
+    renderMealFilter();
+}
+
+function renderMealFilter() {
+    const wrap = document.getElementById('meal-chips');
+    const caption = document.getElementById('meal-caption');
+    if (!wrap) return;
+    wrap.querySelectorAll('.meal-chip').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.meal === state.mealFilter));
+    if (caption) {
+        const now = MEAL_DEFS.find(m => m.key === currentMealKey());
+        const sel = MEAL_DEFS.find(m => m.key === state.mealFilter);
+        caption.textContent = state.mealFilter === 'all'
+            ? '时段 · 不限，全部菜品参与'
+            : (state.mealFilter === currentMealKey()
+                ? `时段 · 现在是${now.label}时间，已智能筛选`
+                : `时段 · 手动锁定${sel.label}候选`);
+    }
 }
 
 // 初始化转盘
@@ -454,13 +536,107 @@ function drawWheelPointer(dpr, rotation) {
     ctx.restore();
 }
 
+// ============ 吃腻衰减：最近吃过的降权 ============
+// 近 7 天抽中过的菜按"距今越近权重越低"衰减：当天仅 15% 权重，随时间
+// 线性恢复，第 7 天回到 100%。只影响抽中概率，转盘外观与格子大小不变。
+const FATIGUE_WINDOW = 7 * 24 * 60 * 60 * 1000;
+
+function foodWeight(name) {
+    if (!state.fatigueDecay) return 1;
+    let latest = 0;
+    for (const h of state.history) {
+        if (h.name === name && h.timestamp > latest) latest = h.timestamp;
+    }
+    if (!latest) return 1;
+    const age = Date.now() - latest;
+    if (age >= FATIGUE_WINDOW) return 1;
+    return 0.15 + 0.85 * (age / FATIGUE_WINDOW);
+}
+
+// 按权重随机挑一个下标（权重全相等时退化为均匀随机）。
+// 总权重 = 吃腻衰减 × 天气加成。
+function weightedPick(foods) {
+    let total = 0;
+    const weights = foods.map(f => {
+        const w = foodWeight(f.name) * weatherBoost(f);
+        total += w;
+        return w;
+    });
+    let r = Math.random() * total;
+    for (let i = 0; i < weights.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return i;
+    }
+    return weights.length - 1;
+}
+
+// ============ 天气联动推荐 ============
+// 定位成功后从 Open-Meteo（免密钥、支持跨域）拉当前气温与天气码：
+// 雨雪天热汤/火锅类权重 ×1.6，高温天(≥30℃)冷食轻食 ×1.6，寒冷天(≤8℃)炖煮热食 ×1.6。
+// 只影响概率，用户无感知负担；拉不到天气就静默跳过。
+const WEATHER_RULES = {
+    rain: { re: /火锅|拉面|米线|泡馍|冒菜|麻辣烫|粥|汤|面馆|饺子|馄饨|煲/, label: '热汤热食↑' },
+    hot:  { re: /凉皮|冷面|沙拉|寿司|冰|凉|轻食|甜品|饮品|果汁|奶茶/, label: '清爽冷食↑' },
+    cold: { re: /火锅|炖|煲|汤|泡馍|冒菜|烤肉|羊肉|麻辣烫/, label: '暖身热食↑' }
+};
+
+function weatherBoost(food) {
+    const w = state.weather;
+    if (!w || w.kind === 'mild') return 1;
+    const rule = WEATHER_RULES[w.kind];
+    if (!rule) return 1;
+    const text = `${food.name || ''} ${food.category || ''} ${food.sourceType || ''}`;
+    return rule.re.test(text) ? 1.6 : 1;
+}
+
+function fetchWeather(lat, lon) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+        + `&current=temperature_2m,weather_code&timezone=auto`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    fetch(url, { signal: ctrl.signal })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(d => {
+            const cur = d && d.current;
+            if (!cur || typeof cur.temperature_2m !== 'number') return;
+            const t = cur.temperature_2m;
+            const code = cur.weather_code || 0;
+            const raining = (code >= 51 && code <= 67) || (code >= 71 && code <= 77)
+                || (code >= 80 && code <= 86) || code >= 95;
+            let kind = 'mild';
+            if (raining) kind = 'rain';
+            else if (t >= 30) kind = 'hot';
+            else if (t <= 8) kind = 'cold';
+            const kindText = { rain: '雨雪', hot: '高温', cold: '低温', mild: '' }[kind];
+            state.weather = {
+                tempC: Math.round(t),
+                kind,
+                text: kind === 'mild'
+                    ? `${Math.round(t)}℃`
+                    : `${Math.round(t)}℃ ${kindText} · ${WEATHER_RULES[kind].label}`
+            };
+            renderWeatherHint();
+        })
+        .catch(() => { /* 天气拉取失败不影响主流程 */ })
+        .finally(() => clearTimeout(timer));
+}
+
+// 把天气提示追加到"附近美食"卡的状态行
+function renderWeatherHint() {
+    if (!state.weather) return;
+    const statusEl = document.getElementById('nearby-status');
+    if (!statusEl) return;
+    const base = statusEl.textContent.replace(/\s*·\s*\d+-?\d*℃.*$/, '');
+    statusEl.textContent = `${base} · ${state.weather.text}`;
+}
+
 // 转盘旋转动画
 function spinWheel() {
     if (state.isSpinning) return;
 
     const foods = getFilteredFoods();
     if (foods.length === 0) {
-        showToast('请至少选择一个分类！');
+        showToast('当前筛选下没有可抽的菜，试试换个时段或分类');
         return;
     }
 
@@ -469,13 +645,13 @@ function spinWheel() {
     spinBtn.querySelector('span').textContent = '抽取中...';
     resultCard.style.display = 'none';
 
-    // 随机选择一个美食
-    let selectedIndex = Math.floor(Math.random() * foods.length);
+    // 按吃腻衰减权重随机选择（老没吃的更容易被抽中）
+    let selectedIndex = weightedPick(foods);
     // 避免连续重复：与上次结果相同则重选（多于一道菜时才有意义）
     if (state.avoidRepeat && foods.length > 1) {
         let guard = 0;
         while (foods[selectedIndex].name === state.lastResultName && guard < 20) {
-            selectedIndex = Math.floor(Math.random() * foods.length);
+            selectedIndex = weightedPick(foods);
             guard++;
         }
     }
@@ -704,13 +880,458 @@ function copyText(text) {
     });
 }
 
-// 复制结果到剪贴板，方便分享
+// ============ 结果分享卡片（Canvas 合成图片，可存相册/发群） ============
+// 生成 750×980 的品牌分享图：渐变底 + 白卡 + 菜品大图 + 菜名 + 日期 + 站点署名。
+// 跨域店铺照片若不支持 CORS 会污染画布导致导出失败，因此加载失败/超时一律
+// 回退到零网络的 SVG 名片（data URI 不污染画布），保证任何情况都能出图。
+function loadCardImage(food) {
+    return new Promise(resolve => {
+        const fallback = () => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.src = (food.imageFallback && food.imageFallback.startsWith('data:'))
+                ? food.imageFallback : makeNameCard(food.name);
+        };
+        const src = food.image || '';
+        if (!src || src.startsWith('data:')) { fallback(); return; }
+        const img = new Image();
+        if (/^https?:/i.test(src) && src.indexOf(location.origin) !== 0) {
+            img.crossOrigin = 'anonymous';   // 跨域照片必须 CORS 加载才能导出
+        }
+        const timer = setTimeout(() => { img.onload = img.onerror = null; fallback(); }, 6000);
+        img.onload = () => { clearTimeout(timer); resolve(img); };
+        img.onerror = () => { clearTimeout(timer); fallback(); };
+        img.src = src;
+    });
+}
+
+function roundedPath(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+}
+
+function buildShareCard(food, img) {
+    const W = 750, H = 980;
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const c = cv.getContext('2d');
+    const FONT = "-apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+
+    // 渐变底
+    const bg = c.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#FF8A4C');
+    bg.addColorStop(0.58, '#F0435A');
+    bg.addColorStop(1, '#D92667');
+    c.fillStyle = bg;
+    c.fillRect(0, 0, W, H);
+
+    // 顶部品牌
+    c.fillStyle = 'rgba(255,255,255,0.95)';
+    c.font = `bold 40px ${FONT}`;
+    c.textAlign = 'center';
+    c.fillText('今天吃什么', W / 2, 78);
+    c.font = `24px ${FONT}`;
+    c.fillStyle = 'rgba(255,255,255,0.75)';
+    c.fillText('让转盘帮你决定', W / 2, 116);
+
+    // 白卡
+    roundedPath(c, 45, 150, W - 90, 730, 36);
+    c.fillStyle = '#FFFFFF';
+    c.shadowColor = 'rgba(60,10,20,0.30)';
+    c.shadowBlur = 30;
+    c.shadowOffsetY = 12;
+    c.fill();
+    c.shadowColor = 'transparent';
+    c.shadowBlur = 0;
+    c.shadowOffsetY = 0;
+
+    // 菜品图（等比裁切铺满）
+    c.save();
+    roundedPath(c, 75, 180, W - 150, 380, 24);
+    c.clip();
+    const iw = img.width || 400, ih = img.height || 300;
+    const scale = Math.max((W - 150) / iw, 380 / ih);
+    const dw = iw * scale, dh = ih * scale;
+    c.drawImage(img, 75 + (W - 150 - dw) / 2, 180 + (380 - dh) / 2, dw, dh);
+    c.restore();
+
+    // 文案
+    c.fillStyle = '#A39B8F';
+    c.font = `26px ${FONT}`;
+    c.fillText('· 今日抽中 ·', W / 2, 628);
+    c.fillStyle = '#241C15';
+    c.font = `bold ${food.name.length > 8 ? 52 : 64}px ${FONT}`;
+    c.fillText(food.name, W / 2, 706, W - 170);
+    // 分类小胶囊
+    c.font = `26px ${FONT}`;
+    const catText = food.category || '';
+    if (catText) {
+        const tw = c.measureText(catText).width;
+        roundedPath(c, W / 2 - tw / 2 - 22, 736, tw + 44, 46, 23);
+        c.fillStyle = 'rgba(240, 67, 90, 0.10)';
+        c.fill();
+        c.fillStyle = '#E23B4E';
+        c.fillText(catText, W / 2, 768);
+    }
+    // 描述（一行截断）
+    const desc = String(food.description || '').slice(0, 20);
+    if (desc) {
+        c.fillStyle = '#6E6259';
+        c.font = `28px ${FONT}`;
+        c.fillText(desc, W / 2, 830, W - 170);
+    }
+
+    // 底部署名 + 日期
+    const d = new Date();
+    c.fillStyle = 'rgba(255,255,255,0.85)';
+    c.font = `24px ${FONT}`;
+    c.fillText(`${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} · gwshhh.github.io/chishenme`, W / 2, 935);
+
+    return cv;
+}
+
+// 分享：优先系统分享（手机可直接发微信），否则下载图片；文字始终复制兜底
 function shareResult(food) {
-    const text = `🍴 今天吃【${food.name}】！(${food.category}) —— 来自「今天吃什么」美食转盘`;
-    copyText(text).then(
-        () => showToast('结果已复制，去分享吧！'),
-        () => showToast('复制失败，请手动选择文字')
+    const text = `今天吃【${food.name}】！(${food.category || '美食'}) —— 来自「今天吃什么」转盘 gwshhh.github.io/chishenme`;
+    showToast('正在生成分享卡片…');
+    loadCardImage(food).then(img => {
+        let cv;
+        try {
+            cv = buildShareCard(food, img);
+        } catch (e) { cv = null; }
+        if (!cv) { copyText(text).finally(() => showToast('已复制文字，去分享吧！')); return; }
+        cv.toBlob(blob => {
+            if (!blob) { copyText(text).finally(() => showToast('已复制文字，去分享吧！')); return; }
+            const file = new File([blob], `今天吃什么-${food.name}.png`, { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({ files: [file], title: '今天吃什么', text })
+                    .catch(() => { /* 用户取消分享不算错误 */ });
+                return;
+            }
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `今天吃什么-${food.name}.png`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+            copyText(text).finally(() => showToast('卡片已保存，文字已复制！'));
+        }, 'image/png');
+    });
+}
+
+// ============ 通用弹窗 ============
+function openModal(html) {
+    let el = document.getElementById('app-modal');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'app-modal';
+        el.className = 'modal-overlay';
+        document.body.appendChild(el);
+        el.addEventListener('click', e => { if (e.target === el) closeModal(); });
+    }
+    el.innerHTML = `<div class="modal-box">${html}</div>`;
+    el.classList.add('show');
+    return el;
+}
+
+function closeModal() {
+    const el = document.getElementById('app-modal');
+    if (el) el.classList.remove('show');
+}
+
+// ============ 8 强淘汰赛（纠结模式） ============
+// 一次抽定还是纠结？从当前候选池按权重抽 8 个，两两对决三轮定冠军。
+let duel = null;   // { queue: 本轮待赛, winners: 已晋级, round, totalRounds }
+
+function initTournament() {
+    const btn = document.getElementById('tournament-btn');
+    if (btn) btn.addEventListener('click', startTournament);
+}
+
+// 按权重无放回抽样 count 个
+function sampleDistinct(foods, count) {
+    const pool = foods.slice();
+    const out = [];
+    while (pool.length && out.length < count) {
+        const i = weightedPick(pool);
+        out.push(pool[i]);
+        pool.splice(i, 1);
+    }
+    return out;
+}
+
+function startTournament() {
+    const foods = getFilteredFoods();
+    if (foods.length < 2) { showToast('候选不足 2 个，先调整筛选'); return; }
+    const size = foods.length >= 8 ? 8 : (foods.length >= 4 ? 4 : 2);
+    duel = { queue: sampleDistinct(foods, size), winners: [], round: 1, totalRounds: Math.round(Math.log2(size)) };
+    renderDuel();
+}
+
+function duelOverlay() {
+    let el = document.getElementById('duel-overlay');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'duel-overlay';
+    el.className = 'modal-overlay';
+    el.innerHTML = `
+        <div class="modal-box duel-box">
+            <button class="modal-close" id="duel-close">×</button>
+            <div class="duel-round" id="duel-round"></div>
+            <div class="duel-arena">
+                <div class="duel-card" id="duel-a"></div>
+                <div class="duel-vs">VS</div>
+                <div class="duel-card" id="duel-b"></div>
+            </div>
+            <p class="duel-hint">点选更想吃的那个，一路选到冠军</p>
+        </div>`;
+    document.body.appendChild(el);
+    document.getElementById('duel-close').addEventListener('click', closeDuel);
+    el.addEventListener('click', e => { if (e.target === el) closeDuel(); });
+    return el;
+}
+
+function closeDuel() {
+    const el = document.getElementById('duel-overlay');
+    if (el) el.classList.remove('show');
+    duel = null;
+}
+
+function renderDuel() {
+    if (!duel) return;
+    // 本轮打完 → 晋级下一轮或产生冠军
+    if (duel.queue.length < 2) {
+        const next = duel.winners.concat(duel.queue);
+        if (next.length === 1) { crownChampion(next[0]); return; }
+        duel = { queue: next, winners: [], round: duel.round + 1, totalRounds: duel.totalRounds };
+    }
+    const el = duelOverlay();
+    el.classList.add('show');
+    const roundName = duel.round >= duel.totalRounds ? '决赛'
+        : (duel.totalRounds - duel.round === 1 ? '半决赛' : `第 ${duel.round} 轮`);
+    document.getElementById('duel-round').textContent =
+        `${roundName} · 场上还剩 ${duel.queue.length + duel.winners.length} 个`;
+    renderDuelCard(document.getElementById('duel-a'), duel.queue[0]);
+    renderDuelCard(document.getElementById('duel-b'), duel.queue[1]);
+}
+
+function renderDuelCard(el, food) {
+    el.innerHTML = `${progressiveImg(food, 'duel-img')}
+        <div class="duel-name">${escapeHtml(food.name)}</div>
+        <div class="duel-cat">${escapeHtml(food.category || '')}</div>`;
+    hydrateImages(el);
+    el.onclick = () => {
+        if (!duel) return;
+        duel.winners.push(food);
+        duel.queue.splice(0, 2);
+        if (navigator.vibrate) navigator.vibrate(20);
+        renderDuel();
+    };
+}
+
+function crownChampion(food) {
+    closeDuel();
+    addToHistory(food);
+    state.currentResult = food;
+    state.lastResultName = food.name;
+    switchTab('wheel');
+    showResult(food);
+    celebrate();
+    showToast(`冠军出炉：就吃【${food.name}】！`);
+}
+
+// ============ 自定义菜单（含 B 端"整套替换"食堂模式） ============
+// customFoods: 追加在内置菜单后的个人菜品；menuOverride: 整套替换内置菜单
+// （食堂/园区/团队专属版），两者都存 localStorage、支持 JSON 导入导出。
+function loadCustomFoods() {
+    return loadStored('customFoods');
+}
+
+function pushFood(f) {
+    if (!f || !f.name) return;
+    const name = normalizeShopText(f.name).slice(0, 20);
+    if (!name || foodData.some(x => x.name === name)) return;
+    const card = makeNameCard(name);
+    foodData.push({
+        name,
+        category: normalizeShopText(f.category || '').slice(0, 12) || '自定义',
+        description: normalizeShopText(f.description || '').slice(0, 40),
+        image: card,
+        imageFallback: card,
+        isCustom: true
+    });
+}
+
+function mergeCustomFoods() {
+    let override = null;
+    try { override = JSON.parse(localStorage.getItem('menuOverride') || 'null'); } catch (e) { /* 忽略坏数据 */ }
+    if (Array.isArray(override) && override.length) {
+        foodData.length = 0;                       // B 端模式：整套替换
+        override.forEach(pushFood);
+    } else {
+        loadCustomFoods().forEach(pushFood);       // 普通模式：追加个人菜品
+    }
+    // 重算分类（categories 是 const 数组，改内容不改引用）
+    const fresh = [...new Set(foodData.map(f => f.category))];
+    categories.length = 0;
+    fresh.forEach(c => categories.push(c));
+}
+
+function refreshAfterMenuChange() {
+    renderFilterChips();
+    renderListCategoryBar();
+    drawWheel();
+    updateWheelCount();
+    renderFoodGrid();
+}
+
+function initCustomMenu() {
+    const addBtn = document.getElementById('add-food-btn');
+    const mgrBtn = document.getElementById('manage-food-btn');
+    if (addBtn) addBtn.addEventListener('click', openAddFood);
+    if (mgrBtn) mgrBtn.addEventListener('click', openManageMenu);
+}
+
+function openAddFood() {
+    openModal(`
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h3 class="modal-title">添加自定义美食</h3>
+        <div class="form-row"><input id="cf-name" maxlength="20" placeholder="名称（必填），如：楼下张姐炒饭"></div>
+        <div class="form-row"><input id="cf-cat" maxlength="12" placeholder="分类（可选，默认：自定义）"></div>
+        <div class="form-row"><input id="cf-desc" maxlength="40" placeholder="一句话描述（可选）"></div>
+        <button class="modal-primary" onclick="submitAddFood()">加入菜单</button>
+    `);
+    const nameInput = document.getElementById('cf-name');
+    if (nameInput) nameInput.focus();
+}
+
+function submitAddFood() {
+    const name = normalizeShopText(document.getElementById('cf-name').value).slice(0, 20);
+    if (!name) { showToast('名称不能为空'); return; }
+    if (foodData.some(f => f.name === name)) { showToast('已有同名菜品'); return; }
+    const item = {
+        name,
+        category: normalizeShopText(document.getElementById('cf-cat').value).slice(0, 12) || '自定义',
+        description: normalizeShopText(document.getElementById('cf-desc').value).slice(0, 40)
+    };
+    const list = loadCustomFoods();
+    list.push(item);
+    localStorage.setItem('customFoods', JSON.stringify(list));
+    pushFood(item);
+    if (!categories.includes(item.category)) categories.push(item.category);
+    refreshAfterMenuChange();
+    closeModal();
+    showToast(`已加入【${name}】，转盘/列表可抽`);
+}
+
+function openManageMenu() {
+    const customs = loadCustomFoods();
+    const hasOverride = !!localStorage.getItem('menuOverride');
+    const items = customs.length
+        ? customs.map((f, i) =>
+            `<div class="mgr-item"><span>${escapeHtml(f.name)}<small> · ${escapeHtml(f.category || '自定义')}</small></span>
+             <button class="mgr-del" onclick="deleteCustomFood(${i})">删除</button></div>`).join('')
+        : '<p class="mgr-empty">还没有自定义菜品，点「＋ 添加自定义」试试</p>';
+    openModal(`
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h3 class="modal-title">管理菜单</h3>
+        ${hasOverride ? '<p class="mgr-tip">当前处于「整套替换」模式（B 端/食堂版），内置菜单已被替换。</p>' : ''}
+        <div class="mgr-list">${items}</div>
+        <div class="mgr-actions">
+            <button class="toolbar-btn" onclick="exportMenu()">导出 JSON</button>
+            <button class="toolbar-btn" onclick="openImportMenu()">导入 JSON</button>
+            ${hasOverride ? '<button class="toolbar-btn" onclick="clearMenuOverride()">恢复内置菜单</button>' : ''}
+        </div>
+        <p class="mgr-tip">导入可选「整套替换」：把公司食堂/团队常点做成专属菜单。</p>
+    `);
+}
+
+function deleteCustomFood(i) {
+    const list = loadCustomFoods();
+    const removed = list.splice(i, 1)[0];
+    localStorage.setItem('customFoods', JSON.stringify(list));
+    if (removed) {
+        const idx = foodData.findIndex(f => f.name === removed.name && f.isCustom);
+        if (idx > -1) foodData.splice(idx, 1);
+    }
+    refreshAfterMenuChange();
+    openManageMenu();
+    showToast('已删除');
+}
+
+function exportMenu() {
+    const payload = JSON.stringify(loadCustomFoods(), null, 2);
+    copyText(payload).then(
+        () => showToast('自定义菜单 JSON 已复制到剪贴板'),
+        () => showToast('复制失败，请重试')
     );
+}
+
+function openImportMenu() {
+    openModal(`
+        <button class="modal-close" onclick="closeModal()">×</button>
+        <h3 class="modal-title">导入菜单 JSON</h3>
+        <textarea id="import-ta" class="import-ta"
+            placeholder='[{"name":"红烧牛肉面","category":"面食","description":"食堂二楼 3 号窗口"}]'></textarea>
+        <label class="avoid-repeat"><input type="checkbox" id="import-replace"> 整套替换内置菜单（食堂/B 端模式）</label>
+        <button class="modal-primary" onclick="submitImportMenu()">导入并重载</button>
+    `);
+}
+
+function submitImportMenu() {
+    let arr;
+    try { arr = JSON.parse(document.getElementById('import-ta').value); } catch (e) { showToast('JSON 格式不对'); return; }
+    if (!Array.isArray(arr)) { showToast('需要 JSON 数组'); return; }
+    const clean = arr.filter(f => f && f.name).slice(0, 300);
+    if (!clean.length) { showToast('没有有效条目（每项需含 name）'); return; }
+    if (document.getElementById('import-replace').checked) {
+        localStorage.setItem('menuOverride', JSON.stringify(clean));
+    } else {
+        const list = loadCustomFoods();
+        clean.forEach(f => {
+            if (!list.some(x => x.name === f.name)) {
+                list.push({ name: f.name, category: f.category || '自定义', description: f.description || '' });
+            }
+        });
+        localStorage.setItem('customFoods', JSON.stringify(list));
+    }
+    location.reload();   // 菜单导入是低频操作，整页重建最稳
+}
+
+function clearMenuOverride() {
+    localStorage.removeItem('menuOverride');
+    location.reload();
+}
+
+// ============ 本地商家推广位（data.js 的 SPONSOR 配置后自动展示） ============
+function initSponsor() {
+    if (typeof SPONSOR === 'undefined' || !SPONSOR || !SPONSOR.name) return;
+    const anchor = document.getElementById('today-pick');
+    if (!anchor) return;
+    const card = document.createElement('div');
+    card.className = 'sponsor-card';
+    card.innerHTML = `
+        <div class="sponsor-info">
+            <span class="sponsor-tag">推广</span>
+            <span class="sponsor-name">${escapeHtml(SPONSOR.name)}</span>
+            <span class="sponsor-desc">${escapeHtml(SPONSOR.desc || '')}</span>
+        </div>
+        <button class="today-pick-btn" id="sponsor-btn">${escapeHtml(SPONSOR.cta || '去看看')}</button>`;
+    anchor.after(card);
+    const btn = document.getElementById('sponsor-btn');
+    if (btn) btn.onclick = () => window.open(SPONSOR.url, '_blank');
+}
+
+// ============ PWA：注册 Service Worker（可安装、可离线） ============
+function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
+    navigator.serviceWorker.register('sw.js').catch(() => { /* 注册失败不影响正常使用 */ });
 }
 
 // 跳转外卖平台下单。核心目标：在手机上把抽中的店/菜带进美团（或饿了么）App。
@@ -929,9 +1550,13 @@ function openMeituanNearby(food, keyword) {
 function openCouponPage(platform, keyword) {
     const copied = normalizeShopText(keyword);
     const isEle = platform === 'eleme';
-    const couponUrl = isEle
+    // CPS 返佣：data.js 的 AFFILIATE 里配置了联盟推广链接就优先走它（用户下单可获佣金），
+    // 未配置则用实测可用的普通领券页，体验一致。
+    const affiliate = (typeof AFFILIATE === 'object' && AFFILIATE)
+        ? (isEle ? AFFILIATE.elemeCoupon : AFFILIATE.meituanCoupon) : '';
+    const couponUrl = affiliate || (isEle
         ? 'https://h5.ele.me/hongbao/'                 // 实测 200
-        : 'https://i.waimai.meituan.com/coupon';       // 实测 302→登录→回跳领券
+        : 'https://i.waimai.meituan.com/coupon');      // 实测 302→登录→回跳领券
     const name = isEle ? '饿了么红包页' : '美团领券页';
     // 美团 H5 会先要求登录，如实提示；饿了么红包页可直接看到
     const tip = isEle
@@ -999,17 +1624,10 @@ function isMobile() {
 function initListPage() {
     const searchInput = document.getElementById('search-input');
     const categoryFilter = document.getElementById('category-filter');
-    const foodGrid = document.getElementById('food-grid');
 
-    // 渲染分类筛选按钮
-    categoryFilter.innerHTML = `
-        <button class="category-btn active" data-category="all">全部</button>
-        ${categories.map(cat => `
-            <button class="category-btn" data-category="${cat}">${cat}</button>
-        `).join('')}
-    `;
+    renderListCategoryBar();
 
-    // 分类筛选事件
+    // 分类筛选事件（委托在容器上，重渲染按钮不丢失）
     categoryFilter.addEventListener('click', (e) => {
         if (e.target.classList.contains('category-btn')) {
             categoryFilter.querySelectorAll('.category-btn').forEach(btn => {
@@ -1025,6 +1643,17 @@ function initListPage() {
 
     // 初始渲染
     renderFoodGrid();
+}
+
+// 渲染列表页分类条（自定义菜单变化后可重复调用）
+function renderListCategoryBar() {
+    const categoryFilter = document.getElementById('category-filter');
+    categoryFilter.innerHTML = `
+        <button class="category-btn active" data-category="all">全部</button>
+        ${categories.map(cat => `
+            <button class="category-btn" data-category="${cat}">${cat}</button>
+        `).join('')}
+    `;
 }
 
 // 渲染美食网格
@@ -1244,10 +1873,10 @@ function initFavoritesPage() {
     });
 }
 
-// 从收藏中随机挑一个（解决"收藏一堆还是不知道吃啥"）
+// 从收藏中随机挑一个（解决"收藏一堆还是不知道吃啥"，同样应用吃腻衰减）
 function pickRandomFavorite() {
     if (state.favorites.length === 0) return;
-    const food = state.favorites[Math.floor(Math.random() * state.favorites.length)];
+    const food = state.favorites[weightedPick(state.favorites)];
     if (navigator.vibrate) navigator.vibrate(40);
     addToHistory(food);
     showFoodDetail(food);
@@ -1273,14 +1902,36 @@ function initHistoryPage() {
     emptyState.style.display = 'none';
     clearBtn.style.display = 'block';
 
-    // 统计：抽取次数 + 最常抽到
+    // 统计：饮食周报（近 7 天）+ 历史总览
     if (statsEl) {
         const counts = {};
         state.history.forEach(h => { counts[h.name] = (counts[h.name] || 0) + 1; });
         let topName = '', topCount = 0;
         Object.keys(counts).forEach(n => { if (counts[n] > topCount) { topCount = counts[n]; topName = n; } });
+
+        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const week = state.history.filter(h => h.timestamp >= weekAgo);
+        const catCount = {};
+        week.forEach(h => { const cat = h.category || '其他'; catCount[cat] = (catCount[cat] || 0) + 1; });
+        const top3 = Object.entries(catCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        const maxC = top3.length ? top3[0][1] : 1;
+        const bars = top3.map(([cat, n]) =>
+            `<div class="week-bar-row"><span class="week-bar-label">${escapeHtml(cat)}</span>` +
+            `<span class="week-bar"><i style="width:${Math.round(n / maxC * 100)}%"></i></span>` +
+            `<span class="week-bar-n">${n}</span></div>`).join('');
+
+        const weekNameCount = {};
+        week.forEach(h => { weekNameCount[h.name] = (weekNameCount[h.name] || 0) + 1; });
+        const weekTop = Object.entries(weekNameCount).sort((a, b) => b[1] - a[1])[0];
+        const quip = !week.length ? '本周还没抽过，转一个？'
+            : (weekTop && weekTop[1] >= 3 ? `本周第 ${weekTop[1]} 次【${escapeHtml(weekTop[0])}】，铁粉认证`
+                : '本周口味换着来，会吃的');
+
         statsEl.style.display = 'block';
-        statsEl.innerHTML = `共抽取 <b>${state.history.length}</b> 次 · 最常抽到 <b>${topName}</b>（${topCount} 次）`;
+        statsEl.innerHTML =
+            `<div class="week-head">本周 <b>${week.length}</b> 顿 · 历史共 <b>${state.history.length}</b> 次 · 最常抽到 <b>${escapeHtml(topName)}</b>（${topCount} 次）</div>` +
+            (bars ? `<div class="week-bars">${bars}</div>` : '') +
+            `<div class="week-quip">${quip}</div>`;
     }
 
     historyList.innerHTML = state.history.map((item, i) => `
@@ -1540,6 +2191,18 @@ function initAvoidRepeat() {
     });
 }
 
+// ============ 吃腻衰减 开关 ============
+function initFatigueDecay() {
+    const cb = document.getElementById('fatigue-decay');
+    if (!cb) return;
+    cb.checked = state.fatigueDecay;
+    cb.addEventListener('change', () => {
+        state.fatigueDecay = cb.checked;
+        localStorage.setItem('fatigueDecay', cb.checked ? '1' : '0');
+        showToast(cb.checked ? '已开启：近 7 天吃过的会更少抽到' : '已关闭吃腻降权，全员等概率');
+    });
+}
+
 // ============ 附近美食（定位 → 拉取真实附近店铺 → 整合进转盘/列表）============
 // 重要说明：美团没有对外开放、可跨域调用的「按坐标查餐厅/菜品」接口，纯前端无法
 // 取到美团 App 内的菜单数据（跨域被拦 + 需 App 内置签名与登录态 + 抓取违规）。
@@ -1560,6 +2223,7 @@ function initNearby() {
             state.location = saved;
             renderNearby(saved.city);
             loadNearbyPlaces(true);   // 有缓存坐标，直接按当前档拉附近店铺（自动，不打断）
+            fetchWeather(saved.latitude, saved.longitude);
             restored = true;
         }
     } catch (e) { /* 数据损坏忽略 */ }
@@ -1631,6 +2295,7 @@ function requestLocation() {
             renderNearby('');
             reverseGeocode(latitude, longitude);
             loadNearbyPlaces(true);  // 定位成功立即拉取附近店铺（自动，不打断当前页）
+            fetchWeather(latitude, longitude);
         },
         (err) => {
             const msg = {
@@ -1835,7 +2500,10 @@ function enterNearbyMode(places, auto = false) {
     const statusEl = document.getElementById('nearby-status');
     const exitBtn = document.getElementById('nearby-exit-btn');
     const goBtn = document.getElementById('nearby-meituan-btn');
-    if (statusEl) statusEl.textContent = `已加载附近 ${places.length} 家店，可抽取`;
+    if (statusEl) {
+        statusEl.textContent = `已加载附近 ${places.length} 家店，可抽取`
+            + (state.weather ? ` · ${state.weather.text}` : '');
+    }
     if (exitBtn) exitBtn.style.display = 'inline-flex';
     if (goBtn) goBtn.textContent = '重新加载';
 

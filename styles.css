@@ -418,6 +418,35 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
+/* 时段筛选行（早/午/晚/夜/不限） */
+.meal-row {
+    margin-bottom: 12px;
+    padding-bottom: 13px;
+    border-bottom: 1px dashed var(--line-strong);
+}
+
+.meal-caption {
+    display: block;
+    font-size: 11px;
+    color: var(--t3);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.meal-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.meal-chip {
+    flex: 1;
+    min-width: 52px;
+    text-align: center;
+    padding: 7px 10px;
+}
+
 /* ---------- 转盘 ---------- */
 .wheel-container {
     text-align: center;
@@ -1528,4 +1557,424 @@ body.dark-mode .today-pick-label {
 
 .toast {
     bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ==========================================================================
+   扩展功能样式：淘汰赛 / 自定义菜单 / 周报 / 推广位 / 通用弹窗
+   ========================================================================== */
+
+/* 淘汰赛入口（次级按钮） */
+.tournament-btn {
+    display: block;
+    margin: 14px auto 0;
+    padding: 10px 22px;
+    background: transparent;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 99px;
+    color: var(--t2);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tournament-btn:active {
+    transform: scale(0.96);
+}
+
+@media (hover: hover) {
+    .tournament-btn:hover {
+        border-color: var(--brand-2);
+        color: var(--brand-text);
+    }
+}
+
+/* 列表页工具栏 */
+.list-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.toolbar-btn {
+    padding: 8px 14px;
+    background: var(--surface);
+    border: 1.5px solid var(--line-strong);
+    border-radius: 99px;
+    color: var(--t2);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toolbar-btn:active {
+    transform: scale(0.96);
+}
+
+@media (hover: hover) {
+    .toolbar-btn:hover {
+        border-color: var(--brand-2);
+        color: var(--brand-text);
+    }
+}
+
+/* 通用弹窗 */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(24, 18, 14, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-box {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    max-height: 84vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+    padding: 22px 20px 20px;
+    box-shadow: var(--shadow-l);
+    transform: translateY(14px) scale(0.98);
+    transition: transform 0.28s cubic-bezier(0.22, 0.9, 0.32, 1.2);
+}
+
+.modal-overlay.show .modal-box {
+    transform: translateY(0) scale(1);
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--t3);
+    font-size: 24px;
+    line-height: 1;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: var(--t1);
+    background: var(--surface-2);
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--t1);
+    margin-bottom: 16px;
+}
+
+.form-row {
+    margin-bottom: 10px;
+}
+
+.form-row input,
+.import-ta {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--t1);
+    background: var(--surface-2);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-row input:focus,
+.import-ta:focus {
+    outline: none;
+    border-color: var(--brand-2);
+    box-shadow: 0 0 0 4px var(--ring);
+    background: var(--surface);
+}
+
+.import-ta {
+    min-height: 140px;
+    resize: vertical;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.modal-primary {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 13px;
+    background: var(--brand-grad);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(240, 67, 90, 0.30);
+    transition: transform 0.2s;
+}
+
+.modal-primary:active {
+    transform: scale(0.97);
+}
+
+/* 管理菜单列表 */
+.mgr-list {
+    max-height: 260px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+}
+
+.mgr-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 2px;
+    border-bottom: 1px dashed var(--line);
+    font-size: 14px;
+    color: var(--t1);
+}
+
+.mgr-item small {
+    color: var(--t3);
+}
+
+.mgr-del {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid rgba(229, 72, 77, 0.45);
+    border-radius: 99px;
+    color: #E5484D;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.mgr-empty {
+    text-align: center;
+    color: var(--t3);
+    font-size: 13px;
+    padding: 18px 0;
+}
+
+.mgr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.mgr-tip {
+    font-size: 12px;
+    color: var(--t3);
+    line-height: 1.6;
+}
+
+/* 淘汰赛对决 */
+.duel-box {
+    max-width: 480px;
+}
+
+.duel-round {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand-text);
+    background: var(--brand-soft);
+    display: table;
+    margin: 0 auto 16px;
+    padding: 5px 16px;
+    border-radius: 99px;
+}
+
+.duel-arena {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+}
+
+.duel-card {
+    flex: 1;
+    min-width: 0;
+    background: var(--surface-2);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-l);
+    overflow: hidden;
+    cursor: pointer;
+    text-align: center;
+    padding-bottom: 12px;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.duel-card:active {
+    transform: scale(0.95);
+}
+
+@media (hover: hover) {
+    .duel-card:hover {
+        border-color: var(--brand-2);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-m);
+    }
+}
+
+.duel-img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.duel-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--t1);
+    padding: 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.duel-cat {
+    font-size: 12px;
+    color: var(--t3);
+    margin-top: 3px;
+}
+
+.duel-vs {
+    align-self: center;
+    flex-shrink: 0;
+    font-size: 15px;
+    font-weight: 900;
+    font-style: italic;
+    color: var(--brand-text);
+}
+
+.duel-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--t3);
+    margin-top: 14px;
+}
+
+/* 饮食周报 */
+.week-head {
+    margin-bottom: 8px;
+}
+
+.week-bars {
+    margin: 10px 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.week-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.week-bar-label {
+    flex-shrink: 0;
+    width: 72px;
+    text-align: right;
+    color: var(--t2);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.week-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--surface-2);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.week-bar i {
+    display: block;
+    height: 100%;
+    background: var(--brand-grad);
+    border-radius: 99px;
+}
+
+.week-bar-n {
+    flex-shrink: 0;
+    width: 20px;
+    color: var(--brand-text);
+    font-weight: 700;
+}
+
+.week-quip {
+    font-size: 12px;
+    color: var(--t3);
+}
+
+/* 本地商家推广位 */
+.sponsor-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-l);
+    padding: 13px 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-s);
+}
+
+.sponsor-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+}
+
+.sponsor-tag {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--t3);
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+.sponsor-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--t1);
+}
+
+.sponsor-desc {
+    font-size: 12px;
+    color: var(--t3);
 }

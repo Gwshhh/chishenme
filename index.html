@@ -8,9 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="description" content="今天吃什么？随机选择美食，解决选择困难症">
     <meta name="theme-color" content="#FF7A45">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.svg">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E%F0%9F%8D%9C%3C/text%3E%3C/svg%3E">
     <title>今天吃什么 - 美食转盘</title>
-    <link rel="stylesheet" href="styles.css?v=21">
+    <link rel="stylesheet" href="styles.css?v=23">
 </head>
 <body>
     <div class="container">
@@ -76,12 +78,19 @@
 
             <!-- 筛选器 -->
             <div class="filters">
+                <div class="meal-row">
+                    <span class="meal-caption" id="meal-caption"></span>
+                    <div class="meal-chips" id="meal-chips"></div>
+                </div>
                 <label>
                     <input type="checkbox" id="filter-all" checked> 全部
                 </label>
                 <div class="filter-chips" id="filter-chips"></div>
                 <label class="avoid-repeat">
                     <input type="checkbox" id="avoid-repeat"> 避免连续重复
+                </label>
+                <label class="avoid-repeat">
+                    <input type="checkbox" id="fatigue-decay"> 少吃重样（近 7 天吃过的少抽到）
                 </label>
             </div>
 
@@ -94,6 +103,7 @@
                 <button class="spin-btn" id="spin-btn">
                     <span>开始抽取</span>
                 </button>
+                <button class="tournament-btn" id="tournament-btn">还在纠结？试试 8 强淘汰赛</button>
             </div>
 
             <!-- 结果显示 -->
@@ -140,6 +150,10 @@
             <div class="search-box">
                 <input type="text" id="search-input" placeholder="🔍 搜索美食...">
             </div>
+            <div class="list-toolbar">
+                <button class="toolbar-btn" id="add-food-btn">＋ 添加自定义</button>
+                <button class="toolbar-btn" id="manage-food-btn">管理菜单</button>
+            </div>
             <div class="category-filter" id="category-filter"></div>
             <div class="food-grid" id="food-grid"></div>
         </div>
@@ -174,7 +188,7 @@
     <!-- Toast 提示 -->
     <div class="toast" id="toast"></div>
 
-    <script src="data.js?v=21"></script>
-    <script src="app.js?v=21"></script>
+    <script src="data.js?v=23"></script>
+    <script src="app.js?v=23"></script>
 </body>
 </html>

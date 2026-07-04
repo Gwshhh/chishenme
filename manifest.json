@@ -1,0 +1,26 @@
+{
+    "name": "今天吃什么 - 美食转盘",
+    "short_name": "吃什么",
+    "description": "转盘决定今天吃什么，支持附近真实店铺抽取",
+    "lang": "zh-CN",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "theme_color": "#FF7A45",
+    "background_color": "#FFFCF8",
+    "icons": [
+        {
+            "src": "icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
+        }
+    ]
+}
