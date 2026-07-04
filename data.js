@@ -206,11 +206,11 @@ foodData.forEach(food => {
 // 获取所有分类
 const categories = [...new Set(foodData.map(food => food.category))];
 
-// 颜色配置（用于转盘）
+// 颜色配置（用于转盘扇区）。精选 16 色：全部为中等明度、白字可读的饱和色，
+// 相邻色相互相错开；不含浅灰/淡色（曾出现白字看不清的问题）。
 const wheelColors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
-    '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2',
-    '#F8B88B', '#FAD390', '#6C5CE7', '#A29BFE',
-    '#FD79A8', '#FDCB6E', '#E17055', '#74B9FF',
-    '#55EFC4', '#DFE6E9', '#FF7675', '#6C5CE7'
+    '#F05D5E', '#12A5A5', '#E8960C', '#3E7CB1',
+    '#D9538C', '#47A25A', '#8A64D6', '#ED7846',
+    '#3193C4', '#C94277', '#7C9F3F', '#B3703E',
+    '#5C6BC0', '#DB5A42', '#2FA48A', '#A85CC4'
 ];

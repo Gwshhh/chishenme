@@ -173,12 +173,7 @@ function getFilteredFoods() {
 
 // 初始化转盘
 function initWheel() {
-    // 设置 canvas 尺寸
-    const size = 300;
-    canvas.width = size;
-    canvas.height = size;
-
-    drawWheel();
+    drawWheel();   // 画布尺寸由 drawWheel 按 devicePixelRatio 自适应
 
     // 绑定抽取按钮
     spinBtn.addEventListener('click', spinWheel);
@@ -199,69 +194,178 @@ function updateWheelCount() {
 // 当前转盘上对应的美食列表（抽取时锁定，保证指针与结果一致）
 let wheelFoods = [];
 
+// ============ 转盘渲染（离屏缓存 + 高清适配）============
+// 性能关键：旋转动画每帧只做「清屏 → 旋转 → 贴一张预渲染好的转盘位图」，
+// 扇区/文字/装饰只在菜品列表变化时重画一次（附近模式 360 家店时收益巨大）。
+// 同时按 devicePixelRatio 放大画布物理分辨率，手机上文字与边缘不再发虚。
+let wheelCache = null;      // 预渲染好的转盘离屏画布
+let wheelCacheKey = '';     // 缓存签名：菜品列表或 dpr 变了才重建
+
+const WHEEL_SIZE = 300;     // 逻辑尺寸（CSS 像素），与 .wheel-wrapper 一致
+
+function wheelDpr() {
+    return Math.min(window.devicePixelRatio || 1, 3);
+}
+
 // 绘制转盘（rotation 为整体旋转角度，单位弧度）
 function drawWheel(rotation = 0) {
     const foods = getFilteredFoods();
     wheelFoods = foods;
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = canvas.width / 2 - 10;
-    const arcAngle = (2 * Math.PI) / foods.length;
+    const dpr = wheelDpr();
+    const px = WHEEL_SIZE * dpr;
+    if (canvas.width !== px || canvas.height !== px) {
+        canvas.width = px;
+        canvas.height = px;
+    }
+
+    // 签名带上全部菜名：筛选变化/附近店铺更新都会触发重建
+    const key = dpr + '|' + foods.length + '|' + foods.map(f => f.name).join('¦');
+    if (!wheelCache || wheelCacheKey !== key) {
+        wheelCache = buildWheelCache(foods, dpr);
+        wheelCacheKey = key;
+    }
 
     // 在未变换的坐标系中清空整个画布（避免旋转后清不干净产生重影）
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, px, px);
 
-    // 应用整体旋转
     ctx.save();
-    ctx.translate(centerX, centerY);
+    ctx.translate(px / 2, px / 2);
     ctx.rotate(rotation);
-
-    // 绘制扇形
-    foods.forEach((food, index) => {
-        const startAngle = index * arcAngle - Math.PI / 2;
-        const endAngle = startAngle + arcAngle;
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, radius, startAngle, endAngle);
-        ctx.closePath();
-        ctx.fillStyle = wheelColors[index % wheelColors.length];
-        ctx.fill();
-
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // 绘制文字（沿扇形中线）
-        ctx.save();
-        ctx.rotate(startAngle + arcAngle / 2);
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'white';
-        ctx.font = foods.length > 30 ? 'bold 9px Arial' : 'bold 12px Arial';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-        ctx.shadowBlur = 3;
-        ctx.fillText(food.name, radius - 8, 0, radius - 38);
-        ctx.restore();
-    });
-
+    ctx.drawImage(wheelCache, -px / 2, -px / 2);
     ctx.restore();
 
-    // 绘制中心圆（未变换坐标系）
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
-    ctx.fillStyle = 'white';
-    ctx.fill();
-    ctx.strokeStyle = '#667eea';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    drawWheelHub(dpr);   // 中心按钮不随转动
+}
 
-    ctx.fillStyle = '#667eea';
-    ctx.font = '22px Arial';
+// 预渲染整个转盘（深色外圈 + 灯珠 + 扇区 + 光影 + 菜名）到离屏画布
+function buildWheelCache(foods, dpr) {
+    const off = document.createElement('canvas');
+    off.width = off.height = WHEEL_SIZE * dpr;
+    const c = off.getContext('2d');
+    c.scale(dpr, dpr);
+
+    const cx = WHEEL_SIZE / 2;
+    const cy = WHEEL_SIZE / 2;
+    const rimR = WHEEL_SIZE / 2 - 5;   // 深色外圈半径
+    const R = rimR - 13;               // 彩色扇区半径
+    const n = foods.length;
+
+    // ① 深色底盘（奖轮质感的外圈）
+    c.beginPath();
+    c.arc(cx, cy, rimR, 0, 2 * Math.PI);
+    c.fillStyle = '#261F1A';
+    c.fill();
+
+    if (n > 0) {
+        const arc = (2 * Math.PI) / n;
+
+        // ② 彩色扇区
+        foods.forEach((food, i) => {
+            const start = i * arc - Math.PI / 2;
+            c.beginPath();
+            c.moveTo(cx, cy);
+            c.arc(cx, cy, R, start, start + arc);
+            c.closePath();
+            c.fillStyle = wheelColors[i % wheelColors.length];
+            c.fill();
+        });
+
+        // ③ 中心高光 + 边缘暗角：一次性整盘叠加出立体感（比逐扇区渐变省得多）
+        const shade = c.createRadialGradient(cx, cy, 0, cx, cy, R);
+        shade.addColorStop(0, 'rgba(255, 255, 255, 0.20)');
+        shade.addColorStop(0.55, 'rgba(255, 255, 255, 0.05)');
+        shade.addColorStop(0.85, 'rgba(0, 0, 0, 0)');
+        shade.addColorStop(1, 'rgba(0, 0, 0, 0.10)');
+        c.beginPath();
+        c.arc(cx, cy, R, 0, 2 * Math.PI);
+        c.fillStyle = shade;
+        c.fill();
+
+        // ④ 扇区分隔线（店太多时细线会糊成一片，仅 ≤60 格时绘制）
+        if (n > 1 && n <= 60) {
+            c.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            c.lineWidth = 1.5;
+            for (let i = 0; i < n; i++) {
+                const a = i * arc - Math.PI / 2;
+                c.beginPath();
+                c.moveTo(cx, cy);
+                c.lineTo(cx + R * Math.cos(a), cy + R * Math.sin(a));
+                c.stroke();
+            }
+        }
+
+        // 扇区外描边
+        c.beginPath();
+        c.arc(cx, cy, R, 0, 2 * Math.PI);
+        c.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        c.lineWidth = 2;
+        c.stroke();
+
+        // ⑤ 菜名（>80 格时每格不足 4.5°，文字必然重叠，只显示色带更干净）
+        if (n <= 80) {
+            const fontSize = n <= 12 ? 13 : (n <= 30 ? 12 : 10);
+            c.fillStyle = 'white';
+            c.font = `bold ${fontSize}px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif`;
+            c.textAlign = 'right';
+            c.textBaseline = 'middle';
+            c.shadowColor = 'rgba(0, 0, 0, 0.45)';
+            c.shadowBlur = 3;
+            foods.forEach((food, i) => {
+                c.save();
+                c.translate(cx, cy);
+                c.rotate(i * arc + arc / 2 - Math.PI / 2);
+                c.fillText(food.name, R - 10, 0, R - 48);
+                c.restore();
+            });
+            c.shadowBlur = 0;
+        }
+    }
+
+    // ⑥ 外圈灯珠（金白交替，转起来有奖轮氛围）
+    const dots = 28;
+    for (let i = 0; i < dots; i++) {
+        const a = (i / dots) * 2 * Math.PI;
+        c.beginPath();
+        c.arc(cx + (rimR - 6.5) * Math.cos(a), cy + (rimR - 6.5) * Math.sin(a), 2.4, 0, 2 * Math.PI);
+        c.fillStyle = i % 2 === 0 ? '#FFD584' : 'rgba(255, 255, 255, 0.85)';
+        c.fill();
+    }
+
+    return off;
+}
+
+// 中心按钮（固定不转）：白圈 + 品牌渐变芯 + 餐具符号
+function drawWheelHub(dpr) {
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cx = WHEEL_SIZE / 2;
+    const cy = WHEEL_SIZE / 2;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 31, 0, 2 * Math.PI);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 2;
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    const g = ctx.createLinearGradient(cx - 26, cy - 26, cx + 26, cy + 26);
+    g.addColorStop(0, '#FF8A4C');
+    g.addColorStop(1, '#D92667');
+    ctx.beginPath();
+    ctx.arc(cx, cy, 26, 0, 2 * Math.PI);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    ctx.font = '22px -apple-system, "Segoe UI Emoji", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🍴', centerX, centerY);
+    ctx.fillText('🍴', cx, cy + 1);
+    ctx.restore();
 }
 
 // 转盘旋转动画
@@ -1111,22 +1215,31 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// 深色模式切换
+// 深色模式切换（首次访问跟随系统偏好；手动切换后记住选择）
 function initThemeToggle() {
     const themeToggle = document.getElementById('theme-toggle');
     const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    if (savedTheme === 'dark') {
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
         document.body.classList.add('dark-mode');
         themeToggle.textContent = '☀️';
     }
+    syncThemeColor();
 
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
         themeToggle.textContent = isDark ? '☀️' : '🌙';
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        syncThemeColor();
     });
+}
+
+// 手机浏览器地址栏/状态栏颜色跟随主题
+function syncThemeColor() {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = document.body.classList.contains('dark-mode') ? '#1B1713' : '#FF7A45';
 }
 
 // ============ 音效（Web Audio，无需音频文件）============
