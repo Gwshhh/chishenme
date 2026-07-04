@@ -385,13 +385,14 @@ input[type="checkbox"] {
 }
 
 .wheel-count {
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--brand-text);
     font-weight: 600;
-    margin-bottom: 16px;
+    /* 关键：指针旗标上探出转盘约 14px 且带摆动，这里留足空气感，绝不再相撞 */
+    margin-bottom: 32px;
     background: var(--brand-soft);
     display: inline-block;
-    padding: 6px 16px;
+    padding: 5px 14px;
     border-radius: 99px;
     letter-spacing: 0.5px;
 }
@@ -401,6 +402,8 @@ input[type="checkbox"] {
     width: 300px;
     height: 300px;
     margin: 0 auto 30px;
+    /* 建立独立层叠上下文：指针（含上探部分）永远画在计数胶囊等文字之上 */
+    z-index: 1;
 }
 
 /* 转盘背后的品牌光晕 */
@@ -422,7 +425,7 @@ input[type="checkbox"] {
 /* 指针：渐变小旗标（原字符隐藏，改用裁切形状） */
 .wheel-pointer {
     position: absolute;
-    top: -17px;
+    top: -14px;
     left: 50%;
     width: 30px;
     height: 44px;
