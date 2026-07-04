@@ -140,6 +140,8 @@ input[type="checkbox"] {
 /* ---------- 头部 ---------- */
 .header {
     background: var(--brand-grad);
+    background-size: 170% 170%;
+    animation: aurora 16s ease-in-out infinite alternate;
     color: white;
     padding: 34px 20px 30px;
     text-align: center;
@@ -147,29 +149,32 @@ input[type="checkbox"] {
     overflow: hidden;
 }
 
-/* 装饰光斑，让渐变不呆板 */
-.header::before,
+/* 渐变极光式缓慢流动 */
+@keyframes aurora {
+    from { background-position: 0% 30%; }
+    to { background-position: 100% 70%; }
+}
+
+/* 装饰光斑（一层两团），让渐变不呆板 */
+.header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(240px 240px at -20px -60px, rgba(255, 255, 255, 0.30), transparent 70%),
+        radial-gradient(340px 340px at calc(100% + 70px) calc(100% + 150px), rgba(255, 255, 255, 0.20), transparent 70%);
+}
+
+/* 细腻噪点，去掉纯渐变的"塑料感" */
 .header::after {
     content: '';
     position: absolute;
-    border-radius: 50%;
+    inset: 0;
     pointer-events: none;
-}
-
-.header::before {
-    width: 240px;
-    height: 240px;
-    top: -130px;
-    left: -70px;
-    background: radial-gradient(closest-side, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0));
-}
-
-.header::after {
-    width: 320px;
-    height: 320px;
-    bottom: -210px;
-    right: -110px;
-    background: radial-gradient(closest-side, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.06;
+    mix-blend-mode: overlay;
 }
 
 .header-actions {
@@ -422,11 +427,22 @@ input[type="checkbox"] {
     width: 30px;
     height: 44px;
     transform: translateX(-50%);
+    transform-origin: 50% 18%;
     font-size: 0;
     background: linear-gradient(180deg, #FF6F4C 0%, #E42A47 100%);
     clip-path: polygon(50% 100%, 0 30%, 0 14%, 14% 0, 86% 0, 100% 14%, 100% 30%);
     filter: drop-shadow(0 3px 6px rgba(60, 10, 20, 0.35));
     z-index: 10;
+}
+
+/* 旋转中指针小幅拨动，像真的在划过格子 */
+.wheel-pointer.spinning {
+    animation: pointerWobble 0.14s ease-in-out infinite alternate;
+}
+
+@keyframes pointerWobble {
+    from { transform: translateX(-50%) rotate(3deg); }
+    to { transform: translateX(-50%) rotate(-5deg); }
 }
 
 .wheel-pointer::after {
@@ -561,6 +577,12 @@ input[type="checkbox"] {
     letter-spacing: 0.5px;
     margin: 14px 0 8px;
     color: var(--t1);
+    /* 品牌渐变文字（不支持时回退纯色） */
+    width: fit-content;
+    background: var(--brand-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .result-category {

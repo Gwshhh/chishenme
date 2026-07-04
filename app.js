@@ -382,6 +382,8 @@ function spinWheel() {
     spinBtn.disabled = true;
     spinBtn.querySelector('span').textContent = '抽取中...';
     resultCard.style.display = 'none';
+    const pointerEl = document.querySelector('.wheel-pointer');
+    if (pointerEl) pointerEl.classList.add('spinning');
 
     // 随机选择一个美食
     let selectedIndex = Math.floor(Math.random() * foods.length);
@@ -433,9 +435,24 @@ function spinWheel() {
         if (progress < 1) {
             requestAnimationFrame(animate);
         } else {
-            // 精确停在目标角度，确保指针对准选中扇形
-            drawWheel(finalRotation % (2 * Math.PI));
-            finishSpin(selectedFood);
+            // 落定余震：像真实奖轮一样带一点阻尼回摆（振幅不超过 1/4 扇区，
+            // 绝不会摆进邻格），结束后精确停在目标角度，确保指针对准选中扇形
+            const settleAmp = Math.min(0.014, arcAngle * 0.25);
+            const baseRotation = finalRotation % (2 * Math.PI);
+            let settleStart = null;
+            function settle(ts) {
+                if (settleStart === null) settleStart = ts;
+                const k = Math.min((ts - settleStart) / 300, 1);
+                const wobble = Math.sin(k * Math.PI * 2.5) * (1 - k) * settleAmp;
+                drawWheel(baseRotation + wobble);
+                if (k < 1) {
+                    requestAnimationFrame(settle);
+                } else {
+                    drawWheel(baseRotation);
+                    finishSpin(selectedFood);
+                }
+            }
+            requestAnimationFrame(settle);
         }
     }
 
@@ -449,8 +466,11 @@ function finishSpin(food) {
     state.lastResultName = food.name;
     spinBtn.disabled = false;
     spinBtn.querySelector('span').textContent = '开始抽取';
+    const pointerEl = document.querySelector('.wheel-pointer');
+    if (pointerEl) pointerEl.classList.remove('spinning');
 
     playDing();
+    celebrate();
 
     // 添加到历史记录
     addToHistory(food);
@@ -462,6 +482,89 @@ function finishSpin(food) {
 
     // 显示结果（不重绘转盘，保持指针停留的位置）
     showResult(food);
+}
+
+// ============ 抽中庆祝：彩带粒子（Canvas 覆盖层，零依赖）============
+let confettiCanvas = null;
+let confettiCtx = null;
+let confettiRAF = 0;
+
+function celebrate() {
+    // 尊重系统"减弱动态效果"设置
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    if (!confettiCanvas) {
+        confettiCanvas = document.createElement('canvas');
+        confettiCanvas.style.cssText =
+            'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:999;';
+        document.body.appendChild(confettiCanvas);
+        confettiCtx = confettiCanvas.getContext('2d');
+    }
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    confettiCanvas.width = window.innerWidth * dpr;
+    confettiCanvas.height = window.innerHeight * dpr;
+    confettiCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // 喷射源：转盘中心（可见时），否则屏幕上 1/3 处
+    let ox = window.innerWidth / 2;
+    let oy = window.innerHeight * 0.35;
+    const wrap = document.querySelector('.wheel-wrapper');
+    if (wrap && state.currentTab === 'wheel') {
+        const r = wrap.getBoundingClientRect();
+        if (r.bottom > 0 && r.top < window.innerHeight) {
+            ox = r.left + r.width / 2;
+            oy = r.top + r.height / 2;
+        }
+    }
+
+    const colors = ['#FF8A4C', '#F0435A', '#FFD584', '#12A5A5', '#3E7CB1', '#D9538C', '#47A25A', '#FFFFFF'];
+    const parts = [];
+    for (let i = 0; i < 80; i++) {
+        const ang = Math.random() * 2 * Math.PI;
+        const speed = 4 + Math.random() * 7;
+        parts.push({
+            x: ox, y: oy,
+            vx: Math.cos(ang) * speed,
+            vy: Math.sin(ang) * speed - 3,     // 整体略向上抛
+            w: 5 + Math.random() * 5,
+            h: 3 + Math.random() * 4,
+            rot: Math.random() * Math.PI,
+            vr: (Math.random() - 0.5) * 0.3,
+            color: colors[i % colors.length],
+            life: 0,
+            ttl: 70 + Math.random() * 40
+        });
+    }
+
+    cancelAnimationFrame(confettiRAF);
+    function tick() {
+        confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        let alive = false;
+        parts.forEach(p => {
+            if (p.life >= p.ttl) return;
+            alive = true;
+            p.life++;
+            p.vy += 0.18;                       // 重力
+            p.vx *= 0.985;
+            p.vy *= 0.985;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.rot += p.vr;
+            confettiCtx.save();
+            confettiCtx.translate(p.x, p.y);
+            confettiCtx.rotate(p.rot);
+            confettiCtx.globalAlpha = 1 - p.life / p.ttl;
+            confettiCtx.fillStyle = p.color;
+            confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            confettiCtx.restore();
+        });
+        if (alive) {
+            confettiRAF = requestAnimationFrame(tick);
+        } else {
+            confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        }
+    }
+    confettiRAF = requestAnimationFrame(tick);
 }
 
 // 显示结果
@@ -1066,6 +1169,7 @@ function pickRandomFavorite() {
     if (navigator.vibrate) navigator.vibrate(40);
     addToHistory(food);
     showFoodDetail(food);
+    celebrate();
     showToast(`就吃【${food.name}】吧！`);
 }
 
