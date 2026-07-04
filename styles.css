@@ -388,8 +388,7 @@ input[type="checkbox"] {
     font-size: 12.5px;
     color: var(--brand-text);
     font-weight: 600;
-    /* 关键：指针旗标上探出转盘约 14px 且带摆动，这里留足空气感，绝不再相撞 */
-    margin-bottom: 32px;
+    margin-bottom: 18px;
     background: var(--brand-soft);
     display: inline-block;
     padding: 5px 14px;
@@ -422,43 +421,8 @@ input[type="checkbox"] {
     filter: drop-shadow(0 10px 26px rgba(31, 20, 12, 0.22));
 }
 
-/* 指针：渐变小旗标（原字符隐藏，改用裁切形状） */
-.wheel-pointer {
-    position: absolute;
-    top: -14px;
-    left: 50%;
-    width: 30px;
-    height: 44px;
-    transform: translateX(-50%);
-    transform-origin: 50% 18%;
-    font-size: 0;
-    background: linear-gradient(180deg, #FF6F4C 0%, #E42A47 100%);
-    clip-path: polygon(50% 100%, 0 30%, 0 14%, 14% 0, 86% 0, 100% 14%, 100% 30%);
-    filter: drop-shadow(0 3px 6px rgba(60, 10, 20, 0.35));
-    z-index: 10;
-}
-
-/* 旋转中指针小幅拨动，像真的在划过格子 */
-.wheel-pointer.spinning {
-    animation: pointerWobble 0.14s ease-in-out infinite alternate;
-}
-
-@keyframes pointerWobble {
-    from { transform: translateX(-50%) rotate(3deg); }
-    to { transform: translateX(-50%) rotate(-5deg); }
-}
-
-.wheel-pointer::after {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
-}
+/* 指针已改为直接绘制在画布内（app.js drawWheelPointer）：
+   跨浏览器渲染一致、永不残缺、且不会与页面文字相撞 */
 
 /* 开始按钮 */
 .spin-btn {
@@ -1419,10 +1383,37 @@ body.dark-mode .today-pick-label {
     }
 }
 
-/* 桌面：应用浮层化 */
+/* 桌面：应用浮层化 + 页面氛围光斑 */
 @media (min-width: 601px) {
     body {
         padding: 28px 20px;
+    }
+
+    body::before,
+    body::after {
+        content: '';
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.5;
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    body::before {
+        width: 420px;
+        height: 420px;
+        left: -120px;
+        top: -80px;
+        background: radial-gradient(closest-side, rgba(255, 138, 76, 0.55), transparent);
+    }
+
+    body::after {
+        width: 520px;
+        height: 520px;
+        right: -160px;
+        bottom: -120px;
+        background: radial-gradient(closest-side, rgba(240, 67, 90, 0.40), transparent);
     }
 
     .container {

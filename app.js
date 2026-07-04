@@ -235,7 +235,8 @@ function drawWheel(rotation = 0) {
     ctx.drawImage(wheelCache, -px / 2, -px / 2);
     ctx.restore();
 
-    drawWheelHub(dpr);   // 中心按钮不随转动
+    drawWheelHub(dpr);              // 中心按钮不随转动
+    drawWheelPointer(dpr, rotation); // 指针画在画布内：跨浏览器渲染一致，绝不残缺
 }
 
 // 预渲染整个转盘（深色外圈 + 灯珠 + 扇区 + 光影 + 菜名）到离屏画布
@@ -302,9 +303,17 @@ function buildWheelCache(foods, dpr) {
         c.lineWidth = 2;
         c.stroke();
 
-        // ⑤ 菜名（>80 格时每格不足 4.5°，文字必然重叠，只显示色带更干净）
-        if (n <= 80) {
-            const fontSize = n <= 12 ? 13 : (n <= 30 ? 12 : 10);
+        // ⑤ 菜名/店名：按格数分级排版——格越多名字越短、越贴外圈，
+        //    保证任何档位都不会挤成一团噪点；>60 格只显示干净色带
+        if (n <= 60) {
+            let fontSize, maxChars, edge, maxW;
+            if (n <= 16) {
+                fontSize = 13;   maxChars = Infinity; edge = 10; maxW = R - 48;
+            } else if (n <= 40) {
+                fontSize = 11;   maxChars = 6;        edge = 10; maxW = 66;
+            } else {
+                fontSize = 9.5;  maxChars = 4;        edge = 8;  maxW = 42;
+            }
             c.fillStyle = 'white';
             c.font = `bold ${fontSize}px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif`;
             c.textAlign = 'right';
@@ -312,10 +321,12 @@ function buildWheelCache(foods, dpr) {
             c.shadowColor = 'rgba(0, 0, 0, 0.45)';
             c.shadowBlur = 3;
             foods.forEach((food, i) => {
+                let label = String(food.name);
+                if (label.length > maxChars) label = label.slice(0, maxChars);
                 c.save();
                 c.translate(cx, cy);
                 c.rotate(i * arc + arc / 2 - Math.PI / 2);
-                c.fillText(food.name, R - 10, 0, R - 48);
+                c.fillText(label, R - edge, 0, maxW);
                 c.restore();
             });
             c.shadowBlur = 0;
@@ -368,6 +379,59 @@ function drawWheelHub(dpr) {
     ctx.restore();
 }
 
+// 顶部指针（画在画布内的泪滴形拨片）。
+// 之前用 HTML+clip-path 叠加层，部分浏览器渲染残缺且易与上方文字相撞；
+// 画进 Canvas 后跨浏览器像素一致，还能做"划过格子被踢一下"的拨片物理。
+function drawWheelPointer(dpr, rotation) {
+    const n = wheelFoods.length;
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cx = WHEEL_SIZE / 2;
+
+    // 拨片物理：转动中每划过一格边界被"踢"向行进方向，随后在 1/3 格内回正
+    let tilt = 0;
+    if (n > 1 && state.isSpinning) {
+        const arc = (2 * Math.PI) / n;
+        const phase = (((rotation % arc) + arc) % arc) / arc;   // 当前格内相位 0..1
+        tilt = 0.30 * Math.max(0, 1 - phase * 3);
+    }
+    ctx.translate(cx, 6);
+    ctx.rotate(tilt);
+    ctx.translate(-cx, -6);
+
+    // 泪滴形：上半圆鼓包 + 收尖伸入扇区
+    ctx.beginPath();
+    ctx.arc(cx, 14, 11, Math.PI * 0.75, Math.PI * 0.25, false);
+    ctx.lineTo(cx, 38);
+    ctx.closePath();
+
+    const g = ctx.createLinearGradient(0, 2, 0, 38);
+    g.addColorStop(0, '#FF6F4C');
+    g.addColorStop(1, '#E42A47');
+    ctx.shadowColor = 'rgba(60, 10, 20, 0.35)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // 白描边把指针从花色扇区中衬出来
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // 顶部白点点缀
+    ctx.beginPath();
+    ctx.arc(cx, 13, 3.6, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.fill();
+
+    ctx.restore();
+}
+
 // 转盘旋转动画
 function spinWheel() {
     if (state.isSpinning) return;
@@ -382,8 +446,6 @@ function spinWheel() {
     spinBtn.disabled = true;
     spinBtn.querySelector('span').textContent = '抽取中...';
     resultCard.style.display = 'none';
-    const pointerEl = document.querySelector('.wheel-pointer');
-    if (pointerEl) pointerEl.classList.add('spinning');
 
     // 随机选择一个美食
     let selectedIndex = Math.floor(Math.random() * foods.length);
@@ -466,8 +528,6 @@ function finishSpin(food) {
     state.lastResultName = food.name;
     spinBtn.disabled = false;
     spinBtn.querySelector('span').textContent = '开始抽取';
-    const pointerEl = document.querySelector('.wheel-pointer');
-    if (pointerEl) pointerEl.classList.remove('spinning');
 
     playDing();
     celebrate();
