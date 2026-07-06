@@ -1,13 +1,13 @@
 // Service Worker：让应用可安装、可离线。
 // 策略：核心文件(HTML/CSS/JS)网络优先(保证代码永远最新，断网才用缓存兜底)；
 //       菜品图片缓存优先(加载过一次就离线可用)。
-const CACHE = 'chishenme-v26';
+const CACHE = 'chishenme-v27';
 const CORE = [
     './',
     './index.html',
-    './styles.css?v=26',
-    './app.js?v=26',
-    './data.js?v=26',
+    './styles.css?v=27',
+    './app.js?v=27',
+    './data.js?v=27',
     './manifest.json',
     './icon.svg'
 ];

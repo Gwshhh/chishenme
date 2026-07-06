@@ -4,7 +4,7 @@
 const AMAP_KEY = 'a6efe2e85bc9027cf51d72e3a20ff9da';
 
 // 应用版本（随每次发布更新，页面底部角标展示，用于确认缓存是否已更新）
-const APP_VERSION = 'v26';
+const APP_VERSION = 'v27';
 
 // 安全读取 localStorage（数据损坏时不会导致应用崩溃白屏）
 function loadStored(key) {
@@ -186,8 +186,15 @@ function getActiveDataset() {
     return state.useNearby ? state.nearbyPlaces : foodData;
 }
 
+// 旋转期间锁定的候选列表：防止转到一半"附近店铺刷新/筛选变化"
+// 把盘面换掉，导致指针落点与抽中结果对不上。
+let spinLockedFoods = null;
+
 // 获取筛选后的美食列表（附近模式不分类不分时段，直接返回全部附近店铺）
 function getFilteredFoods() {
+    if (state.isSpinning && spinLockedFoods) {
+        return spinLockedFoods;
+    }
     if (state.useNearby) {
         return state.nearbyPlaces;
     }
@@ -699,6 +706,7 @@ function spinWheel() {
     }
 
     state.isSpinning = true;
+    spinLockedFoods = foods;   // 锁定本次抽取的候选，动画期间盘面不受外界变化影响
     spinBtn.disabled = true;
     spinBtn.querySelector('span').textContent = '抽取中...';
     resultCard.style.display = 'none';
@@ -780,6 +788,7 @@ function spinWheel() {
 // 完成抽取
 function finishSpin(food) {
     state.isSpinning = false;
+    spinLockedFoods = null;
     state.currentResult = food;
     state.lastResultName = food.name;
     spinBtn.disabled = false;
@@ -891,13 +900,17 @@ function showResult(food) {
     let card = food.imageFallback || '';
     if (!card.startsWith('data:') && typeof makeNameCard === 'function') card = makeNameCard(food.name);
     img.onerror = null;
-    img.src = card;
-    if (food.image && food.image !== card) {
-        const pre = new Image();
-        const timer = setTimeout(() => { pre.onload = pre.onerror = null; }, 8000);
-        pre.onload = () => { clearTimeout(timer); img.src = food.image; };
-        pre.onerror = () => { clearTimeout(timer); };
-        pre.src = food.image;
+    if (food.image && loadedRealImages.has(food.image)) {
+        img.src = food.image;   // 已加载过的真图直接展示
+    } else {
+        img.src = card;
+        if (food.image && food.image !== card) {
+            const pre = new Image();
+            const timer = setTimeout(() => { pre.onload = pre.onerror = null; }, 8000);
+            pre.onload = () => { clearTimeout(timer); loadedRealImages.add(food.image); img.src = food.image; };
+            pre.onerror = () => { clearTimeout(timer); };
+            pre.src = food.image;
+        }
     }
     document.getElementById('result-name').textContent = food.name;
     document.getElementById('result-category').textContent = food.category;
@@ -1810,6 +1823,10 @@ function escapeAttr(s) {
 // 真实照片地址存在 data-real 上，渲染后由 hydrateImages() 在后台预加载，
 // 成功才悄悄替换上去；失败或超时就一直保留那张卡。这样无论 GitHub 图片在国内
 // 能否拉到，屏幕上永远先有内容，能拉到就自动升级成真实照片。
+// 已成功加载过的真实照片地址：重渲染（搜索输入、切页签）时直接出图，
+// 不再"先闪色卡→再换照片"，也避免重复发起下载。
+const loadedRealImages = new Set();
+
 function progressiveImg(food, cls) {
     // 兜底卡必须是零网络的 data: URI。旧版收藏/历史里存的是文件路径
     // （images_new/*.jpg），国内可能拉不到，这里统一按菜名/店名现场重生成。
@@ -1818,6 +1835,10 @@ function progressiveImg(food, cls) {
         card = makeNameCard(food.name);
     }
     const real = food.image && food.image !== card ? food.image : '';
+    if (real && loadedRealImages.has(real)) {
+        return `<img class="${cls}" src="${escapeAttr(real)}" alt="${escapeAttr(food.name)}" `
+            + `loading="lazy" decoding="async">`;
+    }
     return `<img class="${cls}" src="${escapeAttr(card)}" `
         + `data-real="${escapeAttr(real)}" alt="${escapeAttr(food.name)}" `
         + `loading="lazy" decoding="async">`;
@@ -1833,7 +1854,7 @@ function hydrateImages(container) {
         const pre = new Image();
         // 8 秒还没成功就放弃，保留卡片，不让用户一直看转圈
         const timer = setTimeout(() => { pre.onload = pre.onerror = null; }, 8000);
-        pre.onload = () => { clearTimeout(timer); img.src = real; };
+        pre.onload = () => { clearTimeout(timer); loadedRealImages.add(real); img.src = real; };
         pre.onerror = () => { clearTimeout(timer); };
         pre.src = real;
     });
@@ -1860,14 +1881,6 @@ function toggleFavorite(food) {
 
     saveFavorites();
     updateUI();
-}
-
-// 通过名称切换收藏（用于卡片）
-function toggleFavoriteByName(foodName) {
-    const food = foodData.find(f => f.name === foodName);
-    if (food) {
-        toggleFavorite(food);
-    }
 }
 
 // 保存收藏
@@ -2114,8 +2127,13 @@ window.addEventListener('resize', () => {
     }
 });
 
-// 空格键 / 回车键快捷抽取（不在输入框时）
+// 空格/回车快捷抽取（不在输入框时）；Esc 关闭弹窗
 document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeModal();
+        closeDuel();
+        return;
+    }
     if ((e.code === 'Space' || e.code === 'Enter') &&
         state.currentTab === 'wheel' &&
         !state.isSpinning &&
@@ -2230,6 +2248,7 @@ function getAudioCtx() {
 // 已脱离点击手势，故不解锁就一直静音。这里在用户首次触摸/点击页面时就解锁：
 // 创建并 resume 上下文，再播一段 0 音量的空音，把音频通道彻底激活。
 function initAudioUnlock() {
+    const events = ['touchend', 'touchstart', 'click', 'keydown'];
     const unlock = () => {
         if (audioUnlocked) return;
         const ctx = getAudioCtx();
@@ -2244,10 +2263,9 @@ function initAudioUnlock() {
             src.start(0);
         } catch (e) { /* 忽略 */ }
         audioUnlocked = true;
+        events.forEach(evt => document.removeEventListener(evt, unlock));  // 解锁后即清理
     };
-    // 首次触摸/点击/按键都尝试解锁，once 触发后自动移除
-    ['touchend', 'touchstart', 'click', 'keydown'].forEach(evt =>
-        document.addEventListener(evt, unlock, { once: false, passive: true }));
+    events.forEach(evt => document.addEventListener(evt, unlock, { passive: true }));
 }
 
 function beep(freq, durationMs, type = 'square', gainVal = 0.04) {
@@ -2294,22 +2312,32 @@ function initSoundToggle() {
     });
 }
 
-// ============ 今日推荐 ============
-// 按日期确定性地选一道菜：同一天始终推荐同一道，跨天才变。
+// ============ 今日推荐（跟随时段） ============
+// 按"日期 + 当前时段"确定性地选一道：同一天同一餐始终推荐同一道，
+// 且只从当前时段的候选池里挑——早上推早餐、深夜推夜宵，不再违和。
 function initTodayPick() {
     const nameEl = document.getElementById('today-pick-name');
     const btn = document.getElementById('today-pick-btn');
     if (!nameEl || !btn) return;
 
-    const now = new Date();
-    const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-    const food = foodData[seed % foodData.length];
+    const meal = currentMealKey();
+    const pool = foodData.filter(f => foodHasMeal(f, meal));
+    const list = pool.length ? pool : foodData;
 
+    const now = new Date();
+    const daySeed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+    const mealIdx = ['早', '午', '晚', '夜'].indexOf(meal);
+    const food = list[(daySeed * 4 + mealIdx) % list.length];
+
+    const labelEl = document.getElementById('today-pick-label-text');
+    if (labelEl) {
+        labelEl.textContent = { 早: '早餐推荐', 午: '午餐推荐', 晚: '晚餐推荐', 夜: '夜宵推荐' }[meal] || '今日推荐';
+    }
     nameEl.textContent = food.name;
     btn.onclick = () => {
         addToHistory(food);
         showFoodDetail(food);
-        showToast(`今日就吃【${food.name}】！`);
+        showToast(`这顿就吃【${food.name}】！`);
     };
 }
 
@@ -2445,28 +2473,55 @@ function requestLocation() {
     );
 }
 
-// 反查城市/区域名（OpenStreetMap Nominatim，免密钥、支持跨域）。
+// 反查城市/区域名：主用高德逆地理（境内服务器稳定、key 现成），
+// 失败时退回 OpenStreetMap Nominatim（免密钥，但国内时常超时）。
 function reverseGeocode(lat, lon) {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=14&accept-language=zh-CN`;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 6000);
+    const applyCity = (text) => {
+        if (!text) return;
+        if (state.location) {
+            state.location.city = text;
+            persistLocation();
+        }
+        if (!state.useNearby) renderNearby(text);
+        renderNearbyMeta();
+    };
 
-    fetch(url, { signal: ctrl.signal, headers: { 'Accept': 'application/json' } })
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(data => {
-            const a = data.address || {};
-            const city = a.city || a.town || a.county || a.state || '';
-            const dist = a.district || a.suburb || a.city_district || a.neighbourhood || '';
+    const fetchJSON = (url, ms) => {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), ms);
+        return fetch(url, { signal: ctrl.signal })
+            .then(r => r.ok ? r.json() : Promise.reject(r.status))
+            .finally(() => clearTimeout(timer));
+    };
+
+    // ① 高德：GPS 先转 GCJ-02 再逆地理，城市/区县名与国内认知一致
+    const convUrl = `https://restapi.amap.com/v3/assistant/coordinate/convert`
+        + `?locations=${lon},${lat}&coordsys=gps&key=${AMAP_KEY}`;
+    fetchJSON(convUrl, 8000)
+        .then(d => (d && d.status === '1' && d.locations) ? d.locations : `${lon},${lat}`)
+        .then(center => fetchJSON(
+            `https://restapi.amap.com/v3/geocode/regeo?key=${AMAP_KEY}&location=${center}&extensions=base`, 8000))
+        .then(d => {
+            const a = (d && d.status === '1' && d.regeocode && d.regeocode.addressComponent) || null;
+            if (!a) return Promise.reject('regeo-empty');
+            // 直辖市的 city 是空数组，此时用 province（如"北京市"）
+            const city = (typeof a.city === 'string' && a.city) ? a.city : (a.province || '');
+            const dist = typeof a.district === 'string' ? a.district : '';
             const text = [city, dist].filter(Boolean).join(' · ');
-            if (state.location) {
-                state.location.city = text;
-                persistLocation();
-            }
-            if (!state.useNearby) renderNearby(text);
-            renderNearbyMeta();
+            if (!text) return Promise.reject('regeo-blank');
+            applyCity(text);
         })
-        .catch(() => { /* 反查失败不影响主流程 */ })
-        .finally(() => clearTimeout(timer));
+        .catch(() => {
+            // ② 兜底：Nominatim
+            fetchJSON(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=14&accept-language=zh-CN`, 6000)
+                .then(data => {
+                    const a = data.address || {};
+                    const city = a.city || a.town || a.county || a.state || '';
+                    const dist = a.district || a.suburb || a.city_district || a.neighbourhood || '';
+                    applyCity([city, dist].filter(Boolean).join(' · '));
+                })
+                .catch(() => { /* 双双失败不影响主流程 */ });
+        });
 }
 
 // 持久化定位（下次进入免重复授权）
@@ -2704,8 +2759,9 @@ function initShakeDetection() {
     let lastY = 0;
     let lastZ = 0;
 
-    window.addEventListener('devicemotion', (e) => {
+    function onMotion(e) {
         const current = e.accelerationIncludingGravity;
+        if (!current) return;
         const currentTime = new Date().getTime();
 
         if ((currentTime - lastTime) > 100) {
@@ -2727,5 +2783,21 @@ function initShakeDetection() {
             lastY = y;
             lastZ = z;
         }
-    });
+    }
+
+    // iOS 13+ 必须在用户手势的调用栈里申请运动权限，否则监听永远收不到事件。
+    // 借用首次触摸/点击静默申请一次：同意则启用摇一摇，拒绝则安静放弃。
+    if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        const ask = () => {
+            document.removeEventListener('touchend', ask);
+            document.removeEventListener('click', ask);
+            DeviceMotionEvent.requestPermission()
+                .then(s => { if (s === 'granted') window.addEventListener('devicemotion', onMotion); })
+                .catch(() => { /* 用户拒绝或环境不支持，忽略 */ });
+        };
+        document.addEventListener('touchend', ask, { passive: true });
+        document.addEventListener('click', ask);
+    } else {
+        window.addEventListener('devicemotion', onMotion);
+    }
 }

@@ -59,6 +59,23 @@ Each food item in `foodData`:
 
 **No build process required** - this is vanilla HTML/CSS/JS.
 
+## Release checklist (EVERY deploy — stale caches otherwise)
+
+1. Bump `?v=N` on all three asset links in `index.html` (styles.css / data.js / app.js)
+2. Bump `sw.js`: `CACHE = 'chishenme-vN'` **and** the `?v=N` entries inside `CORE` — the Service Worker otherwise keeps serving old assets to installed clients
+3. Bump `APP_VERSION` in `app.js` (drives the page-footer version badge used to verify deploys)
+4. `node --check app.js data.js`, commit, push; GitHub Pages deploys in 1–2 min
+5. Verify live version: page-footer badge shows vN (or `curl -s <site> | grep -o "styles.css?v=[0-9]*"`). Pages deploy occasionally flakes (build ✓ / deploy ✗ in seconds) — retrigger with `git commit --allow-empty && git push`
+
+## Feature modules map (app.js)
+
+- **Themes**: `COLOR_THEMES`/`applyColorTheme` — CSS tokens per `body[data-theme]` (styles.css); canvas hub/pointer/confetti read `themeBrand()`
+- **Smart pick**: meal pool (`MEAL_EXTRA` in data.js + `state.mealFilter`), fatigue decay (`foodWeight`), weather boost (`fetchWeather`/`weatherBoost`, Open-Meteo keyless) — all multiplied inside `weightedPick`
+- **Tournament**: `startTournament`/`renderDuel`; **Share card**: `buildShareCard` (canvas 750×980, CORS-safe fallback)
+- **Custom menu / B-end**: `mergeCustomFoods` — `customFoods` (append) & `menuOverride` (full replace) in localStorage
+- **PWA**: `sw.js` (network-first core, cache-first images_food); PNG icons via `python gen_icon.py` (iOS ignores SVG icons)
+- **Spin safety**: `spinLockedFoods` freezes the candidate list during the spin animation — never remove, prevents pointer/result mismatch when nearby stores reload mid-spin
+
 **To run:**
 ```bash
 # Windows
