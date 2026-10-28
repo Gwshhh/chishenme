@@ -1,1 +1,3 @@
-{ "apiBase": "" }
+{
+  "apiBase": "https://chishenme-api.gwshhh007.workers.dev/api/"
+}

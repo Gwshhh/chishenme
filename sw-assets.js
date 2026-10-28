@@ -1,5 +1,5 @@
 // Explicit offline shell. npm run check verifies that every browser module is present.
-self.APP_VERSION = '3.2.2';
+self.APP_VERSION = '3.2.3';
 self.APP_ASSETS = [
     './', './index.html', './styles.css', './app.js', './data.js', './config.js',
     './manifest.json', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon.ico', './favicon-32.png',

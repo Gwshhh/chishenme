@@ -1,14 +1,14 @@
 import { APP_CONFIG } from '../../config.js';
 import { normalizeFood } from '../core/model.js';
 
-async function fetchJson(url, { signal, timeout = 10000 } = {}) {
+async function fetchJson(url, { signal, timeout = 10000, fetchImpl = fetch } = {}) {
     const controller = new AbortController();
     const abort = () => controller.abort();
     signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) controller.abort();
     const timer = setTimeout(abort, timeout);
     try {
-        const response = await fetch(url, { signal: controller.signal, credentials: 'omit', headers: { Accept: 'application/json' } });
+        const response = await fetchImpl(url, { signal: controller.signal, credentials: 'omit', cache: 'no-store', headers: { Accept: 'application/json' } });
         const data = await response.json();
         if (!response.ok) throw new Error(data?.error || '服务暂不可用，请稍后重试');
         return data;
@@ -20,35 +20,52 @@ async function fetchJson(url, { signal, timeout = 10000 } = {}) {
     } finally { clearTimeout(timer); signal?.removeEventListener('abort', abort); }
 }
 
-export function createApi() {
+export function createApi({ config: appConfig = APP_CONFIG, fetchImpl = fetch } = {}) {
     let base = null;
     let development = false;
     let capabilities = { nearby: false, weather: false };
-    const ready = (async () => {
+    let pending = null, settled = false, connectionError = '';
+    const discover = async () => {
         try {
-            const config = APP_CONFIG.apiBase ? APP_CONFIG : await fetchJson(new URL('../../runtime-config.json', import.meta.url), { timeout: 2500 });
+            const config = appConfig.apiBase ? appConfig : await fetchJson(new URL('../../runtime-config.json', import.meta.url), { timeout: 5000, fetchImpl });
             development = config.development === true;
+            base = null;
+            capabilities = { nearby: false, weather: false };
+            connectionError = '';
             if (!config.apiBase) return capabilities;
             const parsed = new URL(config.apiBase, new URL('../../', import.meta.url));
-            if (!['http:', 'https:'].includes(parsed.protocol)) return capabilities;
+            if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Invalid API address');
             base = parsed.href.endsWith('/') ? parsed : new URL(`${parsed.href}/`);
-            const data = await fetchJson(new URL('config', base), { timeout: 3000 });
+            const data = await fetchJson(new URL('config', base), { timeout: 8000, fetchImpl });
             capabilities = { nearby: data.nearby === true, weather: data.weather === true };
-        } catch { /* Static and offline deployments retain all local functionality. */ }
+        } catch {
+            base = null;
+            capabilities = { nearby: false, weather: false };
+            connectionError = '暂时连接不上附近店铺服务，请稍后重试';
+        } finally { settled = true; }
         return capabilities;
-    })();
+    };
+    const ensureReady = ({ retry = false } = {}) => {
+        if (pending) return pending;
+        if (settled && (!retry || capabilities.nearby && !connectionError)) return Promise.resolve(capabilities);
+        pending = discover().finally(() => { pending = null; });
+        return pending;
+    };
+    const ready = ensureReady();
     const request = async (route, position, options = {}) => {
-        await ready;
-        if (!base || !capabilities[route]) throw new Error(route === 'nearby' ? '附近店铺服务尚未启用，可前往外卖平台查看' : '天气服务暂不可用');
+        await ensureReady({ retry: true });
+        if (!base || !capabilities[route]) throw new Error(connectionError || (route === 'nearby' ? '附近店铺服务尚未启用，可前往外卖平台查看' : '天气服务暂不可用'));
         const url = new URL(route, base);
         url.searchParams.set('lat', String(position.latitude));
         url.searchParams.set('lon', String(position.longitude));
         if (options.level) url.searchParams.set('level', String(options.level));
-        return fetchJson(url, { signal: options.signal, timeout: route === 'nearby' ? 28000 : 10000 });
+        return fetchJson(url, { signal: options.signal, timeout: route === 'nearby' ? 28000 : 10000, fetchImpl });
     };
     return {
         ready,
+        ensureReady,
         get capabilities() { return capabilities; },
+        get connectionError() { return connectionError; },
         get development() { return development; },
         async nearby(position, options) {
             const data = await request('nearby', position, options);

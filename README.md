@@ -75,7 +75,9 @@ GitHub Pages 地址为 [https://gwshhh.github.io/chishenme/](https://gwshhh.gith
 
 **纯静态托管**：发布 `index.html`、`app.js`、`data.js`、`config.js`、`runtime-config.json`、`styles.css`、`src/`、`images_food/`、`sw.js`、`sw-assets.js`、manifest 与图标。相对路径支持 GitHub Pages 子目录；默认启用全部本地功能。
 
-**静态站点 + 独立 API**：在 `config.js` 中设置公开的 `apiBase: 'https://你的服务/api/'`，并在后端 `.env` 配置 `ALLOWED_ORIGIN=https://你的静态域名`。`apiBase` 是地址，不是密钥。
+**静态站点 + 独立 API**：在 `runtime-config.json` 中配置公开的 `apiBase: 'https://你的服务/api/'`；Node 托管会自动返回同源配置。`config.js` 的 `apiBase` 可作为明确的覆盖值，通常保持空白。后端允许来源须为网页来源（本站是 `https://gwshhh.github.io`），不带项目路径。`apiBase` 是地址，不是密钥。
+
+**Cloudflare 接口部署**：`npm run deploy:api` 把地图配置保存为 Worker Secret，真实查询通过后自动写入运行配置；发布前端后用 `npm run verify:live` 检查完整链路。首次使用需要 `npx wrangler login`。步骤与验证范围见 [附近店铺部署](docs/nearby-deployment.md)。
 
 **Node 一体托管**：运行 `npm start`，生产环境放在 HTTPS 反向代理后；静态文件和 API 同源。服务端只提供允许公开的文件，不提供 `.env`、证书、Git 元数据或服务端源码。
 

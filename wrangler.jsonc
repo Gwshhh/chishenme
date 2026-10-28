@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "chishenme-api",
+  "main": "server/worker.js",
+  "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "placement": { "region": "aws:ap-east-1" },
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "ALLOWED_ORIGIN": "https://gwshhh.github.io"
+  },
+  "ratelimits": [
+    {
+      "name": "NEARBY_LIMITER",
+      "namespace_id": "1072801",
+      "simple": { "limit": 40, "period": 60 }
+    }
+  ],
+  "observability": { "enabled": false }
+}

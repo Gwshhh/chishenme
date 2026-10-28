@@ -10,10 +10,12 @@ export function initNearby(app) {
         controller?.abort(); controller = new AbortController();
         button.disabled = true; cancel.hidden = false;
         const signal = controller.signal;
-        status.textContent = reuse && position ? '正在寻找附近的真实店铺…' : '正在获取位置，请留意浏览器权限提示…';
+        status.textContent = '正在连接附近店铺服务…';
         try {
-            const capabilities = await app.api.ready;
-            if (!capabilities.nearby) throw new Error('附近店铺服务尚未启用，可点击下方入口去美团看看');
+            const capabilities = await app.api.ensureReady({ retry: true });
+            if (signal.aborted || token !== sequence) return;
+            if (!capabilities.nearby) throw new Error(app.api.connectionError || '附近店铺服务尚未启用，可点击下方入口去美团看看');
+            status.textContent = reuse && position ? '正在寻找附近的真实店铺…' : '正在获取位置，请留意浏览器权限提示…';
             const acquired = !reuse || !position ? await locate() : position;
             if (signal.aborted || token !== sequence) return;
             position = acquired;
@@ -39,6 +41,8 @@ export function initNearby(app) {
     const cancelSearch = () => { sequence++; controller?.abort(); button.disabled = false; cancel.hidden = true; status.textContent = '已取消搜索，当前菜单保持不变。'; };
     cancel.addEventListener('click', cancelSearch);
     level.addEventListener('change', () => { app.store.update(data => { data.settings.nearbyLevel = Number(level.value); }, 'nearby-setting'); if (position || controller && button.disabled) load(true); });
-    app.api.ready.then(capabilities => { if (!capabilities.nearby && !position) status.textContent = '当前可使用美食菜单，也可以直接去外卖平台发现附近。'; });
+    app.api.ready.then(capabilities => {
+        if (!capabilities.nearby && !position && !button.disabled) status.textContent = app.api.connectionError ? '附近店铺暂时连接不上，可点击“定位找店”重试。' : '当前可使用美食菜单，也可以直接去外卖平台发现附近。';
+    });
     return { cancel: cancelSearch, refresh() { level.value = String(app.store.get().settings.nearbyLevel); } };
 }

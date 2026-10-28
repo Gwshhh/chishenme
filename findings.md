@@ -77,3 +77,15 @@
 - 实际图标预览中，碗筷大轮廓在 16px 仍可辨识，叶脉与高光属于可丢失的细节；圆形裁切不碰主体。桌面和手机品牌与既有白/深绿页面协调，没有新增页面布局改动。
 - 本地工具浏览器保留了 v3.1.0 的旧 shell，首次采样读到 span 而不是新版 img；点击已有更新按钮后显示 v3.2.2，清理旧 shell 并保留既有 images-v2 策略。不能把首次旧页截图当作新版证据。
 - v3.2.2 线上验收：7 个图标返回值与本地哈希逐一一致；实际 v3.2.1 浏览器接受更新后，6 个使用中图标均进入新 shell，旧 shell 被移除，images-v2 保留。生产上下文前后为空状态，验证边界已明确记录。
+
+## v3.2.3 线上附近店铺回归修复
+- 旧版 d0f8ec7 的 app.js 直接访问高德 place/around、geocode/regeo 和坐标转换，前端存在地图配置；核对过程仅输出端点和配置存在与否，未输出密钥。
+- 当前线上 config.js 和 runtime-config.json 的 apiBase 均为空，createApi().ready 返回 nearby=false/weather=false；Node 只在本机提供同源配置。用户指出这是重构造成的功能回退，要求修复。
+- 当前真实高德配置有效：npm run smoke:providers 在公开固定北京测试坐标返回 60 家店、partial=false，天气请求也成功。没有使用用户实际位置。
+- 现有服务端有坐标校验、固定上游、超时、错误脱敏、缓存、并发合并和限流。边缘适配应复用 providers.js 和校验，保留这些边界。
+- API 能力探测目前为一次性 Promise，任何暂时失败都会维持 false 到刷新；修复上线同时让主动定位操作可以重试，并区分未配置和连接失败。
+- 新实现以 runtime-config.json 接入静态页面，保留 config.js 显式覆盖和 Node 自动同源配置，避免开发预览被强行指向生产服务。
+- Cloudflare 登录失败不是用户未授权：第一次本机接收等待超时，后一次回调有效但令牌交换 fetch 失败。Windows 浏览器启用了本机代理，提升权限后的命令行未设置代理变量；对齐网络后授权成功。
+- Worker 已部署且 Secret 类型正确，但初次地图和天气请求均报连接错误；共同代码的 redirect:error 改为 Workers 支持的 manual，再由非 2xx 检查拒绝重定向，不转发凭据。
+- 跨域浏览器验证及连续 3 次诊断发现高德初始连接仍会超时，三次入口均为 LAX，约 13–14 秒（一轮首请求重试后）。天气请求已经成功，问题集中在该节点到高德的链路。
+- 参考 Cloudflare 官方 Placement 文档（2026-10-12 更新，https://developers.cloudflare.com/workers/configuration/placement/）：支持所有 Workers plans，明确区域提示可选择靠近指定云区域的 Cloudflare 节点。配置 aws:ap-east-1（香港附近）来缩短到高德的连接；不修改用户代理或扩大请求次数。

@@ -106,6 +106,36 @@ test('providers enforce request timeouts and response size bounds', async () => 
     await assert.rejects(() => fetchJson(new URL('https://example.test'), { fetchImpl: async () => new Response('x'.repeat(1024 * 1024 + 1)) }), error => error.status === 502);
 });
 
+test('provider fetch rejects redirects without forwarding its credential', async () => {
+    let calls = 0;
+    await assert.rejects(() => fetchJson(new URL('https://example.test'), { fetchImpl: async (_, options) => {
+        calls++;
+        assert.equal(options.redirect, 'manual');
+        return new Response(null, { status: 302, headers: { Location: 'https://unexpected.example/' } });
+    } }), error => error.status === 502);
+    assert.equal(calls, 1);
+});
+
+test('first-page connection failures retry once while provider rejections do not loop', async () => {
+    let attempts = 0;
+    const recovered = await nearbyPlaces({ lat: 39, lon: 116, level: 1, amapKey: 'fixture-key', pageDelay: 0, fetchImpl: async url => {
+        if (url.pathname.endsWith('/regeo')) return Response.json({ status: '1' });
+        if (++attempts === 1) throw new TypeError('connection interrupted');
+        return Response.json({ status: '1', pois: [{ id: 'recovered', name: '测试餐馆' }] });
+    } });
+    assert.equal(attempts, 2); assert.equal(recovered.places.length, 1);
+    attempts = 0;
+    await assert.rejects(() => nearbyPlaces({ lat: 39, lon: 116, level: 1, amapKey: 'fixture-key', pageDelay: 0, fetchImpl: async () => {
+        attempts++; throw new TypeError('still disconnected');
+    } }), error => error.status === 502);
+    assert.equal(attempts, 2);
+    attempts = 0;
+    await assert.rejects(() => nearbyPlaces({ lat: 39, lon: 116, level: 1, amapKey: 'fixture-key', pageDelay: 0, fetchImpl: async () => {
+        attempts++; return Response.json({ status: '0', info: 'provider rejection' });
+    } }), error => error.status === 502);
+    assert.equal(attempts, 1);
+});
+
 test('rate limiting bounds abusive uncached API requests', async () => {
     await withServer({}, async base => {
         let response;

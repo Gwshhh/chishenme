@@ -1,4 +1,4 @@
-export const APP_VERSION = '3.2.2';
+export const APP_VERSION = '3.2.3';
 export const SCHEMA_VERSION = 1;
 export const STORAGE_KEY = 'chishenme:state:v1';
 export const LIMITS = Object.freeze({ foods: 500, history: 300, planDays: 366, fileBytes: 2 * 1024 * 1024 });

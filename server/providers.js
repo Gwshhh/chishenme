@@ -1,4 +1,5 @@
 import { setTimeout as delay } from 'node:timers/promises';
+import { Buffer } from 'node:buffer';
 import { cleanText, normalizeFood, safeImage } from '../src/core/model.js';
 
 export class HttpError extends Error {
@@ -8,7 +9,9 @@ export class HttpError extends Error {
 export async function fetchJson(url, { fetchImpl = fetch, signal, timeout = 6000 } = {}) {
     const combined = signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout);
     try {
-        const response = await fetchImpl(url, { signal: combined, headers: { Accept: 'application/json' }, redirect: 'error' });
+        // Workers supports manual redirects; rejecting non-2xx below also prevents
+        // provider credentials from being forwarded to a redirected destination.
+        const response = await fetchImpl(url, { signal: combined, headers: { Accept: 'application/json' }, redirect: 'manual' });
         if (!response.ok) throw new HttpError(502, '上游服务暂时不可用，请稍后重试');
         const chunks = [];
         let size = 0;
@@ -74,17 +77,24 @@ export async function nearbyPlaces({ lat, lon, level, amapKey, fetchImpl, signal
     const pois = [];
     let partial = false;
     let city = '';
-    const request = async (path, query) => {
+    const request = async (path, query, retryInitial = false) => {
         const url = new URL(`https://restapi.amap.com/v3/${path}`);
         url.search = new URLSearchParams({ key: amapKey, ...query }).toString();
-        const result = await fetchJson(url, { fetchImpl, signal });
+        let result;
+        try { result = await fetchJson(url, { fetchImpl, signal }); }
+        catch (error) {
+            // A cold edge connection can time out once. Retry only the first page;
+            // later-page failures still return already acquired restaurants.
+            if (!retryInitial || signal?.aborted || ![502, 504].includes(error.status)) throw error;
+            result = await fetchJson(url, { fetchImpl, signal });
+        }
         if (result?.status !== '1') throw new HttpError(502, '地图服务暂不可用，请稍后重试');
         return result;
     };
     for (let page = 1; page <= settings.pages; page++) {
         try {
             if (page > 1 && pageDelay) await delay(pageDelay, undefined, { signal });
-            const data = await request('place/around', { location: center, types: '050000', radius: String(settings.radius), sortrule: 'distance', offset: '25', extensions: 'all', page: String(page) });
+            const data = await request('place/around', { location: center, types: '050000', radius: String(settings.radius), sortrule: 'distance', offset: '25', extensions: 'all', page: String(page) }, page === 1);
             if (!Array.isArray(data.pois)) throw new HttpError(502, '地图返回的数据格式异常');
             pois.push(...data.pois);
             if (data.pois.length < 25 || normalizePlaces(pois).length >= settings.limit) break;

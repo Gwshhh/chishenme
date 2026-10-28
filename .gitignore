@@ -5,6 +5,9 @@ _dev_cert.pem
 .env.*
 !.env.example
 node_modules/
+.wrangler/
+.dev.vars
+.dev.vars.*
 test-results/
 playwright-report/
 .playwright-mcp/

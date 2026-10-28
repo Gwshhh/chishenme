@@ -3,21 +3,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { APP_VERSION } from '../src/core/model.js';
 import { HttpError, nearbyPlaces, weatherAt } from './providers.js';
+import { coordinates, searchLevel } from './validation.js';
+export { coordinates } from './validation.js';
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const publicFiles = new Set(['index.html', 'app.js', 'data.js', 'config.js', 'styles.css', 'sw.js', 'sw-assets.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-1024.png', 'apple-touch-icon.png', 'favicon.ico', 'favicon-32.png']);
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/vnd.microsoft.icon' };
-
-export function coordinates(query) {
-    const number = (name, min, max) => {
-        const value = query.get(name);
-        if (query.getAll(name).length !== 1 || !value?.trim() || !/^-?\d+(\.\d+)?$/.test(value)) throw new HttpError(400, '请提供有效经纬度');
-        const numeric = Number(value);
-        if (!Number.isFinite(numeric) || numeric < min || numeric > max) throw new HttpError(400, '经纬度超出范围');
-        return numeric;
-    };
-    return { lat: number('lat', -90, 90), lon: number('lon', -180, 180) };
-}
 
 export function createApp({ root = defaultRoot, amapKey = '', allowedOrigin = '', fetchImpl = fetch, now = Date.now, pageDelay = 350, development = false } = {}) {
     const cache = new Map(), clients = new Map(), pending = new Map();
@@ -73,8 +64,7 @@ export function createApp({ root = defaultRoot, amapKey = '', allowedOrigin = ''
             if (pathname === '/api/nearby' || pathname === '/api/weather') {
                 guardRate(req);
                 const coords = coordinates(url.searchParams);
-                const level = Number(url.searchParams.get('level') || 1);
-                if (!Number.isInteger(level) || ![1, 2, 3].includes(level) || url.searchParams.getAll('level').length > 1) throw new HttpError(400, '无效的附近搜索范围');
+                const level = searchLevel(url.searchParams);
                 if (pathname === '/api/nearby' && !amapKey) throw new HttpError(503, '附近店铺服务尚未启用，可继续使用菜单或前往外卖平台');
                 const key = `${pathname}:${coords.lat.toFixed(4)}:${coords.lon.toFixed(4)}:${level}`;
                 const data = await cachedRequest(key, () => {
