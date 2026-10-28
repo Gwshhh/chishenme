@@ -1,61 +1,66 @@
-// Service Worker：让应用可安装、可离线。
-// 策略：核心文件(HTML/CSS/JS)网络优先(保证代码永远最新，断网才用缓存兜底)；
-//       菜品图片缓存优先(加载过一次就离线可用)。
-const CACHE = 'chishenme-v27';
-const CORE = [
-    './',
-    './index.html',
-    './styles.css?v=27',
-    './app.js?v=27',
-    './data.js?v=27',
-    './manifest.json',
-    './icon.svg'
-];
+/* Keep each installed shell coherent; update only after the user accepts. */
+importScripts('./sw-assets.js');
+const scope = self.registration.scope;
+const prefix = 'chishenme:' + new URL(scope).pathname + ':';
+const SHELL = prefix + self.APP_VERSION;
+const IMAGES = prefix + 'images-v1';
+const core = new Set(self.APP_ASSETS.map(asset => new URL(asset, scope).pathname));
 
-self.addEventListener('install', (e) => {
-    e.waitUntil(
-        caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())
-    );
+self.addEventListener('install', event => {
+    event.waitUntil(caches.open(SHELL).then(cache => cache.addAll(self.APP_ASSETS.map(asset => new Request(new URL(asset, scope), { cache: 'reload' })))));
 });
-
-self.addEventListener('activate', (e) => {
-    e.waitUntil(
-        caches.keys()
-            .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-            .then(() => self.clients.claim())
-    );
+self.addEventListener('message', event => {
+    if (event.data?.type === 'ACTIVATE_UPDATE') self.skipWaiting();
 });
-
-self.addEventListener('fetch', (e) => {
-    const req = e.request;
-    if (req.method !== 'GET') return;
-    const url = new URL(req.url);
-    if (url.origin !== location.origin) return;   // 跨域(高德/天气等)不掺和
-
-    // 菜品图片：缓存优先，首次取回即存
-    if (url.pathname.includes('/images_food/')) {
-        e.respondWith(
-            caches.match(req).then(hit => hit || fetch(req).then(resp => {
-                if (resp.ok) {
-                    const copy = resp.clone();
-                    caches.open(CACHE).then(c => c.put(req, copy));
-                }
-                return resp;
-            }))
-        );
+self.addEventListener('activate', event => {
+    event.waitUntil((async () => {
+        for (const name of await caches.keys()) {
+            if (name.startsWith(prefix) && name !== SHELL && name !== IMAGES) await caches.delete(name);
+            // Legacy releases used one unscoped key. Only remove it if it belongs to this app path.
+            if (/^chishenme-v\d+$/.test(name)) {
+                const cache = await caches.open(name);
+                if (await cache.match(new URL('index.html', scope))) await caches.delete(name);
+            }
+        }
+        await self.clients.claim();
+    })());
+});
+self.addEventListener('fetch', event => {
+    const request = event.request;
+    if (request.method !== 'GET') return;
+    const url = new URL(request.url);
+    if (url.origin !== self.location.origin) return;
+    if (core.has(url.pathname)) {
+        event.respondWith((async () => {
+            const cache = await caches.open(SHELL);
+            const hit = await cache.match(request, { ignoreSearch: true });
+            if (hit) return hit;
+            try { return await fetch(request); }
+            catch { return new Response('Offline resource unavailable', { status: 503 }); }
+        })());
         return;
     }
-
-    // 核心资源与页面：网络优先，失败回退缓存（支持离线打开）
-    e.respondWith(
-        fetch(req).then(resp => {
-            if (resp.ok) {
-                const copy = resp.clone();
-                caches.open(CACHE).then(c => c.put(req, copy));
-            }
-            return resp;
-        }).catch(() =>
-            caches.match(req).then(hit => hit || (req.mode === 'navigate' ? caches.match('./index.html') : undefined))
-        )
-    );
+    const imagePrefix = new URL('images_food/', scope).pathname;
+    if (url.pathname.startsWith(imagePrefix)) {
+        event.respondWith((async () => {
+            const cache = await caches.open(IMAGES);
+            const hit = await cache.match(request);
+            if (hit) return hit;
+            try {
+                const response = await fetch(request);
+                if (response.ok) {
+                    const copy = response.clone();
+                    event.waitUntil((async () => {
+                        try {
+                            await cache.put(request, copy);
+                            const keys = await cache.keys();
+                            await Promise.all(keys.slice(0, Math.max(0, keys.length - 120)).map(key => cache.delete(key)));
+                        } catch { /* Quota limits never break a successful image response. */ }
+                    })());
+                }
+                return response;
+            } catch { return new Response('', { status: 503 }); }
+        })());
+    }
+    // Personal data, runtime configuration and API responses are not cached.
 });

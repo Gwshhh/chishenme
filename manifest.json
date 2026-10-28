@@ -1,14 +1,13 @@
 {
-    "name": "今天吃什么 - 美食转盘",
+    "name": "今天吃什么 · 好好吃每一餐",
     "short_name": "吃什么",
-    "description": "转盘决定今天吃什么，支持附近真实店铺抽取",
+    "description": "美食转盘、饮食偏好与一周用餐计划，离线也能决定这一餐",
     "lang": "zh-CN",
     "start_url": "./",
     "scope": "./",
     "display": "standalone",
-    "orientation": "portrait",
-    "theme_color": "#FF7A45",
-    "background_color": "#FFFCF8",
+    "theme_color": "#f8f5f0",
+    "background_color": "#f8f5f0",
     "icons": [
         {
             "src": "icon-192.png",

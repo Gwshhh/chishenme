@@ -1,199 +1,78 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="description" content="今天吃什么？随机选择美食，解决选择困难症">
-    <meta name="theme-color" content="#FF7A45">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="转一转，决定这一餐。按喜好挑美食，安排一周用餐，收藏每一次好选择。">
+    <meta name="theme-color" content="#f8f5f0">
+    <meta name="color-scheme" content="light dark">
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link rel="icon" href="icon.svg" type="image/svg+xml" sizes="any">
-    <title>今天吃什么 - 美食转盘</title>
-    <link rel="stylesheet" href="styles.css?v=27">
+    <link rel="stylesheet" href="styles.css?v=3.1.0">
+    <script src="src/ui/theme-bootstrap.js"></script>
+    <title>今天吃什么 · 好好吃每一餐</title>
 </head>
 <body>
-    <div class="container">
-        <!-- 头部 -->
-        <header class="header">
+    <!-- Established-surface refinement, Operate mode.
+    THESIS: Make the next meal a quick, preference-aware choice, then carry it into the week.
+    OWN-WORLD: Retain the warm food identity, bowl mark, local photographs and six accent themes.
+    STORY: Choose a meal, draw or browse, save favorites, and plan meals without losing local data.
+    FIRST VIEWPORT: Desktop places a readable wheel and primary action beside a food photograph;
+    mobile puts the same action first with persistent bottom navigation.
+    FORM: Existing-world extension; no replacement-world concept roll or generated comp applies.
+    FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
+    <a class="skip-link" href="#main">跳到主要内容</a>
+    <div class="app-shell">
+        <header class="site-header">
+            <a class="brand" href="#wheel" aria-label="今天吃什么首页">
+                <span class="brand-mark" data-icon="bowl"></span>
+                <span><strong>今天吃什么</strong><small>好好吃每一餐</small></span>
+            </a>
+            <nav class="main-nav" aria-label="主要导航">
+                <a href="#wheel" class="nav-link active" data-route="wheel" aria-current="page"><span data-icon="wheel"></span><span>转盘</span></a>
+                <a href="#list" class="nav-link" data-route="list"><span data-icon="grid"></span><span>菜单</span></a>
+                <a href="#plan" class="nav-link" data-route="plan"><span data-icon="calendar"></span><span>一周计划</span></a>
+                <a href="#favorites" class="nav-link" data-route="favorites"><span data-icon="heart"></span><span>收藏</span><span class="nav-count" id="favorite-count" hidden></span></a>
+                <a href="#history" class="nav-link" data-route="history"><span data-icon="history"></span><span>记录</span></a>
+            </nav>
             <div class="header-actions">
-                <button class="icon-btn" id="theme-picker-btn" title="选择主题" aria-label="选择主题"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.2 0 2-.9 2-2 0-.55-.2-1-.58-1.4-.38-.4-.62-.85-.62-1.35a2 2 0 0 1 2-2h2.3a3.4 3.4 0 0 0 3.4-3.4C20.5 6.7 16.7 3.5 12 3.5z"/><circle cx="7.6" cy="10.6" r="1.15"/><circle cx="11.2" cy="7.4" r="1.15"/><circle cx="15.8" cy="9.4" r="1.15"/></svg></button>
-                <button class="icon-btn" id="sound-toggle" title="开关音效" aria-label="开关音效">🔊</button>
-                <button class="icon-btn" id="theme-toggle" title="切换深色模式" aria-label="切换深色模式">🌙</button>
+                <button class="icon-btn" id="theme-toggle" aria-label="切换深色模式" title="切换深色模式"><span data-icon="moon"></span></button>
+                <a class="icon-btn" href="#settings" aria-label="偏好与设置" title="偏好与设置"><span data-icon="settings"></span></a>
             </div>
-            <h1><svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5h17a8.5 8.5 0 0 1-17 0z"/><path d="M9.5 3.5c0 1.2-1.4 1.8 0 3.5M14.5 3.5c0 1.2-1.4 1.8 0 3.5"/></svg>今天吃什么</h1>
-            <p class="subtitle">让转盘帮你决定！</p>
         </header>
-
-        <!-- 导航标签 -->
-        <nav class="nav-tabs">
-            <button class="tab-btn active" data-tab="wheel">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.4 4.2M12 12l-7.4 4.2"/></svg>
-                <span>转盘</span>
-            </button>
-            <button class="tab-btn" data-tab="list">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h15M4.5 12h15M4.5 17.5h9"/></svg>
-                <span>列表</span>
-            </button>
-            <button class="tab-btn" data-tab="favorites">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8l2.5 5.1 5.6.8-4 4 .9 5.6-5-2.7-5 2.7.9-5.6-4-4 5.6-.8z"/></svg>
-                <span>收藏</span><span class="tab-badge" id="fav-badge"></span>
-            </button>
-            <button class="tab-btn" data-tab="history">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2"/></svg>
-                <span>历史</span>
-            </button>
-        </nav>
-
-        <!-- 转盘页面 -->
-        <div class="tab-content active" id="wheel-tab">
-            <!-- 今日推荐 -->
-            <div class="today-pick" id="today-pick">
-                <div class="today-pick-info">
-                    <span class="today-pick-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l1.8 5 5 1.8-5 1.8-1.8 5-1.8-5-5-1.8 5-1.8z"/><path d="M18.5 15l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z"/></svg><span id="today-pick-label-text">今日推荐</span></span>
-                    <span class="today-pick-name" id="today-pick-name"></span>
+        <div id="storage-notice" class="notice storage-notice" role="status" hidden></div>
+        <div id="offline-notice" class="notice" role="status" hidden>当前离线，菜单、抽取和计划仍可使用；附近店铺需联网。</div>
+        <main id="main" tabindex="-1">
+            <section id="wheel-view" class="view" aria-labelledby="wheel-heading">
+                <div class="page-heading"><div><h1 id="wheel-heading">这一餐，吃点喜欢的。</h1><p>选个范围，剩下的交给转盘。</p></div><div class="date-label"><span data-icon="calendar"></span><time id="today-label"></time></div></div>
+                <div class="decision-layout">
+                    <section class="wheel-panel" aria-label="美食转盘">
+                        <div class="wheel-toolbar"><div class="segmented meal-tabs" id="meal-tabs" aria-label="选择餐次"></div><button class="icon-btn" id="sound-toggle" aria-label="开启音效"></button></div>
+                        <div class="selection-tools"><details id="category-details"><summary><span data-icon="settings"></span><span id="filter-summary">所有分类</span><span data-icon="down"></span></summary><div class="filter-options" id="wheel-categories"></div></details><button class="text-button" id="wheel-source" hidden>返回我的菜单</button><a class="text-button" href="#settings" id="preference-shortcut">饮食偏好</a></div>
+                        <div class="wheel-stage"><div class="wheel-pointer" aria-hidden="true"></div><canvas id="wheel-canvas" width="880" height="880" role="img" aria-label="美食转盘，使用中心开饭或下方开始抽取按钮"></canvas><div class="wheel-photos" id="wheel-photos" aria-hidden="true"></div><button class="wheel-hub" id="wheel-hub" aria-label="转动美食转盘"><span data-icon="bowl"></span><span>开饭</span></button></div>
+                        <div class="wheel-empty" id="wheel-empty" hidden><h2>换个范围，发现更多选择</h2><p>当前筛选没有合适的美食。试试不限餐次，或调整饮食偏好。</p><button class="button secondary" id="reset-wheel">重置餐次和分类</button><a class="text-button" href="#settings">调整饮食偏好</a></div>
+                        <div class="wheel-bottom"><p class="candidate-count" id="candidate-count" aria-live="polite"></p><button class="button primary spin-button" id="spin-btn"><span data-icon="wheel"></span><span>开始抽取</span><span data-icon="arrow"></span></button><p class="wheel-explanation" id="wheel-explanation"></p><button class="text-button tournament-link" id="tournament-btn"><span data-icon="trophy"></span>还是纠结？两两选出你的最爱</button></div>
+                    </section>
+                    <aside class="decision-side">
+                        <section id="recommendation" class="recommendation" aria-label="美食推荐"></section>
+                        <section class="nearby-panel" aria-labelledby="nearby-heading"><div class="section-inline-heading"><h2 id="nearby-heading"><span data-icon="pin"></span>附近有什么好吃的</h2></div><p id="nearby-status" role="status">定位后看看身边的真实店铺。</p><p id="weather-status" class="weather-status" hidden></p><div class="nearby-controls"><label class="sr-only" for="nearby-level">附近搜索范围</label><select id="nearby-level"><option value="1">1.5 公里 · 最多 60 家</option><option value="2">3 公里 · 最多 180 家</option><option value="3">5 公里 · 最多 360 家</option></select><button class="button secondary" id="locate-btn">定位找店</button><button class="text-button" id="cancel-nearby" hidden>取消</button></div><a class="text-button external-link" href="https://waimai.meituan.com" target="_blank" rel="noopener noreferrer">去美团看看<span data-icon="external"></span></a></section>
+                    </aside>
                 </div>
-                <button class="today-pick-btn" id="today-pick-btn">就吃这个</button>
-            </div>
-
-            <!-- 附近美食（定位 + 美团外卖） -->
-            <div class="nearby-card" id="nearby-card">
-                <div class="nearby-info">
-                    <span class="nearby-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.2-6.5-9.8a6.5 6.5 0 0 1 13 0C18.5 15.8 12 21 12 21z"/><circle cx="12" cy="11" r="2.4"/></svg>附近美食</span>
-                    <span class="nearby-status" id="nearby-status">点击定位，发现你身边的外卖</span>
-                    <div class="nearby-meta" id="nearby-meta"></div>
-                </div>
-                <div class="nearby-actions">
-                    <button class="nearby-btn" id="locate-btn">定位</button>
-                    <button class="nearby-btn nearby-go" id="nearby-meituan-btn" style="display: none;">发现附近</button>
-                    <button class="nearby-btn nearby-exit" id="nearby-exit-btn" style="display: none;">回菜单</button>
-                </div>
-                <div class="nearby-levels" id="nearby-levels">
-                    <span class="nearby-levels-hint">抽取范围</span>
-                    <button class="level-btn active" data-level="1">附近 60 家</button>
-                    <button class="level-btn" data-level="2">附近 180 家</button>
-                    <button class="level-btn" data-level="3">附近 360 家</button>
-                </div>
-            </div>
-
-            <!-- 筛选器 -->
-            <div class="filters">
-                <div class="meal-row">
-                    <span class="meal-caption" id="meal-caption"></span>
-                    <div class="meal-chips" id="meal-chips"></div>
-                </div>
-                <label>
-                    <input type="checkbox" id="filter-all" checked> 全部
-                </label>
-                <div class="filter-chips" id="filter-chips"></div>
-                <label class="avoid-repeat">
-                    <input type="checkbox" id="avoid-repeat"> 避免连续重复
-                </label>
-                <label class="avoid-repeat">
-                    <input type="checkbox" id="fatigue-decay"> 少吃重样（近 7 天吃过的少抽到）
-                </label>
-            </div>
-
-            <!-- 转盘容器 -->
-            <div class="wheel-container">
-                <p class="wheel-count" id="wheel-count"></p>
-                <div class="wheel-wrapper">
-                    <canvas id="wheel-canvas"></canvas>
-                </div>
-                <button class="spin-btn" id="spin-btn">
-                    <span>开始抽取</span>
-                </button>
-                <button class="tournament-btn" id="tournament-btn">还在纠结？试试 8 强淘汰赛</button>
-            </div>
-
-            <!-- 结果显示 -->
-            <div class="result-card" id="result-card" style="display: none;">
-                <div class="result-image-wrapper">
-                    <img id="result-image" src="" alt="美食图片">
-                </div>
-                <h2 id="result-name"></h2>
-                <p class="result-category" id="result-category"></p>
-                <p class="result-description" id="result-description"></p>
-                <div class="result-actions">
-                    <button class="action-btn" id="add-favorite-btn">⭐ 收藏</button>
-                    <button class="action-btn" id="spin-again-btn">🔄 再抽一次</button>
-                    <button class="action-btn" id="share-btn">📋 分享</button>
-                </div>
-                <div class="delivery-links">
-                    <span class="delivery-hint">去外卖平台点这道菜</span>
-                    <div class="coupon-guide" id="coupon-guide" style="display: none;">
-                        <div class="coupon-guide-title">先领券再下单</div>
-                        <ol class="coupon-steps">
-                            <li>先点领券</li>
-                            <li>再搜店名</li>
-                            <li>下单前检查满减/红包</li>
-                        </ol>
-                        <div class="coupon-actions">
-                            <button class="coupon-btn meituan" id="order-meituan-coupon">美团领券(需先登录)</button>
-                            <button class="coupon-btn eleme" id="order-eleme-coupon">饿了么红包页</button>
-                        </div>
-                    </div>
-                    <div class="delivery-btns">
-                        <button class="delivery-btn meituan" id="order-meituan">美团外卖</button>
-                        <button class="delivery-btn eleme" id="order-eleme">饿了么</button>
-                    </div>
-                    <div class="delivery-assist" id="delivery-assist" style="display: none;">
-                        <button class="delivery-assist-btn" id="order-meituan-alt">换词搜美团</button>
-                        <button class="delivery-assist-btn" id="order-meituan-nearby">美团附近</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 列表页面 -->
-        <div class="tab-content" id="list-tab">
-            <div class="search-box">
-                <input type="text" id="search-input" placeholder="🔍 搜索美食...">
-            </div>
-            <div class="list-toolbar">
-                <button class="toolbar-btn" id="add-food-btn">＋ 添加自定义</button>
-                <button class="toolbar-btn" id="manage-food-btn">管理菜单</button>
-            </div>
-            <div class="category-filter" id="category-filter"></div>
-            <div class="food-grid" id="food-grid"></div>
-        </div>
-
-        <!-- 收藏页面 -->
-        <div class="tab-content" id="favorites-tab">
-            <div class="favorites-controls" id="favorites-controls">
-                <span class="fav-count-label" id="fav-count-label"></span>
-                <button class="random-fav-btn" id="random-fav-btn">帮我从收藏里挑</button>
-            </div>
-            <div class="empty-state" id="empty-favorites">
-                <p>😋 还没有收藏的美食</p>
-                <p>快去转盘或列表页添加吧！</p>
-            </div>
-            <div class="food-grid" id="favorites-grid"></div>
-        </div>
-
-        <!-- 历史页面 -->
-        <div class="tab-content" id="history-tab">
-            <div class="history-controls">
-                <button class="clear-btn" id="clear-history-btn">清空历史</button>
-            </div>
-            <div class="history-stats" id="history-stats"></div>
-            <div class="empty-state" id="empty-history">
-                <p>📜 还没有抽取记录</p>
-                <p>快去转转盘吧！</p>
-            </div>
-            <div class="history-list" id="history-list"></div>
-        </div>
+                <section class="discovery-section" aria-labelledby="discovery-heading"><div class="section-inline-heading"><div><h2 id="discovery-heading">换个口味，也不错</h2><p>从当前候选里，给你一点灵感。</p></div><a href="#list" class="text-button">逛逛完整菜单<span data-icon="arrow"></span></a></div><div id="discovery-grid" class="food-grid compact-grid"></div></section>
+            </section>
+            <section id="list-view" class="view" aria-labelledby="list-heading" hidden></section>
+            <section id="plan-view" class="view" aria-labelledby="plan-heading" hidden></section>
+            <section id="favorites-view" class="view" aria-labelledby="favorites-heading" hidden></section>
+            <section id="history-view" class="view" aria-labelledby="history-heading" hidden></section>
+            <section id="settings-view" class="view" aria-labelledby="settings-heading" hidden></section>
+        </main>
+        <footer class="site-footer"><span>认真吃饭，小事也值得期待。</span><div><span id="app-version">v3.1.0</span><button class="text-button" id="install-btn" hidden>安装到桌面</button><button class="text-button" id="update-btn" hidden>有新版本，点击更新</button><a class="text-button" href="#settings">数据与偏好</a></div></footer>
     </div>
-
-    <!-- 版本角标：一眼确认当前加载的是哪个版本 -->
-    <footer class="app-foot">今天吃什么 · <span id="app-version"></span></footer>
-
-    <!-- Toast 提示 -->
-    <div class="toast" id="toast"></div>
-
-    <script src="data.js?v=27"></script>
-    <script src="app.js?v=27"></script>
+    <dialog class="dialog" id="app-dialog" aria-labelledby="dialog-title"></dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <noscript><div class="notice">请启用 JavaScript 后使用美食转盘与用餐计划。</div></noscript>
+    <script type="module" src="app.js?v=3.1.0"></script>
 </body>
 </html>

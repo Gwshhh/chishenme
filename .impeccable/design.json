@@ -1,0 +1,268 @@
+{
+    "schemaVersion":  2,
+    "generatedAt":  "2026-10-27T17:00:45.1877886+00:00",
+    "title":  "Design System: 今天吃什么",
+    "extensions":  {
+                       "shadows":  [
+                                       {
+                                           "name":  "dialog",
+                                           "value":  "0 18px 60px rgba(43,29,18,.18)",
+                                           "purpose":  "原生弹窗浮层"
+                                       }
+                                   ],
+                       "motion":  [
+                                      {
+                                          "name":  "control-feedback",
+                                          "value":  "180ms",
+                                          "purpose":  "控件颜色反馈"
+                                      },
+                                      {
+                                          "name":  "wheel-draw",
+                                          "value":  "2600ms quartic ease-out",
+                                          "purpose":  "抽取落定，减少动态效果时跳过"
+                                      }
+                                  ],
+                       "breakpoints":  [
+                                           {
+                                               "name":  "compact-desktop",
+                                               "value":  "1080px"
+                                           },
+                                           {
+                                               "name":  "mobile",
+                                               "value":  "760px"
+                                           },
+                                           {
+                                               "name":  "narrow-mobile",
+                                               "value":  "370px"
+                                           }
+                                       ],
+                       "colorMeta":  {
+                                         "primary":  {
+                                                         "displayName":  "Primary",
+                                                         "canonical":  "#a64732",
+                                                         "tonalRamp":  [
+                                                                           "oklch(15.00% 0.1305 33.95)",
+                                                                           "oklch(26.43% 0.1305 33.95)",
+                                                                           "oklch(37.86% 0.1305 33.95)",
+                                                                           "oklch(49.29% 0.1305 33.95)",
+                                                                           "oklch(60.71% 0.1305 33.95)",
+                                                                           "oklch(72.14% 0.1305 33.95)",
+                                                                           "oklch(83.57% 0.1305 33.95)",
+                                                                           "oklch(95.00% 0.1305 33.95)"
+                                                                       ]
+                                                     },
+                                         "primary-hover":  {
+                                                               "displayName":  "Primary Hover",
+                                                               "canonical":  "#8c3927",
+                                                               "tonalRamp":  [
+                                                                                 "oklch(15.00% 0.1175 33.79)",
+                                                                                 "oklch(26.43% 0.1175 33.79)",
+                                                                                 "oklch(37.86% 0.1175 33.79)",
+                                                                                 "oklch(49.29% 0.1175 33.79)",
+                                                                                 "oklch(60.71% 0.1175 33.79)",
+                                                                                 "oklch(72.14% 0.1175 33.79)",
+                                                                                 "oklch(83.57% 0.1175 33.79)",
+                                                                                 "oklch(95.00% 0.1175 33.79)"
+                                                                             ]
+                                                           },
+                                         "primary-soft":  {
+                                                              "displayName":  "Primary Soft",
+                                                              "canonical":  "#f5e6df",
+                                                              "tonalRamp":  [
+                                                                                "oklch(15.00% 0.0190 46.81)",
+                                                                                "oklch(26.43% 0.0190 46.81)",
+                                                                                "oklch(37.86% 0.0190 46.81)",
+                                                                                "oklch(49.29% 0.0190 46.81)",
+                                                                                "oklch(60.71% 0.0190 46.81)",
+                                                                                "oklch(72.14% 0.0190 46.81)",
+                                                                                "oklch(83.57% 0.0190 46.81)",
+                                                                                "oklch(95.00% 0.0190 46.81)"
+                                                                            ]
+                                                          },
+                                         "page":  {
+                                                      "displayName":  "Page",
+                                                      "canonical":  "#f8f5f0",
+                                                      "tonalRamp":  [
+                                                                        "oklch(15.00% 0.0074 80.72)",
+                                                                        "oklch(26.43% 0.0074 80.72)",
+                                                                        "oklch(37.86% 0.0074 80.72)",
+                                                                        "oklch(49.29% 0.0074 80.72)",
+                                                                        "oklch(60.71% 0.0074 80.72)",
+                                                                        "oklch(72.14% 0.0074 80.72)",
+                                                                        "oklch(83.57% 0.0074 80.72)",
+                                                                        "oklch(95.00% 0.0074 80.72)"
+                                                                    ]
+                                                  },
+                                         "surface":  {
+                                                         "displayName":  "Surface",
+                                                         "canonical":  "#fffdf9",
+                                                         "tonalRamp":  [
+                                                                           "oklch(15.00% 0.0057 84.57)",
+                                                                           "oklch(26.43% 0.0057 84.57)",
+                                                                           "oklch(37.86% 0.0057 84.57)",
+                                                                           "oklch(49.29% 0.0057 84.57)",
+                                                                           "oklch(60.71% 0.0057 84.57)",
+                                                                           "oklch(72.14% 0.0057 84.57)",
+                                                                           "oklch(83.57% 0.0057 84.57)",
+                                                                           "oklch(95.00% 0.0057 84.57)"
+                                                                       ]
+                                                     },
+                                         "subtle":  {
+                                                        "displayName":  "Subtle",
+                                                        "canonical":  "#f0ebe3",
+                                                        "tonalRamp":  [
+                                                                          "oklch(15.00% 0.0120 79.78)",
+                                                                          "oklch(26.43% 0.0120 79.78)",
+                                                                          "oklch(37.86% 0.0120 79.78)",
+                                                                          "oklch(49.29% 0.0120 79.78)",
+                                                                          "oklch(60.71% 0.0120 79.78)",
+                                                                          "oklch(72.14% 0.0120 79.78)",
+                                                                          "oklch(83.57% 0.0120 79.78)",
+                                                                          "oklch(95.00% 0.0120 79.78)"
+                                                                      ]
+                                                    },
+                                         "text":  {
+                                                      "displayName":  "Text",
+                                                      "canonical":  "#302922",
+                                                      "tonalRamp":  [
+                                                                        "oklch(15.00% 0.0162 67.11)",
+                                                                        "oklch(26.43% 0.0162 67.11)",
+                                                                        "oklch(37.86% 0.0162 67.11)",
+                                                                        "oklch(49.29% 0.0162 67.11)",
+                                                                        "oklch(60.71% 0.0162 67.11)",
+                                                                        "oklch(72.14% 0.0162 67.11)",
+                                                                        "oklch(83.57% 0.0162 67.11)",
+                                                                        "oklch(95.00% 0.0162 67.11)"
+                                                                    ]
+                                                  },
+                                         "muted":  {
+                                                       "displayName":  "Muted",
+                                                       "canonical":  "#74665b",
+                                                       "tonalRamp":  [
+                                                                         "oklch(15.00% 0.0246 60.39)",
+                                                                         "oklch(26.43% 0.0246 60.39)",
+                                                                         "oklch(37.86% 0.0246 60.39)",
+                                                                         "oklch(49.29% 0.0246 60.39)",
+                                                                         "oklch(60.71% 0.0246 60.39)",
+                                                                         "oklch(72.14% 0.0246 60.39)",
+                                                                         "oklch(83.57% 0.0246 60.39)",
+                                                                         "oklch(95.00% 0.0246 60.39)"
+                                                                     ]
+                                                   },
+                                         "line":  {
+                                                      "displayName":  "Line",
+                                                      "canonical":  "#e5ddd2",
+                                                      "tonalRamp":  [
+                                                                        "oklch(15.00% 0.0172 76.10)",
+                                                                        "oklch(26.43% 0.0172 76.10)",
+                                                                        "oklch(37.86% 0.0172 76.10)",
+                                                                        "oklch(49.29% 0.0172 76.10)",
+                                                                        "oklch(60.71% 0.0172 76.10)",
+                                                                        "oklch(72.14% 0.0172 76.10)",
+                                                                        "oklch(83.57% 0.0172 76.10)",
+                                                                        "oklch(95.00% 0.0172 76.10)"
+                                                                    ]
+                                                  },
+                                         "success":  {
+                                                         "displayName":  "Success",
+                                                         "canonical":  "#37624e",
+                                                         "tonalRamp":  [
+                                                                           "oklch(15.00% 0.0587 162.77)",
+                                                                           "oklch(26.43% 0.0587 162.77)",
+                                                                           "oklch(37.86% 0.0587 162.77)",
+                                                                           "oklch(49.29% 0.0587 162.77)",
+                                                                           "oklch(60.71% 0.0587 162.77)",
+                                                                           "oklch(72.14% 0.0587 162.77)",
+                                                                           "oklch(83.57% 0.0587 162.77)",
+                                                                           "oklch(95.00% 0.0587 162.77)"
+                                                                       ]
+                                                     },
+                                         "danger":  {
+                                                        "displayName":  "Danger",
+                                                        "canonical":  "#ae3735",
+                                                        "tonalRamp":  [
+                                                                          "oklch(15.00% 0.1554 25.33)",
+                                                                          "oklch(26.43% 0.1554 25.33)",
+                                                                          "oklch(37.86% 0.1554 25.33)",
+                                                                          "oklch(49.29% 0.1554 25.33)",
+                                                                          "oklch(60.71% 0.1554 25.33)",
+                                                                          "oklch(72.14% 0.1554 25.33)",
+                                                                          "oklch(83.57% 0.1554 25.33)",
+                                                                          "oklch(95.00% 0.1554 25.33)"
+                                                                      ]
+                                                    }
+                                     }
+                   },
+    "components":  [
+                       {
+                           "name":  "主按钮",
+                           "kind":  "button",
+                           "refersTo":  "button-primary",
+                           "description":  "每个任务的主要动作",
+                           "html":  "\u003cbutton class=\"ds-primary\"\u003e开始抽取\u003c/button\u003e",
+                           "css":  ".ds-primary{background:var(--accent,#a64732);color:var(--surface,#fffdf9);padding:11px 18px;min-height:44px;border:0;border-radius:10px;font:600 14px sans-serif;cursor:pointer;transition:background-color .18s}.ds-primary:hover{background:var(--accent-hover,#8c3927)}.ds-primary:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}.ds-primary:disabled{opacity:.48;cursor:not-allowed}"
+                       },
+                       {
+                           "name":  "次按钮",
+                           "kind":  "button",
+                           "refersTo":  "button-secondary",
+                           "description":  "辅助动作",
+                           "html":  "\u003cbutton class=\"ds-secondary\"\u003e管理菜单\u003c/button\u003e",
+                           "css":  ".ds-secondary{background:var(--surface,#fffdf9);color:var(--text,#302922);border:1px solid var(--line,#e5ddd2);border-radius:10px;min-height:44px;padding:11px 18px;font:600 14px sans-serif;cursor:pointer}.ds-secondary:hover{background:var(--subtle,#f0ebe3)}.ds-secondary:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
+                       },
+                       {
+                           "name":  "文字输入",
+                           "kind":  "input",
+                           "description":  "带可见标签的原生输入",
+                           "html":  "\u003clabel class=\"ds-label\"\u003e美食名称\u003cinput class=\"ds-input\" placeholder=\"例如：番茄鸡蛋面\"\u003e\u003c/label\u003e",
+                           "css":  ".ds-label{display:grid;gap:8px;font:600 13px sans-serif;color:var(--text,#302922)}.ds-input{border:1px solid var(--line,#e5ddd2);background:var(--surface,#fffdf9);color:var(--text,#302922);padding:10px 12px;border-radius:10px;font:400 14px sans-serif}.ds-input:hover{border-color:var(--accent,#a64732)}.ds-input:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
+                       },
+                       {
+                           "name":  "分类筛选",
+                           "kind":  "chip",
+                           "description":  "可选中筛选按钮",
+                           "html":  "\u003cbutton class=\"ds-chip\" aria-pressed=\"true\"\u003e米粉面馆\u003c/button\u003e",
+                           "css":  ".ds-chip{border:1px solid var(--accent,#a64732);color:var(--accent,#a64732);background:var(--accent-soft,#f5e6df);border-radius:9px;min-height:38px;padding:7px 14px;font:400 13px sans-serif;cursor:pointer}.ds-chip:hover{background:var(--surface,#fffdf9)}.ds-chip:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
+                       },
+                       {
+                           "name":  "导航项",
+                           "kind":  "nav",
+                           "description":  "带当前页面状态的导航",
+                           "html":  "\u003ca class=\"ds-nav\" href=\"#plan\" aria-current=\"page\"\u003e一周计划\u003c/a\u003e",
+                           "css":  ".ds-nav{display:inline-flex;align-items:center;padding:9px 14px;min-height:42px;border-radius:9px;color:var(--accent,#a64732);background:var(--surface,#fffdf9);font:650 13px sans-serif;text-decoration:none}.ds-nav:hover{background:var(--subtle,#f0ebe3)}.ds-nav:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
+                       },
+                       {
+                           "name":  "内容卡片",
+                           "kind":  "card",
+                           "refersTo":  "food-card",
+                           "description":  "菜品图文内容的表面容器",
+                           "html":  "\u003carticle class=\"ds-card\"\u003e\u003cstrong\u003e黄焖鸡米饭\u003c/strong\u003e\u003cp\u003e鸡肉软烂，汤汁浓郁\u003c/p\u003e\u003cbutton\u003e加入计划\u003c/button\u003e\u003c/article\u003e",
+                           "css":  ".ds-card{background:var(--surface,#fffdf9);color:var(--text,#302922);border:1px solid var(--line,#e5ddd2);border-radius:16px;padding:16px;font:400 14px sans-serif}.ds-card p{color:var(--muted,#74665b);font-size:12px}.ds-card button{border:0;background:none;color:var(--accent,#a64732);padding:8px 0;cursor:pointer}.ds-card:hover{border-color:var(--accent,#a64732)}.ds-card button:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
+                       }
+                   ],
+    "narrative":  {
+                      "northStar":  "好好吃每一餐",
+                      "overview":  "以现有产品文案「好好吃每一餐」作为记录名称，延续暖色美食身份。界面服务于日常选择任务，照片承载食物内容，转盘是唯一主要动效。此文档从最终代码提取，不引入新的品牌承诺。",
+                      "keyCharacteristics":  [
+                                                 "温暖中性色",
+                                                 "真实菜品图",
+                                                 "清楚的操作状态",
+                                                 "移动端底部导航"
+                                             ],
+                      "rules":  [
+                                    {
+                                        "name":  "The Semantic State Rule",
+                                        "body":  "强调、成功和错误颜色分别由同名 token 管理。",
+                                        "section":  "colors"
+                                    }
+                                ],
+                      "dos":  [
+                                  "Do 使用语义 token、真实按钮与统一 SVG 图标；保持照片、结果和计划的阅读顺序。",
+                                  "Do 明确标注未知口味、空候选、离线、加载失败与存储失败的恢复方式。"
+                              ],
+                      "donts":  [
+                                    "Don\u0027t 用页面装饰动画延迟操作，也不要把图片失败变成空白区域。",
+                                    "Don\u0027t 将抽取记录自动等同于实际吃过，或把参考标签当作食材保证。"
+                                ]
+                  }
+}

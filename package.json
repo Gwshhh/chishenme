@@ -1,0 +1,22 @@
+{
+  "name": "chishenme",
+  "version": "3.1.0",
+  "private": true,
+  "type": "module",
+  "description": "今天吃什么：离线美食决策与一周用餐计划",
+  "engines": {
+    "node": ">=22.9.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "node --watch --env-file-if-exists=.env server/index.js --dev",
+    "check": "node scripts/check.mjs",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "playwright test",
+    "smoke:providers": "node --env-file-if-exists=.env scripts/smoke-providers.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.58.2"
+  }
+}

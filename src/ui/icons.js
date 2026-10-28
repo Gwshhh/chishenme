@@ -1,0 +1,38 @@
+const paths = {
+    bowl: '<path d="M3 11h18a9 9 0 0 1-18 0Zm6-8c-3 3 3 3 0 6m6-6c-3 3 3 3 0 6M8 21h8"/>',
+    wheel: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v7m7.8 6.5-6-3.5m-9.6 3.5 6-3.5"/>',
+    grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18m-13 4h2m4 0h2m-8 3h2"/>',
+    heart: '<path d="m12 21-8.2-8.2a5.5 5.5 0 0 1 7.8-7.8l.4.4.4-.4a5.5 5.5 0 0 1 7.8 7.8Z"/>',
+    history: '<path d="M3 11a9 9 0 1 1 2.8 7M3 4v7h7m2-5v6l4 2"/>',
+    settings: '<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/>',
+    moon: '<path d="M20.8 13A9 9 0 0 1 11 3.2 9 9 0 1 0 20.8 13Z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',
+    sound: '<path d="m11 4-6 5H2v6h3l6 5Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>',
+    muted: '<path d="m11 4-6 5H2v6h3l6 5Zm5 5 6 6m0-6-6 6"/>',
+    search: '<circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/>',
+    arrow: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
+    chevron: '<path d="m9 5 7 7-7 7"/>',
+    down: '<path d="m6 9 6 6 6-6"/>',
+    close: '<path d="m6 6 12 12M6 18 18 6"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    refresh: '<path d="M20 7v5h-5M4 17v-5h5m10.5-2a8 8 0 0 0-13-5M4.5 14a8 8 0 0 0 13 5"/>',
+    pin: '<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/>',
+    leaf: '<path d="M20 3C9 2 3 6 4 13a7 7 0 0 0 7 7c7-1 9-9 9-17ZM3 22 15 10"/>',
+    check: '<path d="m5 12 4 4L19 6"/>',
+    lock: '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 5v2"/>',
+    unlock: '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7.5-2m-3.5 10v2"/>',
+    share: '<path d="M12 16V3m-5 5 5-5 5 5M5 13H3v8h18v-8h-2"/>',
+    download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+    upload: '<path d="M12 15V3m-5 5 5-5 5 5M4 16v5h16v-5"/>',
+    trash: '<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+    ban: '<circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/>',
+    trophy: '<path d="M8 3h8v7a4 4 0 0 1-8 0ZM8 5H3v3a5 5 0 0 0 5 5m8-8h5v3a5 5 0 0 1-5 5m-4 1v6m-5 1h10"/>',
+    external: '<path d="M14 3h7v7m0-7L11 13M10 3H3v18h18v-7"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/>',
+    wifi: '<path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0m-10 4a5 5 0 0 1 6 0m-3 4h.01"/>',
+};
+
+export function icon(name, className = '') {
+    return `<svg class="icon ${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.bowl}</svg>`;
+}

@@ -1,145 +1,48 @@
-# CLAUDE.md
+# Project guidance
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+“今天吃什么” is a Chinese food decision and weekly meal planning app. The frontend uses native ES modules with no bundler. An optional Node standard-library server provides safe static hosting and map/weather APIs. Read README.md for setup and docs/architecture.md for the module map.
 
-## Project Overview
+## Commands
 
-"今天吃什么" (What to Eat Today) is a single-page web application that helps users decide what to eat through a spinning wheel interface. It's a pure frontend app with no build process—just open `index.html` in a browser.
+- `npm start`: local app and API at http://127.0.0.1:4173; Node 22.9+.
+- `npm run dev`: watch server sources and disable this app's Service Worker to expose frontend edits after reload.
+- `npm ci`: install test-only dependencies.
+- `npm run check`: JavaScript syntax, offline manifest, version agreement and photo references.
+- `npm test`: core logic and real local HTTP tests with mocked external providers.
+- `npm run test:browser`: desktop and mobile Chromium/Edge flows, accessibility and offline behavior. Uses isolated server port 4174 with no real key.
+- `python -m unittest discover -s tests -p "test_*.py"`: shared image-slot reader tests.
+- `npm run smoke:providers`: optional real map/weather network test using a public fixed coordinate and local `.env`; never run as part of ordinary tests.
 
-## Architecture
+## Architecture boundaries
 
-### Core Files
-- **index.html** - Single page with all UI elements (tabs, wheel, lists, forms)
-- **app.js** - Main application logic (~1700 lines)
-- **data.js** - Food database (~91 items, organized by Meituan-style delivery channels; one retired slot) and configuration
-- **styles.css** - All styling, design-token based: colors/shadows/radii are CSS variables on `:root`; dark mode only re-defines those tokens on `body.dark-mode`
-- **images_food/** - Real finished-dish photos downloaded from Wikipedia by `fetch_real_images.py`. The image fallback is an inline SVG name card generated at runtime (`makeNameCard()` in data.js) — the old `images_new/` directory no longer exists
+- `app.js` assembles features, routes hash navigation, and owns ephemeral UI state. It is not a home for new domain logic.
+- `src/core/` owns pure catalog/model/selection/backup rules and the storage adapter.
+- `src/features/` owns feature views and bindings; shared cards/dialogs/icons live in `src/ui/`.
+- `src/services/` isolates browser APIs, remote requests, delivery links, sharing, motion permission and PWA.
+- `server/` owns HTTP/provider work. Never place `AMAP_KEY` in a browser file, browser storage, logs or a share/backup file.
+- `data.js` contains food data and the one stable image order; Python asset scripts read it through `scripts/catalog_assets.py`.
+- `DESIGN.md` and `.impeccable/design.json` describe the shipped visual system; avoid reverting to fixed 600px desktop layout or duplicating style tokens.
 
-### Application State
-Global `state` object in `app.js` manages:
-- Current tab selection
-- Category filters for wheel
-- Favorites (persisted to localStorage)
-- History (persisted to localStorage)
-- Spinning animation state
+## Data invariants
 
-### Key Components
+Use `store.update` / `store.replace`, not direct localStorage writes or mutation of store snapshots. New data is a single versioned object under `chishenme:state:v1`; old keys stay intact for compatibility. Validate imports completely before changing data. Surface storage errors while retaining usable in-session state.
 
-**1. Wheel Drawing (Canvas)**
-- `drawWheel(rotation)` renders the wheel at a specific rotation angle
-- The full wheel (dark rim, light dots, sectors, labels, shading) is pre-rendered ONCE into an offscreen canvas by `buildWheelCache()`; each animation frame only clears, rotates and blits that bitmap, then `drawWheelHub()` draws the static center button. Cache key = food-name list + devicePixelRatio
-- Canvas backing store is `300 × devicePixelRatio` px for crisp mobile rendering; sector labels are skipped above 80 sectors and separator lines above 60 (nearby mode can have 360 stores)
-- **Critical**: Must use integer number of spins to ensure pointer alignment
-- Color array `wheelColors` in data.js provides sector colors (16 curated mid-tone colors, all readable with white text — do not add light/pastel colors)
+Food identity is stable and snapshots allow deleted foods to remain meaningful in history/plans. Update the active replacement menu while replacement mode is enabled. Export the actual current menu, not only appended custom items.
 
-**2. Spin Animation**
-- `spinWheel()` calculates target rotation using: `finalRotation = spins * 2π + (2π - targetAngle)`
-- `spins` MUST be an integer (not float) or pointer won't align with result
-- Animation uses cubic ease-out: `1 - (1-progress)³`
-- **Bug fix history**: Previous version used float spins causing misalignment
+One preference filter governs all automatic decisions. Unknown food labels cannot pass strict no-spicy or vegetarian preferences. Do not weaken preferences to fill a result. Automatic plans exclude standalone built-in dessert/drink items, preserve locked/eaten meals, and use local calendar dates. Selection and actual consumption are separate history states.
 
-**3. Tab System**
-- Four tabs: wheel, list, favorites, history
-- `switchTab(tabName)` toggles visibility and updates state
-- Each tab has its own init function called on DOMContentLoaded
+## UI and network invariants
 
-**4. Data Structure**
-Each food item in `foodData`:
-```javascript
-{
-    name: "黄焖鸡米饭",
-    category: "中式快餐",
-    description: "鸡肉软烂，汤汁浓郁"
-    // image (real photo URL) + imageFallback (local card) are assigned automatically
-    // from KEYWORDS and IMAGE_ORDER — see "Image strategy" below
-}
-```
+- Preserve a copied wheel candidate board throughout each draw. Integer turns plus the selected sector midpoint must land at the pointer. Tests include 360 source candidates.
+- No inline event handlers or unescaped user-controlled HTML. Use shared rendering helpers and native controls.
+- Keep keyboard focus when replacing controls or closing dialogs; guard asynchronous dialog content using its generation.
+- Location and DeviceMotion permissions are only requested by explicit actions. Cancelled/stale requests must not update the active source.
+- Pictures prioritize supplied photos, try alternate originals, then labeled real-food references matched to a clear dish/brand/category. Use the name card only if no suitable photo loads; never store references as actual shop photos. Keep viewport-based loading and bounded preload concurrency.
+- Map data is not a guarantee of delivery-platform availability. HTTPS platform links are explicit navigation, never fake ordering or automatic coupon claims.
+- Fixed provider hosts, parameter validation, timeouts, rate limits and public-file allowlists must remain.
 
-## Development Commands
+## Release checks
 
-**No build process required** - this is vanilla HTML/CSS/JS.
+Before a release, update the package version, `APP_VERSION` in `src/core/model.js`, version in `sw-assets.js`, and entry script/stylesheet query versions in `index.html`. Add every new browser module to `APP_ASSETS`; run the documented checks. The Service Worker preserves a coherent versioned shell and only deletes this app path's caches. Do not revert to deleting every same-origin cache.
 
-## Release checklist (EVERY deploy — stale caches otherwise)
-
-1. Bump `?v=N` on all three asset links in `index.html` (styles.css / data.js / app.js)
-2. Bump `sw.js`: `CACHE = 'chishenme-vN'` **and** the `?v=N` entries inside `CORE` — the Service Worker otherwise keeps serving old assets to installed clients
-3. Bump `APP_VERSION` in `app.js` (drives the page-footer version badge used to verify deploys)
-4. `node --check app.js data.js`, commit, push; GitHub Pages deploys in 1–2 min
-5. Verify live version: page-footer badge shows vN (or `curl -s <site> | grep -o "styles.css?v=[0-9]*"`). Pages deploy occasionally flakes (build ✓ / deploy ✗ in seconds) — retrigger with `git commit --allow-empty && git push`
-
-## Feature modules map (app.js)
-
-- **Themes**: `COLOR_THEMES`/`applyColorTheme` — CSS tokens per `body[data-theme]` (styles.css); canvas hub/pointer/confetti read `themeBrand()`
-- **Smart pick**: meal pool (`MEAL_EXTRA` in data.js + `state.mealFilter`), fatigue decay (`foodWeight`), weather boost (`fetchWeather`/`weatherBoost`, Open-Meteo keyless) — all multiplied inside `weightedPick`
-- **Tournament**: `startTournament`/`renderDuel`; **Share card**: `buildShareCard` (canvas 750×980, CORS-safe fallback)
-- **Custom menu / B-end**: `mergeCustomFoods` — `customFoods` (append) & `menuOverride` (full replace) in localStorage
-- **PWA**: `sw.js` (network-first core, cache-first images_food); PNG icons via `python gen_icon.py` (iOS ignores SVG icons)
-- **Spin safety**: `spinLockedFoods` freezes the candidate list during the spin animation — never remove, prevents pointer/result mismatch when nearby stores reload mid-spin
-
-**To run:**
-```bash
-# Windows
-start index.html
-
-# Mac/Linux
-open index.html
-```
-
-**To regenerate food images:**
-```bash
-python generate_images.py
-```
-This creates 65 labeled placeholder images in `images_new/` directory. Each image displays the food name in Chinese on a colored background using PIL/Pillow.
-
-## Critical Implementation Details
-
-### Nearby Food / Location (附近美食)
-`initNearby()` in `app.js` powers the location card on the wheel tab. Important constraint: this is a static frontend with **no backend and no Meituan API access** — Meituan does not expose a public, CORS-enabled "restaurants by coordinates" endpoint, so the app CANNOT pull Meituan's store list into this page. Do not attempt to scrape or proxy it. Instead the flow is: browser Geolocation → reverse-geocode the city/district via OpenStreetMap Nominatim (keyless, CORS-OK, best-effort with a 6s AbortController timeout) → display it → open Meituan外卖's "附近" H5 (`i.waimai.meituan.com` on mobile, `waimai.meituan.com` on desktop) where Meituan's own geolocation lists nearby stores. `openDelivery()` and `openNearbyMeituan()` pick mobile vs desktop URLs via `isMobile()`. Location is cached in `localStorage['location']` to avoid re-prompting. Geolocation requires HTTPS or localhost — under `file://` it's disabled, and the code shows a hint instead of failing silently. GPS returns WGS-84; we never feed raw coordinates to Chinese map services (which expect GCJ-02), sidestepping the coordinate-offset problem entirely.
-
-### Wheel Pointer Alignment
-The pointer is fixed at top center (angle = -π/2). To ensure accurate results:
-1. Calculate target angle: `selectedIndex * arcAngle + arcAngle/2`
-2. Calculate rotation: `spins * 2π + (2π - targetAngle)` where `spins = Math.floor(5 + Math.random() * 4)`
-3. **Never use float for spins** - causes pointer to land between sectors
-
-### Canvas Clearing
-Must reset transform before clearing:
-```javascript
-ctx.setTransform(1, 0, 0, 1, 0, 0);
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-```
-Otherwise, rotated coordinate system causes ghosting artifacts.
-
-### Mobile Shake Detection
-`initShakeDetection()` uses DeviceMotion API:
-- Requires HTTPS or localhost
-- Speed threshold: 3000 (tuned to avoid false triggers)
-- Only triggers when on wheel tab and not already spinning
-
-## Data Management
-
-**Adding new foods:**
-1. Add an entry `{ name, category, description }` to `foodData` in `data.js` (do NOT set `image` — it is assigned automatically)
-2. Append the same `name` to `IMAGE_ORDER` (in `data.js`), to `ORDER` in `fetch_real_images.py`, and to the `foods` list in `generate_images.py` — all three MUST stay in the SAME order (the order decides the `food_XX.jpg` number)
-3. Add a `TITLES[name]` entry in `fetch_real_images.py` mapping the dish to a Wikipedia article title whose lead image is the finished dish (use a concrete dish title for brand/chain names, or `None` to skip)
-4. Run `python fetch_real_images.py` (downloads the real photo) and `python generate_images.py` (regenerates the fallback label card)
-
-**Image strategy (real photos + one-to-one + never broken):** Each food gets `image = images_food/food_XX.jpg` (a real finished-dish photo downloaded from the dish's Wikipedia lead image by `fetch_real_images.py`) and `imageFallback = <inline SVG data URI>` (a zero-network name card generated by `makeNameCard()` in data.js). `XX` is the food's `IMAGE_ORDER` index + 1, shared with the Python scripts. Rendering is progressive: `<img src>` starts as the SVG card (instant, never blank), the real photo URL sits in `data-real` and `hydrateImages()` preloads it in the background with an 8s timeout, swapping it in only on success — so slow/blocked networks still always show a labeled card, and nothing is ever mismatched. Brand/chain dish names (海底捞…) are mapped to generic dish titles in `TITLES` to avoid pulling storefront/logo images. (`generate_images.py` and the `images_new/` cards it produced are legacy — no longer referenced by the app.)
-
-**Categories are auto-generated** from unique category values in foodData.
-
-## localStorage Schema
-
-**Favorites:** Array of food objects (same structure as foodData)
-**History:** Array of food objects with added `timestamp` property (Date.now())
-
-Both are serialized JSON strings under keys 'favorites' and 'history'.
-
-## Image Generation
-
-The `generate_images.py` script:
-- Requires PIL/Pillow
-- Creates 400×300 px images with food names
-- Uses Windows Chinese font: `C:/Windows/Fonts/msyh.ttc`
-- Each food gets unique background color from predefined list
-- Images are labeled placeholder cards, not actual food photos (intentional design after real photos proved unreliable)
+Static hosting uses relative asset paths, including a GitHub Pages project subdirectory. Separate APIs use a public `config.js` URL and exact server `ALLOWED_ORIGIN`. `.env` and local TLS keys remain ignored. Local work does not automatically publish or push changes.

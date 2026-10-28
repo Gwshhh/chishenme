@@ -1,10 +1,5 @@
-// 美食数据
-// 图片策略：每道菜显示一张本地真实成品照片 images_food/food_XX.jpg
-//（由 fetch_real_images.py 从维基百科下载，词条主图即该菜真实成品，准确、离线可用、无防盗链）；
-// 若真实图缺失或尚未下载，app.js 的 onerror 自动回退到带菜名的本地标签卡 images_new/food_XX.jpg，
-// 保证「图片 ⇄ 食物」一一对应、绝不裂图、绝不张冠李戴。
-
-const foodData = [
+// Static catalog and stable image slots. Rules: src/core/catalog.js. Public configuration: config.js.
+export const foodData = [
     // === 快餐便当 ===
     { name: "黄焖鸡米饭", category: "快餐便当", description: "鸡肉软烂，汤汁浓郁" },
     { name: "盖浇饭", category: "快餐便当", description: "一碗饭解决一餐" },
@@ -126,7 +121,7 @@ const foodData = [
 // 图片序号唯一事实来源：顺序必须与 generate_images.py / fetch_real_images.py 严格一致，
 // food_XX.jpg 的 XX = 此数组下标+1。注意：「呷哺呷哺」已从菜单(foodData)移除，但其槽位
 // 在此保留，以免删除后导致后续所有菜的图片序号整体前移、与已下载图片错位。
-const IMAGE_ORDER = [
+export const IMAGE_ORDER = [
     "黄焖鸡米饭", "兰州拉面", "重庆小面", "麻辣烫", "麻辣香锅", "沙县小吃", "盖浇饭",
     "扬州炒饭", "煲仔饭", "东北饺子", "云吞面", "刀削面", "热干面", "酸辣粉", "烤鱼",
     "水煮鱼", "红烧肉", "宫保鸡丁", "回锅肉", "鱼香肉丝", "重庆火锅", "海底捞", "呷哺呷哺",
@@ -143,73 +138,7 @@ const IMAGE_ORDER = [
     "梅菜扣肉", "鸡公煲", "小龙虾", "蛋包饭", "咖喱饭", "烤冷面", "关东煮", "手抓饼"
 ];
 
-// 生成"带菜名的内联 SVG 卡片"作为兜底图。
-// 关键：data URI 是零网络的，浏览器无需下载任何文件即可渲染——
-// 因此即使真实照片（images_food/*.jpg）在国内手机上从 GitHub 拉不下来/超时，
-// onerror 回退到这张 SVG 后，屏幕上永远立刻显示一张带菜名的彩色卡，绝不空白、绝不裂图。
-const _fallbackPalette = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F',
-    '#BB8FCE', '#85C1E2', '#F8B88B', '#FAD390', '#6C5CE7', '#A29BFE',
-    '#FD79A8', '#FDCB6E', '#E17055', '#74B9FF', '#55EFC4', '#FF7675'
-];
-function _xmlEscape(s) {
-    return String(s).replace(/[&<>"']/g, c =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-function makeNameCard(name) {
-    let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-    const bg = _fallbackPalette[h % _fallbackPalette.length];
-    const text = _xmlEscape(name);
-    const fontSize = name.length > 5 ? 44 : 56;
-    // 注意：SVG 内不能出现单引号。encodeURIComponent 不编码单引号，残留的 ' 会截断
-    // app.js 中 onerror="...src='<dataURI>'..." 的单引号属性，破坏回退。故字体名用双引号
-    // （会被编码为 %22）且不加引号包裹字体族。
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">`
-        + `<rect width="400" height="300" fill="${bg}"/>`
-        + `<text x="200" y="135" font-size="56" text-anchor="middle" dominant-baseline="central">🍴</text>`
-        + `<text x="200" y="215" font-size="${fontSize}" fill="#fff" font-weight="bold" `
-        + `text-anchor="middle" dominant-baseline="central" `
-        + `font-family="PingFang SC, Microsoft YaHei, sans-serif">${text}</text>`
-        + `</svg>`;
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-}
-
-// 为每道菜绑定两层图片：
-// ① food.image —— 本地真实成品照片 images_food/food_XX.jpg（由 fetch_real_images.py
-//    从维基百科下载，词条主图即该菜真实成品，准确可靠、离线可用）；
-// ② food.imageFallback —— 带菜名的内联 SVG 卡片（零网络，永不空白）。真实图缺失/加载失败时
-//    由 app.js 的 onerror 自动回退，绝不裂图、绝不张冠李戴、国内手机也一定看得到。
-foodData.forEach(food => {
-    food.imageFallback = makeNameCard(food.name);
-    const idx = IMAGE_ORDER.indexOf(food.name);
-    if (idx === -1) {
-        console.error(`[数据错误]「${food.name}」未在 IMAGE_ORDER 中登记，缺少图片。`);
-        food.image = food.imageFallback;  // 没有真实图槽位，直接用名称卡
-        return;
-    }
-    const nn = String(idx + 1).padStart(2, '0');
-    food.image = `images_food/food_${nn}.jpg`;
-});
-
-// 完整性自检（仅控制台提示，不影响运行）。
-(function validateFoodImages() {
-    foodData.forEach(food => {
-        if (IMAGE_ORDER.indexOf(food.name) === -1) {
-            console.error(`[数据错误]「${food.name}」未在 IMAGE_ORDER 中登记。`);
-        }
-    });
-    if (foodData.length > IMAGE_ORDER.length) {
-        console.warn(`[数据提示] 菜品数(${foodData.length}) 超过图片登记数(${IMAGE_ORDER.length})，请补登 IMAGE_ORDER。`);
-    }
-})();
-
-// 获取所有分类
-const categories = [...new Set(foodData.map(food => food.category))];
-
-// ============ 时段标签 ============
-// 规则：所有菜默认适合午餐/晚餐；下面两份清单额外标注"也适合早餐"/"也适合夜宵"。
-// 早餐时段转盘只出「早」清单，夜宵时段只出「夜」清单（app.js foodHasMeal）。
-const MEAL_EXTRA = {
+export const MEAL_EXTRA = {
     早: [
         '粥品', '煎饼果子', '鸡蛋灌饼', '生煎包', '小笼包', '肠粉',
         '手抓饼', '早茶', '三明治', '蛋挞', '热干面', '咖啡'
@@ -222,32 +151,3 @@ const MEAL_EXTRA = {
         '东北饺子', '粥品', '奶茶'
     ]
 };
-
-// 颜色配置（用于转盘扇区）。精选 16 色：全部为中等明度、白字可读的饱和色，
-// 相邻色相互相错开；不含浅灰/淡色（曾出现白字看不清的问题）。
-const wheelColors = [
-    '#F05D5E', '#12A5A5', '#E8960C', '#3E7CB1',
-    '#D9538C', '#47A25A', '#8A64D6', '#ED7846',
-    '#3193C4', '#C94277', '#7C9F3F', '#B3703E',
-    '#5C6BC0', '#DB5A42', '#2FA48A', '#A85CC4'
-];
-
-// ============ 商业化配置 ============
-// ① 外卖联盟返佣（CPS）：注册美团联盟(union.meituan.com)/淘宝联盟(饿了么)后，
-//    把生成的 H5 推广链接填进来——用户经这些链接领券下单可获返佣。
-//    留空则自动走普通链接，产品体验完全一致。
-const AFFILIATE = {
-    meituanCoupon: '',   // 例：美团联盟生成的外卖红包推广 H5 链接
-    elemeCoupon: ''      // 例：淘宝联盟生成的饿了么吃货红包推广链接
-};
-
-// ② 本地商家推广位：谈到合作商家后填入即可在转盘页展示（自动带"推广"标识）；
-//    保持 null 则完全不渲染。
-const SPONSOR = null;
-// 示例：
-// const SPONSOR = {
-//     name: '老王烤肉·大学城店',
-//     desc: '到店出示本页立减 10 元',
-//     cta: '去看看',
-//     url: 'https://example.com/shop'
-// };
