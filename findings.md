@@ -34,3 +34,6 @@
 - 目标仓库为公开仓库 Gwshhh/chishenme，默认分支 master；GitHub Pages 使用 legacy 模式，发布 master 根目录，地址 https://gwshhh.github.io/chishenme/。
 - 当前远端仍为 d0f8ec7，上次发布请求没有完成提交或推送。恢复后已成功 fetch，工作区变更完整保留。
 - 当前 test-results/.last-run.json 为 passed，时间晚于最后一次应用代码修改。发布前补查 v27 到 v3.1.0 的缓存升级兼容。
+- Pages 运行 https://github.com/Gwshhh/chishenme/actions/runs/40618257622 成功，对应完整应用提交 b7f956295fa2f634f418b49dff3cf2de88d69b0b；页面已提供 3.1.0 资源。
+- 在发布前建立的隔离 v27 上下文中，刷新后接受页脚更新即可切换到 3.1.0。旧缓存 chishenme-v27 已清理，只留下当前路径下的 shell/images 缓存；样例收藏、历史及原存储键均保留。
+- 线上 shell 资源 36/36 可访问，手机离线周计划 21 餐完整保留且可抽取；盘面实物图 8/8 加载成功。实际查看桌面/手机与深色设置截图，没有发布环境导致的视觉回退。
