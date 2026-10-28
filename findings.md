@@ -79,6 +79,7 @@
 - v3.2.2 线上验收：7 个图标返回值与本地哈希逐一一致；实际 v3.2.1 浏览器接受更新后，6 个使用中图标均进入新 shell，旧 shell 被移除，images-v2 保留。生产上下文前后为空状态，验证边界已明确记录。
 
 ## 2026-10-29 · iPhone 连接与天气/美团入口
+- 最终原站 Pages 40755642043 与新站均通过真实接口验证。v3.2.3 已安装浏览器更新至 3.2.4 时测试状态逐字节保持一致；跨来源的新域名仍需备份迁移，不自动清除或重定向原站。
 - 用户实际 iPhone 已确认 https://eat.zhouquanji.eu.cc/api/config 可访问，nearby/weather 均为 true；本机直连特定 Cloudflare IP 的限制不等同于用户手机情况。
 - v3.2.4 Cloudflare 部署成功，版本 5c0d2e75-8cfe-420c-9d11-7a1ff700879b。新域名页面、同源 API、真实 60 家店、天气和实际抽取已在桌面与 WebKit iPhone 上通过；这些浏览器使用公开固定坐标，不宣称获取了用户真实 GPS。
 - 用户提供自有域名 zhouquanji.eu.cc；选用未占用的 eat 子域名。Cloudflare 当前登录能管理 Worker 自定义域名，不需要再次登录。域名绑定后使用 Worker domains/records 完成 DNS/证书配置。
