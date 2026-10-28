@@ -89,3 +89,4 @@
 - Worker 已部署且 Secret 类型正确，但初次地图和天气请求均报连接错误；共同代码的 redirect:error 改为 Workers 支持的 manual，再由非 2xx 检查拒绝重定向，不转发凭据。
 - 跨域浏览器验证及连续 3 次诊断发现高德初始连接仍会超时，三次入口均为 LAX，约 13–14 秒（一轮首请求重试后）。天气请求已经成功，问题集中在该节点到高德的链路。
 - 参考 Cloudflare 官方 Placement 文档（2026-10-12 更新，https://developers.cloudflare.com/workers/configuration/placement/）：支持所有 Workers plans，明确区域提示可选择靠近指定云区域的 Cloudflare 节点。配置 aws:ap-east-1（香港附近）来缩短到高德的连接；不修改用户代理或扩大请求次数。
+- 最终上线链路已实测：Pages v3.2.3 → Worker → 高德。两个隔离浏览器在固定公开坐标均得到 60 家店并实际抽取成功，旧版缓存升级也检测到服务启用。无需把地图密钥重新放回网页。
