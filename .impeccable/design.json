@@ -1,268 +1,447 @@
 {
-    "schemaVersion":  2,
-    "generatedAt":  "2026-10-27T17:00:45.1877886+00:00",
-    "title":  "Design System: 今天吃什么",
-    "extensions":  {
-                       "shadows":  [
-                                       {
-                                           "name":  "dialog",
-                                           "value":  "0 18px 60px rgba(43,29,18,.18)",
-                                           "purpose":  "原生弹窗浮层"
-                                       }
-                                   ],
-                       "motion":  [
-                                      {
-                                          "name":  "control-feedback",
-                                          "value":  "180ms",
-                                          "purpose":  "控件颜色反馈"
-                                      },
-                                      {
-                                          "name":  "wheel-draw",
-                                          "value":  "2600ms quartic ease-out",
-                                          "purpose":  "抽取落定，减少动态效果时跳过"
-                                      }
-                                  ],
-                       "breakpoints":  [
-                                           {
-                                               "name":  "compact-desktop",
-                                               "value":  "1080px"
-                                           },
-                                           {
-                                               "name":  "mobile",
-                                               "value":  "760px"
-                                           },
-                                           {
-                                               "name":  "narrow-mobile",
-                                               "value":  "370px"
-                                           }
-                                       ],
-                       "colorMeta":  {
-                                         "primary":  {
-                                                         "displayName":  "Primary",
-                                                         "canonical":  "#a64732",
-                                                         "tonalRamp":  [
-                                                                           "oklch(15.00% 0.1305 33.95)",
-                                                                           "oklch(26.43% 0.1305 33.95)",
-                                                                           "oklch(37.86% 0.1305 33.95)",
-                                                                           "oklch(49.29% 0.1305 33.95)",
-                                                                           "oklch(60.71% 0.1305 33.95)",
-                                                                           "oklch(72.14% 0.1305 33.95)",
-                                                                           "oklch(83.57% 0.1305 33.95)",
-                                                                           "oklch(95.00% 0.1305 33.95)"
-                                                                       ]
-                                                     },
-                                         "primary-hover":  {
-                                                               "displayName":  "Primary Hover",
-                                                               "canonical":  "#8c3927",
-                                                               "tonalRamp":  [
-                                                                                 "oklch(15.00% 0.1175 33.79)",
-                                                                                 "oklch(26.43% 0.1175 33.79)",
-                                                                                 "oklch(37.86% 0.1175 33.79)",
-                                                                                 "oklch(49.29% 0.1175 33.79)",
-                                                                                 "oklch(60.71% 0.1175 33.79)",
-                                                                                 "oklch(72.14% 0.1175 33.79)",
-                                                                                 "oklch(83.57% 0.1175 33.79)",
-                                                                                 "oklch(95.00% 0.1175 33.79)"
-                                                                             ]
-                                                           },
-                                         "primary-soft":  {
-                                                              "displayName":  "Primary Soft",
-                                                              "canonical":  "#f5e6df",
-                                                              "tonalRamp":  [
-                                                                                "oklch(15.00% 0.0190 46.81)",
-                                                                                "oklch(26.43% 0.0190 46.81)",
-                                                                                "oklch(37.86% 0.0190 46.81)",
-                                                                                "oklch(49.29% 0.0190 46.81)",
-                                                                                "oklch(60.71% 0.0190 46.81)",
-                                                                                "oklch(72.14% 0.0190 46.81)",
-                                                                                "oklch(83.57% 0.0190 46.81)",
-                                                                                "oklch(95.00% 0.0190 46.81)"
-                                                                            ]
-                                                          },
-                                         "page":  {
-                                                      "displayName":  "Page",
-                                                      "canonical":  "#f8f5f0",
-                                                      "tonalRamp":  [
-                                                                        "oklch(15.00% 0.0074 80.72)",
-                                                                        "oklch(26.43% 0.0074 80.72)",
-                                                                        "oklch(37.86% 0.0074 80.72)",
-                                                                        "oklch(49.29% 0.0074 80.72)",
-                                                                        "oklch(60.71% 0.0074 80.72)",
-                                                                        "oklch(72.14% 0.0074 80.72)",
-                                                                        "oklch(83.57% 0.0074 80.72)",
-                                                                        "oklch(95.00% 0.0074 80.72)"
-                                                                    ]
-                                                  },
-                                         "surface":  {
-                                                         "displayName":  "Surface",
-                                                         "canonical":  "#fffdf9",
-                                                         "tonalRamp":  [
-                                                                           "oklch(15.00% 0.0057 84.57)",
-                                                                           "oklch(26.43% 0.0057 84.57)",
-                                                                           "oklch(37.86% 0.0057 84.57)",
-                                                                           "oklch(49.29% 0.0057 84.57)",
-                                                                           "oklch(60.71% 0.0057 84.57)",
-                                                                           "oklch(72.14% 0.0057 84.57)",
-                                                                           "oklch(83.57% 0.0057 84.57)",
-                                                                           "oklch(95.00% 0.0057 84.57)"
-                                                                       ]
-                                                     },
-                                         "subtle":  {
-                                                        "displayName":  "Subtle",
-                                                        "canonical":  "#f0ebe3",
-                                                        "tonalRamp":  [
-                                                                          "oklch(15.00% 0.0120 79.78)",
-                                                                          "oklch(26.43% 0.0120 79.78)",
-                                                                          "oklch(37.86% 0.0120 79.78)",
-                                                                          "oklch(49.29% 0.0120 79.78)",
-                                                                          "oklch(60.71% 0.0120 79.78)",
-                                                                          "oklch(72.14% 0.0120 79.78)",
-                                                                          "oklch(83.57% 0.0120 79.78)",
-                                                                          "oklch(95.00% 0.0120 79.78)"
-                                                                      ]
-                                                    },
-                                         "text":  {
-                                                      "displayName":  "Text",
-                                                      "canonical":  "#302922",
-                                                      "tonalRamp":  [
-                                                                        "oklch(15.00% 0.0162 67.11)",
-                                                                        "oklch(26.43% 0.0162 67.11)",
-                                                                        "oklch(37.86% 0.0162 67.11)",
-                                                                        "oklch(49.29% 0.0162 67.11)",
-                                                                        "oklch(60.71% 0.0162 67.11)",
-                                                                        "oklch(72.14% 0.0162 67.11)",
-                                                                        "oklch(83.57% 0.0162 67.11)",
-                                                                        "oklch(95.00% 0.0162 67.11)"
-                                                                    ]
-                                                  },
-                                         "muted":  {
-                                                       "displayName":  "Muted",
-                                                       "canonical":  "#74665b",
-                                                       "tonalRamp":  [
-                                                                         "oklch(15.00% 0.0246 60.39)",
-                                                                         "oklch(26.43% 0.0246 60.39)",
-                                                                         "oklch(37.86% 0.0246 60.39)",
-                                                                         "oklch(49.29% 0.0246 60.39)",
-                                                                         "oklch(60.71% 0.0246 60.39)",
-                                                                         "oklch(72.14% 0.0246 60.39)",
-                                                                         "oklch(83.57% 0.0246 60.39)",
-                                                                         "oklch(95.00% 0.0246 60.39)"
-                                                                     ]
-                                                   },
-                                         "line":  {
-                                                      "displayName":  "Line",
-                                                      "canonical":  "#e5ddd2",
-                                                      "tonalRamp":  [
-                                                                        "oklch(15.00% 0.0172 76.10)",
-                                                                        "oklch(26.43% 0.0172 76.10)",
-                                                                        "oklch(37.86% 0.0172 76.10)",
-                                                                        "oklch(49.29% 0.0172 76.10)",
-                                                                        "oklch(60.71% 0.0172 76.10)",
-                                                                        "oklch(72.14% 0.0172 76.10)",
-                                                                        "oklch(83.57% 0.0172 76.10)",
-                                                                        "oklch(95.00% 0.0172 76.10)"
-                                                                    ]
-                                                  },
-                                         "success":  {
-                                                         "displayName":  "Success",
-                                                         "canonical":  "#37624e",
-                                                         "tonalRamp":  [
-                                                                           "oklch(15.00% 0.0587 162.77)",
-                                                                           "oklch(26.43% 0.0587 162.77)",
-                                                                           "oklch(37.86% 0.0587 162.77)",
-                                                                           "oklch(49.29% 0.0587 162.77)",
-                                                                           "oklch(60.71% 0.0587 162.77)",
-                                                                           "oklch(72.14% 0.0587 162.77)",
-                                                                           "oklch(83.57% 0.0587 162.77)",
-                                                                           "oklch(95.00% 0.0587 162.77)"
-                                                                       ]
-                                                     },
-                                         "danger":  {
-                                                        "displayName":  "Danger",
-                                                        "canonical":  "#ae3735",
-                                                        "tonalRamp":  [
-                                                                          "oklch(15.00% 0.1554 25.33)",
-                                                                          "oklch(26.43% 0.1554 25.33)",
-                                                                          "oklch(37.86% 0.1554 25.33)",
-                                                                          "oklch(49.29% 0.1554 25.33)",
-                                                                          "oklch(60.71% 0.1554 25.33)",
-                                                                          "oklch(72.14% 0.1554 25.33)",
-                                                                          "oklch(83.57% 0.1554 25.33)",
-                                                                          "oklch(95.00% 0.1554 25.33)"
-                                                                      ]
-                                                    }
-                                     }
-                   },
-    "components":  [
-                       {
-                           "name":  "主按钮",
-                           "kind":  "button",
-                           "refersTo":  "button-primary",
-                           "description":  "每个任务的主要动作",
-                           "html":  "\u003cbutton class=\"ds-primary\"\u003e开始抽取\u003c/button\u003e",
-                           "css":  ".ds-primary{background:var(--accent,#a64732);color:var(--surface,#fffdf9);padding:11px 18px;min-height:44px;border:0;border-radius:10px;font:600 14px sans-serif;cursor:pointer;transition:background-color .18s}.ds-primary:hover{background:var(--accent-hover,#8c3927)}.ds-primary:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}.ds-primary:disabled{opacity:.48;cursor:not-allowed}"
-                       },
-                       {
-                           "name":  "次按钮",
-                           "kind":  "button",
-                           "refersTo":  "button-secondary",
-                           "description":  "辅助动作",
-                           "html":  "\u003cbutton class=\"ds-secondary\"\u003e管理菜单\u003c/button\u003e",
-                           "css":  ".ds-secondary{background:var(--surface,#fffdf9);color:var(--text,#302922);border:1px solid var(--line,#e5ddd2);border-radius:10px;min-height:44px;padding:11px 18px;font:600 14px sans-serif;cursor:pointer}.ds-secondary:hover{background:var(--subtle,#f0ebe3)}.ds-secondary:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
-                       },
-                       {
-                           "name":  "文字输入",
-                           "kind":  "input",
-                           "description":  "带可见标签的原生输入",
-                           "html":  "\u003clabel class=\"ds-label\"\u003e美食名称\u003cinput class=\"ds-input\" placeholder=\"例如：番茄鸡蛋面\"\u003e\u003c/label\u003e",
-                           "css":  ".ds-label{display:grid;gap:8px;font:600 13px sans-serif;color:var(--text,#302922)}.ds-input{border:1px solid var(--line,#e5ddd2);background:var(--surface,#fffdf9);color:var(--text,#302922);padding:10px 12px;border-radius:10px;font:400 14px sans-serif}.ds-input:hover{border-color:var(--accent,#a64732)}.ds-input:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
-                       },
-                       {
-                           "name":  "分类筛选",
-                           "kind":  "chip",
-                           "description":  "可选中筛选按钮",
-                           "html":  "\u003cbutton class=\"ds-chip\" aria-pressed=\"true\"\u003e米粉面馆\u003c/button\u003e",
-                           "css":  ".ds-chip{border:1px solid var(--accent,#a64732);color:var(--accent,#a64732);background:var(--accent-soft,#f5e6df);border-radius:9px;min-height:38px;padding:7px 14px;font:400 13px sans-serif;cursor:pointer}.ds-chip:hover{background:var(--surface,#fffdf9)}.ds-chip:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
-                       },
-                       {
-                           "name":  "导航项",
-                           "kind":  "nav",
-                           "description":  "带当前页面状态的导航",
-                           "html":  "\u003ca class=\"ds-nav\" href=\"#plan\" aria-current=\"page\"\u003e一周计划\u003c/a\u003e",
-                           "css":  ".ds-nav{display:inline-flex;align-items:center;padding:9px 14px;min-height:42px;border-radius:9px;color:var(--accent,#a64732);background:var(--surface,#fffdf9);font:650 13px sans-serif;text-decoration:none}.ds-nav:hover{background:var(--subtle,#f0ebe3)}.ds-nav:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
-                       },
-                       {
-                           "name":  "内容卡片",
-                           "kind":  "card",
-                           "refersTo":  "food-card",
-                           "description":  "菜品图文内容的表面容器",
-                           "html":  "\u003carticle class=\"ds-card\"\u003e\u003cstrong\u003e黄焖鸡米饭\u003c/strong\u003e\u003cp\u003e鸡肉软烂，汤汁浓郁\u003c/p\u003e\u003cbutton\u003e加入计划\u003c/button\u003e\u003c/article\u003e",
-                           "css":  ".ds-card{background:var(--surface,#fffdf9);color:var(--text,#302922);border:1px solid var(--line,#e5ddd2);border-radius:16px;padding:16px;font:400 14px sans-serif}.ds-card p{color:var(--muted,#74665b);font-size:12px}.ds-card button{border:0;background:none;color:var(--accent,#a64732);padding:8px 0;cursor:pointer}.ds-card:hover{border-color:var(--accent,#a64732)}.ds-card button:focus-visible{outline:3px solid var(--focus,#9c472f);outline-offset:4px}"
-                       }
-                   ],
-    "narrative":  {
-                      "northStar":  "好好吃每一餐",
-                      "overview":  "以现有产品文案「好好吃每一餐」作为记录名称，延续暖色美食身份。界面服务于日常选择任务，照片承载食物内容，转盘是唯一主要动效。此文档从最终代码提取，不引入新的品牌承诺。",
-                      "keyCharacteristics":  [
-                                                 "温暖中性色",
-                                                 "真实菜品图",
-                                                 "清楚的操作状态",
-                                                 "移动端底部导航"
-                                             ],
-                      "rules":  [
-                                    {
-                                        "name":  "The Semantic State Rule",
-                                        "body":  "强调、成功和错误颜色分别由同名 token 管理。",
-                                        "section":  "colors"
-                                    }
-                                ],
-                      "dos":  [
-                                  "Do 使用语义 token、真实按钮与统一 SVG 图标；保持照片、结果和计划的阅读顺序。",
-                                  "Do 明确标注未知口味、空候选、离线、加载失败与存储失败的恢复方式。"
-                              ],
-                      "donts":  [
-                                    "Don\u0027t 用页面装饰动画延迟操作，也不要把图片失败变成空白区域。",
-                                    "Don\u0027t 将抽取记录自动等同于实际吃过，或把参考标签当作食材保证。"
-                                ]
-                  }
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T06:18:50.903207+00:00",
+  "title": "Design System: 今天吃什么",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "primary",
+        "canonical": "#b74428",
+        "tonalRamp": [
+          "oklch(15.0% 0.1550 34.9)",
+          "oklch(26.4% 0.1550 34.9)",
+          "oklch(37.9% 0.1550 34.9)",
+          "oklch(49.3% 0.1550 34.9)",
+          "oklch(60.7% 0.1550 34.9)",
+          "oklch(72.1% 0.1550 34.9)",
+          "oklch(83.6% 0.1550 34.9)",
+          "oklch(95.0% 0.1550 34.9)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "primary-hover",
+        "canonical": "#97361e",
+        "tonalRamp": [
+          "oklch(15.0% 0.1354 35.0)",
+          "oklch(26.4% 0.1354 35.0)",
+          "oklch(37.9% 0.1354 35.0)",
+          "oklch(49.3% 0.1354 35.0)",
+          "oklch(60.7% 0.1354 35.0)",
+          "oklch(72.1% 0.1354 35.0)",
+          "oklch(83.6% 0.1354 35.0)",
+          "oklch(95.0% 0.1354 35.0)"
+        ]
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "primary-soft",
+        "canonical": "#f8e9e2",
+        "tonalRamp": [
+          "oklch(15.0% 0.0189 46.8)",
+          "oklch(26.4% 0.0189 46.8)",
+          "oklch(37.9% 0.0189 46.8)",
+          "oklch(49.3% 0.0189 46.8)",
+          "oklch(60.7% 0.0189 46.8)",
+          "oklch(72.1% 0.0189 46.8)",
+          "oklch(83.6% 0.0189 46.8)",
+          "oklch(95.0% 0.0189 46.8)"
+        ]
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "page",
+        "canonical": "#f6f7f3",
+        "tonalRamp": [
+          "oklch(15.0% 0.0054 117.9)",
+          "oklch(26.4% 0.0054 117.9)",
+          "oklch(37.9% 0.0054 117.9)",
+          "oklch(49.3% 0.0054 117.9)",
+          "oklch(60.7% 0.0054 117.9)",
+          "oklch(72.1% 0.0054 117.9)",
+          "oklch(83.6% 0.0054 117.9)",
+          "oklch(95.0% 0.0054 117.9)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "surface",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 89.9)",
+          "oklch(26.4% 0.0000 89.9)",
+          "oklch(37.9% 0.0000 89.9)",
+          "oklch(49.3% 0.0000 89.9)",
+          "oklch(60.7% 0.0000 89.9)",
+          "oklch(72.1% 0.0000 89.9)",
+          "oklch(83.6% 0.0000 89.9)",
+          "oklch(95.0% 0.0000 89.9)"
+        ]
+      },
+      "subtle": {
+        "role": "neutral",
+        "displayName": "subtle",
+        "canonical": "#edf1e8",
+        "tonalRamp": [
+          "oklch(15.0% 0.0127 126.4)",
+          "oklch(26.4% 0.0127 126.4)",
+          "oklch(37.9% 0.0127 126.4)",
+          "oklch(49.3% 0.0127 126.4)",
+          "oklch(60.7% 0.0127 126.4)",
+          "oklch(72.1% 0.0127 126.4)",
+          "oklch(83.6% 0.0127 126.4)",
+          "oklch(95.0% 0.0127 126.4)"
+        ]
+      },
+      "feature": {
+        "role": "neutral",
+        "displayName": "feature",
+        "canonical": "#eaf0e4",
+        "tonalRamp": [
+          "oklch(15.0% 0.0171 128.7)",
+          "oklch(26.4% 0.0171 128.7)",
+          "oklch(37.9% 0.0171 128.7)",
+          "oklch(49.3% 0.0171 128.7)",
+          "oklch(60.7% 0.0171 128.7)",
+          "oklch(72.1% 0.0171 128.7)",
+          "oklch(83.6% 0.0171 128.7)",
+          "oklch(95.0% 0.0171 128.7)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "text",
+        "canonical": "#27352c",
+        "tonalRamp": [
+          "oklch(15.0% 0.0246 156.5)",
+          "oklch(26.4% 0.0246 156.5)",
+          "oklch(37.9% 0.0246 156.5)",
+          "oklch(49.3% 0.0246 156.5)",
+          "oklch(60.7% 0.0246 156.5)",
+          "oklch(72.1% 0.0246 156.5)",
+          "oklch(83.6% 0.0246 156.5)",
+          "oklch(95.0% 0.0246 156.5)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "muted",
+        "canonical": "#626e65",
+        "tonalRamp": [
+          "oklch(15.0% 0.0201 153.2)",
+          "oklch(26.4% 0.0201 153.2)",
+          "oklch(37.9% 0.0201 153.2)",
+          "oklch(49.3% 0.0201 153.2)",
+          "oklch(60.7% 0.0201 153.2)",
+          "oklch(72.1% 0.0201 153.2)",
+          "oklch(83.6% 0.0201 153.2)",
+          "oklch(95.0% 0.0201 153.2)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "line",
+        "canonical": "#dde4d9",
+        "tonalRamp": [
+          "oklch(15.0% 0.0165 133.8)",
+          "oklch(26.4% 0.0165 133.8)",
+          "oklch(37.9% 0.0165 133.8)",
+          "oklch(49.3% 0.0165 133.8)",
+          "oklch(60.7% 0.0165 133.8)",
+          "oklch(72.1% 0.0165 133.8)",
+          "oklch(83.6% 0.0165 133.8)",
+          "oklch(95.0% 0.0165 133.8)"
+        ]
+      },
+      "success": {
+        "role": "neutral",
+        "displayName": "success",
+        "canonical": "#37624e",
+        "tonalRamp": [
+          "oklch(15.0% 0.0587 162.8)",
+          "oklch(26.4% 0.0587 162.8)",
+          "oklch(37.9% 0.0587 162.8)",
+          "oklch(49.3% 0.0587 162.8)",
+          "oklch(60.7% 0.0587 162.8)",
+          "oklch(72.1% 0.0587 162.8)",
+          "oklch(83.6% 0.0587 162.8)",
+          "oklch(95.0% 0.0587 162.8)"
+        ]
+      },
+      "danger": {
+        "role": "neutral",
+        "displayName": "danger",
+        "canonical": "#ae3735",
+        "tonalRamp": [
+          "oklch(15.0% 0.1554 25.3)",
+          "oklch(26.4% 0.1554 25.3)",
+          "oklch(37.9% 0.1554 25.3)",
+          "oklch(49.3% 0.1554 25.3)",
+          "oklch(60.7% 0.1554 25.3)",
+          "oklch(72.1% 0.1554 25.3)",
+          "oklch(83.6% 0.1554 25.3)",
+          "oklch(95.0% 0.1554 25.3)"
+        ]
+      },
+      "wheel-slice": {
+        "role": "neutral",
+        "displayName": "wheel-slice",
+        "canonical": "#e1e9d9",
+        "tonalRamp": [
+          "oklch(15.0% 0.0230 128.7)",
+          "oklch(26.4% 0.0230 128.7)",
+          "oklch(37.9% 0.0230 128.7)",
+          "oklch(49.3% 0.0230 128.7)",
+          "oklch(60.7% 0.0230 128.7)",
+          "oklch(72.1% 0.0230 128.7)",
+          "oklch(83.6% 0.0230 128.7)",
+          "oklch(95.0% 0.0230 128.7)"
+        ]
+      },
+      "wheel-alternate": {
+        "role": "neutral",
+        "displayName": "wheel-alternate",
+        "canonical": "#f3f6ee",
+        "tonalRamp": [
+          "oklch(15.0% 0.0110 123.5)",
+          "oklch(26.4% 0.0110 123.5)",
+          "oklch(37.9% 0.0110 123.5)",
+          "oklch(49.3% 0.0110 123.5)",
+          "oklch(60.7% 0.0110 123.5)",
+          "oklch(72.1% 0.0110 123.5)",
+          "oklch(83.6% 0.0110 123.5)",
+          "oklch(95.0% 0.0110 123.5)"
+        ]
+      },
+      "dark-page": {
+        "role": "neutral",
+        "displayName": "dark-page",
+        "canonical": "#1b231e",
+        "tonalRamp": [
+          "oklch(15.0% 0.0149 157.7)",
+          "oklch(26.4% 0.0149 157.7)",
+          "oklch(37.9% 0.0149 157.7)",
+          "oklch(49.3% 0.0149 157.7)",
+          "oklch(60.7% 0.0149 157.7)",
+          "oklch(72.1% 0.0149 157.7)",
+          "oklch(83.6% 0.0149 157.7)",
+          "oklch(95.0% 0.0149 157.7)"
+        ]
+      },
+      "dark-surface": {
+        "role": "neutral",
+        "displayName": "dark-surface",
+        "canonical": "#242f28",
+        "tonalRamp": [
+          "oklch(15.0% 0.0197 157.0)",
+          "oklch(26.4% 0.0197 157.0)",
+          "oklch(37.9% 0.0197 157.0)",
+          "oklch(49.3% 0.0197 157.0)",
+          "oklch(60.7% 0.0197 157.0)",
+          "oklch(72.1% 0.0197 157.0)",
+          "oklch(83.6% 0.0197 157.0)",
+          "oklch(95.0% 0.0197 157.0)"
+        ]
+      },
+      "dark-subtle": {
+        "role": "neutral",
+        "displayName": "dark-subtle",
+        "canonical": "#303e33",
+        "tonalRamp": [
+          "oklch(15.0% 0.0264 151.3)",
+          "oklch(26.4% 0.0264 151.3)",
+          "oklch(37.9% 0.0264 151.3)",
+          "oklch(49.3% 0.0264 151.3)",
+          "oklch(60.7% 0.0264 151.3)",
+          "oklch(72.1% 0.0264 151.3)",
+          "oklch(83.6% 0.0264 151.3)",
+          "oklch(95.0% 0.0264 151.3)"
+        ]
+      },
+      "dark-feature": {
+        "role": "neutral",
+        "displayName": "dark-feature",
+        "canonical": "#2a382d",
+        "tonalRamp": [
+          "oklch(15.0% 0.0268 151.2)",
+          "oklch(26.4% 0.0268 151.2)",
+          "oklch(37.9% 0.0268 151.2)",
+          "oklch(49.3% 0.0268 151.2)",
+          "oklch(60.7% 0.0268 151.2)",
+          "oklch(72.1% 0.0268 151.2)",
+          "oklch(83.6% 0.0268 151.2)",
+          "oklch(95.0% 0.0268 151.2)"
+        ]
+      },
+      "dark-text": {
+        "role": "neutral",
+        "displayName": "dark-text",
+        "canonical": "#eff3eb",
+        "tonalRamp": [
+          "oklch(15.0% 0.0114 128.6)",
+          "oklch(26.4% 0.0114 128.6)",
+          "oklch(37.9% 0.0114 128.6)",
+          "oklch(49.3% 0.0114 128.6)",
+          "oklch(60.7% 0.0114 128.6)",
+          "oklch(72.1% 0.0114 128.6)",
+          "oklch(83.6% 0.0114 128.6)",
+          "oklch(95.0% 0.0114 128.6)"
+        ]
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "dark-muted",
+        "canonical": "#b4c0b3",
+        "tonalRamp": [
+          "oklch(15.0% 0.0224 143.2)",
+          "oklch(26.4% 0.0224 143.2)",
+          "oklch(37.9% 0.0224 143.2)",
+          "oklch(49.3% 0.0224 143.2)",
+          "oklch(60.7% 0.0224 143.2)",
+          "oklch(72.1% 0.0224 143.2)",
+          "oklch(83.6% 0.0224 143.2)",
+          "oklch(95.0% 0.0224 143.2)"
+        ]
+      },
+      "dark-line": {
+        "role": "neutral",
+        "displayName": "dark-line",
+        "canonical": "#405044",
+        "tonalRamp": [
+          "oklch(15.0% 0.0283 152.7)",
+          "oklch(26.4% 0.0283 152.7)",
+          "oklch(37.9% 0.0283 152.7)",
+          "oklch(49.3% 0.0283 152.7)",
+          "oklch(60.7% 0.0283 152.7)",
+          "oklch(72.1% 0.0283 152.7)",
+          "oklch(83.6% 0.0283 152.7)",
+          "oklch(95.0% 0.0283 152.7)"
+        ]
+      }
+    },
+    "shadows": [
+      {
+        "name": "dialog-and-popover",
+        "value": "0 20px 70px rgba(27,45,33,.16)",
+        "purpose": "弹窗与分类浮层"
+      }
+    ],
+    "motion": [
+      {
+        "name": "wheel",
+        "value": "1750ms cubic-bezier(.12,.76,.18,1)",
+        "purpose": "合成层旋转，减少动态时跳过"
+      },
+      {
+        "name": "control",
+        "value": "160–200ms",
+        "purpose": "用户操作的颜色、轻微缩放反馈"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "top-navigation",
+        "value": "1159px"
+      },
+      {
+        "name": "mobile",
+        "value": "760px"
+      },
+      {
+        "name": "narrow-mobile",
+        "value": "370px"
+      },
+      {
+        "name": "short-desktop-height",
+        "value": "840px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "用于明确的主要任务。",
+      "html": "<button class=\"ds-button ds-primary\">加入计划</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:11px 18px;border:1px solid transparent;border-radius:var(--control-radius,10px);font:600 14px/1.4 sans-serif;cursor:pointer;transition:background-color .18s,transform .18s}.ds-button:focus-visible{outline:3px solid var(--focus,#b74428);outline-offset:4px}.ds-button:active{transform:scale(.98)}.ds-primary{background:var(--accent,#b74428);color:var(--on-accent,#fff)}.ds-primary:hover{background:var(--accent-hover,#97361e)}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "与主动作相邻的次要选择。",
+      "html": "<button class=\"ds-button ds-secondary\">换一道</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:11px 18px;border:1px solid transparent;border-radius:var(--control-radius,10px);font:600 14px/1.4 sans-serif;cursor:pointer;transition:background-color .18s,transform .18s}.ds-button:focus-visible{outline:3px solid var(--focus,#b74428);outline-offset:4px}.ds-button:active{transform:scale(.98)}.ds-secondary{background:var(--surface,#fff);color:var(--text,#27352c);border-color:var(--line,#dde4d9)}.ds-secondary:hover{background:var(--subtle,#edf1e8)}"
+    },
+    {
+      "name": "Direct meal choice",
+      "kind": "button",
+      "refersTo": "button-choice",
+      "description": "推荐照片下的直接选择。",
+      "html": "<button class=\"ds-button ds-choice\">就选这道</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:11px 18px;border:1px solid transparent;border-radius:var(--control-radius,10px);font:600 14px/1.4 sans-serif;cursor:pointer;transition:background-color .18s,transform .18s}.ds-button:focus-visible{outline:3px solid var(--focus,#b74428);outline-offset:4px}.ds-button:active{transform:scale(.98)}.ds-choice{min-height:48px;background:var(--text,#27352c);color:var(--surface,#fff)}.ds-choice:hover{background:var(--accent,#b74428);color:var(--on-accent,#fff)}"
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "搜索完整菜品集合。",
+      "html": "<label class=\"ds-search\"><span>搜索</span><input type=\"search\" aria-label=\"搜索美食\" placeholder=\"菜名、分类或描述\"></label>",
+      "css": ".ds-search{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 16px;border:1px solid var(--line,#dde4d9);border-radius:12px;background:var(--surface,#fff);color:var(--muted,#626e65);font:14px sans-serif}.ds-search input{min-width:0;flex:1;border:0;background:none;color:var(--text,#27352c);font:inherit;padding:10px 0;outline:none}.ds-search:focus-within{outline:2px solid var(--focus,#b74428);outline-offset:2px}.ds-search:hover{border-color:var(--muted,#626e65)}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "真实链接，选中项使用强调背景。",
+      "html": "<nav class=\"ds-nav\" aria-label=\"导航预览\"><a href=\"#wheel\" aria-current=\"page\">今天吃什么</a><a href=\"#list\">美食菜单</a><a href=\"#plan\">一周计划</a></nav>",
+      "css": ".ds-nav{display:grid;gap:8px;max-width:190px;font:14px sans-serif}.ds-nav a{padding:12px 15px;border-radius:10px;text-decoration:none;color:var(--muted,#626e65)}.ds-nav [aria-current]{background:var(--accent-soft,#f8e9e2);color:var(--accent,#b74428);font-weight:650}.ds-nav a:hover{background:var(--subtle,#edf1e8)}.ds-nav a:focus-visible{outline:3px solid var(--focus,#b74428);outline-offset:3px}"
+    },
+    {
+      "name": "Category chip",
+      "kind": "chip",
+      "refersTo": "navigation-active",
+      "description": "分类筛选保留按钮语义。",
+      "html": "<button class=\"ds-chip\" aria-pressed=\"true\">米粉面馆</button>",
+      "css": ".ds-chip{min-height:38px;padding:7px 14px;border:1px solid var(--accent,#b74428);border-radius:9px;background:var(--accent-soft,#f8e9e2);color:var(--accent,#b74428);font:13px sans-serif;cursor:pointer}.ds-chip:hover{background:var(--subtle,#edf1e8)}.ds-chip:focus-visible{outline:3px solid var(--focus,#b74428);outline-offset:3px}.ds-chip:active{transform:scale(.98)}"
+    },
+    {
+      "name": "Food card",
+      "kind": "card",
+      "refersTo": "feature-surface",
+      "description": "图片、菜名与描述直接组成菜单。",
+      "html": "<article class=\"ds-card\"><button aria-label=\"查看黄焖鸡米饭\"><img src=\"data:image/webp;base64,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\" alt=\"黄焖鸡米饭\"><small>快餐便当</small><strong>黄焖鸡米饭</strong><p>鸡肉软烂，汤汁浓郁</p></button></article>",
+      "css": ".ds-card{max-width:270px}.ds-card button{display:block;border:0;padding:0;background:none;color:var(--text,#27352c);text-align:left;cursor:pointer;font:13px/1.65 sans-serif}.ds-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px}.ds-card small{display:block;margin-top:13px;color:var(--muted,#626e65);font-size:11px}.ds-card strong{display:block;font-size:17px;margin:4px 0 5px}.ds-card p{margin:0;color:var(--muted,#626e65)}.ds-card button:focus-visible{outline:3px solid var(--focus,#b74428);outline-offset:4px}.ds-card button:hover strong{color:var(--accent,#b74428)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "鲜食菜单",
+    "overview": "v3.2.0 的视觉系统围绕真实食物和明确选择建立。白色内容区、植物色中性背景与珊瑚色交互强调形成层次，照片承担主要视觉内容。中文任务界面使用本机字体，保持快速加载与可读性。",
+    "keyCharacteristics": [
+      "菜品照片与直接选择动作相邻。",
+      "页面依靠留白、背景和少量分隔线组织内容。",
+      "主次操作、选中与等待状态可辨认。",
+      "桌面、手机及深色模式保持同一套组件语言。"
+    ],
+    "rules": [
+      {
+        "name": "Semantic State",
+        "body": "强调、成功和错误分别使用对应语义 token，不能只靠颜色表达状态。",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Do 让照片、菜名和选择动作保持直接的阅读顺序。",
+      "Do 以共享语义 token 维护明暗与六色主题。",
+      "Do 同时保留键盘、减少动态效果、长名称和图片失败状态。",
+      "Do 把派生图片与原图一起发布，并检查缩略图大小预算。"
+    ],
+    "donts": [
+      "Don't 将店铺参考图表达成本店实拍，或把口味标签当作食材保证。",
+      "Don't 在动画每一帧重建图片、重绘盘面或更新整页。",
+      "Don't 为背景装饰引入持续动画和额外网络依赖。"
+    ]
+  }
 }

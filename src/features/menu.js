@@ -1,4 +1,4 @@
-import { $, attr, emptyState, escapeHtml, on, toast, downloadFile } from '../ui/dom.js';
+import { $, attr, emptyState, escapeHtml, on, toast, downloadFile, syncFavoriteButtons } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { foodCard } from '../ui/cards.js';
 import { categoriesFor } from '../core/catalog.js';
@@ -8,25 +8,40 @@ import { createMenuExport, parseMenu } from '../core/backup.js';
 
 export function initMenu(app) {
     const root = $('#list-view');
-    let category = '', query = '', respectPreferences = true, order = 'default';
+    let category = '', query = '', respectPreferences = true, order = 'default', shown = 24, searchTimer, categoriesKey = '';
     root.innerHTML = `<div class="page-heading"><div><h1 id="list-heading">你的美食灵感库</h1><p id="menu-description">熟悉的味道，和下一道想吃的。</p></div><div class="heading-actions"><button class="button secondary" id="manage-menu">管理菜单</button><button class="button primary" id="add-food">${icon('plus')}添加美食</button></div></div><div class="browse-toolbar"><label class="search-field">${icon('search')}<input type="search" id="menu-search" placeholder="搜索菜名、分类或描述" aria-label="搜索美食"></label><label class="sort-field"><span class="sr-only">排序方式</span><select id="menu-sort"><option value="default">默认排序</option><option value="name">按名称排序</option><option value="favorite">收藏优先</option></select></label></div><div id="menu-categories" class="category-bar" aria-label="按分类浏览"></div><div class="results-toolbar"><span id="menu-count" role="status"></span><label class="checkbox-label"><input type="checkbox" id="respect-preferences" checked>按我的饮食偏好</label></div><div class="food-grid" id="menu-grid"></div>`;
-    const render = () => {
+    const more = document.createElement('div'); more.className = 'menu-more'; root.append(more);
+    const render = (reason) => {
+        if (reason === 'settings' || reason === 'plan' || reason === 'nearby-setting') return;
+        if (reason === 'favorites' && order !== 'favorite') { syncFavoriteButtons(root, app.store.get().favorites); return; }
         const menu = app.dataset();
         const categories = categoriesFor(menu);
         if (!categories.includes(category)) category = '';
-        $('#menu-categories').innerHTML = ['', ...categories].map(value => `<button class="chip${value === category ? ' active' : ''}" data-category="${attr(value)}" aria-pressed="${value === category}">${escapeHtml(value || '全部')}</button>`).join('');
+        const nextCategories = `${categories.join('|')}|${category}`;
+        if (nextCategories !== categoriesKey) {
+            $('#menu-categories').innerHTML = ['', ...categories].map(value => `<button class="chip${value === category ? ' active' : ''}" data-category="${attr(value)}" aria-pressed="${value === category}">${escapeHtml(value || '全部')}</button>`).join('');
+            categoriesKey = nextCategories;
+        }
         const data = app.store.get();
         let foods = filterFoods(menu, { preferences: respectPreferences ? data.preferences : undefined, categories: category ? [category] : [], search: query });
         if (order === 'name') foods.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
         if (order === 'favorite') { const favoriteIds = new Set(data.favorites.map(food => food.id)); foods.sort((a, b) => Number(favoriteIds.has(b.id)) - Number(favoriteIds.has(a.id))); }
         $('#menu-count').textContent = `找到 ${foods.length} ${app.ui.useNearby ? '家店铺' : '道美食'} · 共 ${menu.length} 项`;
         $('#menu-description').textContent = app.ui.useNearby ? '正在浏览附近店铺，口味标签以商家实际信息为准。' : data.menuOverride ? '正在使用你的专属菜单，可随时恢复内置菜单。' : '熟悉的味道，和下一道想吃的。';
-        $('#menu-grid').innerHTML = foods.length ? foods.map(food => foodCard(food, { favorites: data.favorites, excluded: data.preferences.excludedIds })).join('') : emptyState('还没有找到这道美味', '试试其他关键词、全部分类，或调整饮食偏好。', '<button class="button secondary" id="clear-search">清除搜索与分类</button><a class="text-button" href="#settings">调整饮食偏好</a>');
+        $('#menu-grid').innerHTML = foods.length ? foods.slice(0, shown).map(food => foodCard(food, { favorites: data.favorites, excluded: data.preferences.excludedIds })).join('') : emptyState('还没有找到这道美味', '试试其他关键词、全部分类，或调整饮食偏好。', '<button class="button secondary" id="clear-search">清除搜索与分类</button><a class="text-button" href="#settings">调整饮食偏好</a>');
+        more.innerHTML = foods.length > shown ? `<button class="button secondary" id="more-foods">再看 ${Math.min(24, foods.length - shown)} 道美食${icon('down')}</button><p>已展示 ${shown} / ${foods.length} 道</p>` : '';
     };
-    $('#menu-search').addEventListener('input', event => { query = event.target.value; render(); });
-    $('#respect-preferences').addEventListener('change', event => { respectPreferences = event.target.checked; render(); });
-    $('#menu-sort').addEventListener('change', event => { order = event.target.value; render(); });
-    on(root, 'click', '[data-category]', (_, button) => { category = button.dataset.category; render(); root.querySelector(`[data-category="${CSS.escape(category)}"]`)?.focus({ preventScroll: true }); });
+    const search = event => {
+        clearTimeout(searchTimer);
+        query = event.target.value; shown = 24;
+        if (!event.isComposing) searchTimer = setTimeout(render, 90);
+    };
+    $('#menu-search').addEventListener('input', search);
+    $('#menu-search').addEventListener('compositionend', search);
+    $('#respect-preferences').addEventListener('change', event => { respectPreferences = event.target.checked; shown = 24; render(); });
+    $('#menu-sort').addEventListener('change', event => { order = event.target.value; shown = 24; render(); });
+    on(root, 'click', '#more-foods', () => { const count = $('#menu-grid').children.length; shown += 24; render(); $('#menu-grid').children[count]?.querySelector('button')?.focus({ preventScroll: true }); });
+    on(root, 'click', '[data-category]', (_, button) => { category = button.dataset.category; shown = 24; render(); root.querySelector(`[data-category="${CSS.escape(category)}"]`)?.focus({ preventScroll: true }); });
     on(root, 'click', '#clear-search', () => { query = ''; category = ''; $('#menu-search').value = ''; render(); $('#menu-search').focus(); });
 
     function openEditor(food = null) {

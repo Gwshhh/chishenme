@@ -3,7 +3,7 @@ importScripts('./sw-assets.js');
 const scope = self.registration.scope;
 const prefix = 'chishenme:' + new URL(scope).pathname + ':';
 const SHELL = prefix + self.APP_VERSION;
-const IMAGES = prefix + 'images-v1';
+const IMAGES = prefix + 'images-v2';
 const core = new Set(self.APP_ASSETS.map(asset => new URL(asset, scope).pathname));
 
 self.addEventListener('install', event => {
@@ -54,7 +54,7 @@ self.addEventListener('fetch', event => {
                         try {
                             await cache.put(request, copy);
                             const keys = await cache.keys();
-                            await Promise.all(keys.slice(0, Math.max(0, keys.length - 120)).map(key => cache.delete(key)));
+                            await Promise.all(keys.slice(0, Math.max(0, keys.length - 240)).map(key => cache.delete(key)));
                         } catch { /* Quota limits never break a successful image response. */ }
                     })());
                 }

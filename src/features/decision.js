@@ -1,4 +1,4 @@
-import { $, attr, escapeHtml, emptyState, foodImage, on, toast } from '../ui/dom.js';
+import { $, attr, escapeHtml, emptyState, foodImage, on, toast, syncFavoriteButtons } from '../ui/dom.js';
 import { icon } from '../ui/icons.js';
 import { foodCard, foodTags } from '../ui/cards.js';
 import { Wheel } from '../ui/wheel.js';
@@ -12,33 +12,61 @@ const BOARD_SIZE = 8;
 
 export function initDecision(app) {
     const root = $('#wheel-view'), wheel = new Wheel($('#wheel-canvas'), $('#wheel-photos'));
-    let signature = '', dailyFood;
+    let signature = '', dailyFood, dailyKey = '', recommendationKey = '', actionsKey = '', extrasKey = '';
+    let mealsKey = '', categoriesKey = '', discoveryKey = '';
     const announcement = document.createElement('span');
     announcement.className = 'sr-only'; announcement.setAttribute('role', 'status'); announcement.setAttribute('aria-live', 'polite'); root.append(announcement);
     const recommendation = () => {
         const data = app.store.get(), result = app.ui.result, food = result || dailyFood;
         const target = $('#recommendation');
-        if (!food) { target.innerHTML = emptyState('留一点空间给新口味', '调整一下筛选，就能找到新的灵感。', '<a class="text-button" href="#settings">调整饮食偏好</a>'); return; }
+        if (!food) { target.innerHTML = emptyState('留一点空间给新口味', '调整一下筛选，就能找到新的灵感。', '<a class="text-button" href="#settings">调整饮食偏好</a>'); recommendationKey = ''; return; }
         const favorite = data.favorites.some(item => item.id === food.id);
         const reasons = preferenceReasons(food, data.preferences);
         const record = data.history.find(item => item.id === app.ui.resultEventId);
         target.classList.toggle('is-result', Boolean(result));
-        target.innerHTML = `<div class="recommendation-heading"><h2 id="result-title" tabindex="-1">${result ? '这一餐，就它了。' : '今日灵感'}</h2>${result ? icon('check') : '<span>试试这一口</span>'}</div><button class="recommendation-image" data-food-action="detail" data-food-id="${attr(food.id)}" aria-label="查看${attr(food.name)}详情">${foodImage(food, { eager: true })}</button><div class="recommendation-body"><span class="food-category">${escapeHtml(food.category)}</span><h3>${escapeHtml(food.name)}</h3><p>${escapeHtml(food.description || '一份新期待，留给这一餐。')}</p><div class="tag-list">${foodTags(food)}</div>${reasons.length && result ? '<p class="fine-print">这次结果已保留；下一次抽取将按新偏好筛选。</p>' : ''}<div class="recommendation-actions">${result ? `<button class="button primary" data-food-action="plan" data-food-id="${attr(food.id)}">${icon('calendar')}加入计划</button>` : `<button class="button primary" id="choose-daily">就选这道${icon('arrow')}</button>`}<button class="icon-btn${favorite ? ' is-favorite' : ''}" data-food-action="favorite" data-food-id="${attr(food.id)}" aria-label="${favorite ? '取消收藏' : '收藏'}${attr(food.name)}" aria-pressed="${favorite}">${icon('heart')}</button>${result ? `<button class="icon-btn" data-food-action="share" data-food-id="${attr(food.id)}" aria-label="分享${attr(food.name)}">${icon('share')}</button>` : `<button class="icon-btn" data-food-action="plan" data-food-id="${attr(food.id)}" aria-label="将${attr(food.name)}加入计划">${icon('calendar')}</button>`}</div>${result ? `<div class="result-secondary"><button class="text-button" id="spin-again">再抽一次</button><button class="text-button" id="result-eaten" ${record?.eaten ? 'disabled' : ''}>${icon('check')}${record?.eaten ? '已记为吃过' : '记为已吃'}</button></div>${deliveryLinks(food)}` : ''}</div>`;
+        const nextKey = JSON.stringify(food);
+        if (nextKey !== recommendationKey) {
+            target.innerHTML = `<div class="recommendation-heading"><h2 id="result-title" tabindex="-1"></h2><span>${icon('bowl')}好好吃这一餐</span></div><button class="recommendation-image" data-food-action="detail" data-food-id="${attr(food.id)}" aria-label="查看${attr(food.name)}详情">${foodImage(food, { eager: true, variant: 'hero', priority: 'high' })}</button><div class="recommendation-body"><div class="recommendation-copy"><div class="recommendation-meta"><span class="food-category">${escapeHtml(food.category)}</span><div class="tag-list">${foodTags(food)}</div></div><h3>${escapeHtml(food.name)}</h3><p>${escapeHtml(food.description || '一份新期待，留给这一餐。')}</p></div><div class="recommendation-actions"></div><div class="recommendation-extra"></div></div>`;
+            recommendationKey = nextKey; actionsKey = ''; extrasKey = '';
+            target.dataset.foodId = food.id;
+        }
+        $('#result-title').textContent = result ? '这一餐，就它了。' : '今日灵感';
+        const actions = `${result ? `<button class="button primary" data-food-action="plan" data-food-id="${attr(food.id)}">${icon('calendar')}加入计划</button>` : `<button class="button primary" id="choose-daily">${icon('check')}就选这道</button><button class="button secondary" id="shuffle-daily">${icon('refresh')}换一道</button>`}<button class="icon-btn${favorite ? ' is-favorite' : ''}" data-food-action="favorite" data-food-id="${attr(food.id)}" aria-label="${favorite ? '取消收藏' : '收藏'}${attr(food.name)}" aria-pressed="${favorite}">${icon('heart')}</button>${result ? `<button class="icon-btn" data-food-action="share" data-food-id="${attr(food.id)}" aria-label="分享${attr(food.name)}">${icon('share')}</button>` : ''}`;
+        const extras = `${reasons.length && result ? '<p class="fine-print">这次结果已保留；下一次抽取将按新偏好筛选。</p>' : ''}${result ? `<div class="result-secondary"><button class="text-button" id="spin-again">${icon('refresh')}再抽一次</button><button class="text-button" id="result-eaten" ${record?.eaten ? 'disabled' : ''}>${icon('check')}${record?.eaten ? '已记为吃过' : '记为已吃'}</button></div>${deliveryLinks(food)}` : ''}`;
+        if (actions !== actionsKey) { $('.recommendation-actions', target).innerHTML = actions; actionsKey = actions; }
+        if (extras !== extrasKey) { $('.recommendation-extra', target).innerHTML = extras; extrasKey = extras; }
     };
-    const render = () => {
+    const render = (reason) => {
+        if (reason === 'settings') { wheel.refreshTheme(); return; }
+        if (reason === 'favorites') { syncFavoriteButtons(root, app.store.get().favorites); return; }
+        if (reason === 'plan' || reason === 'nearby-setting') return;
         const data = app.store.get(), categories = categoriesFor(app.dataset());
         app.ui.categories = app.ui.categories.filter(value => categories.includes(value));
         const pool = app.pool();
         const key = pool.map(food => food.id).join('|');
-        const random = seededRandom(`${localDateKey()}-${app.meal()}-${key}`);
-        dailyFood = weightedPick(pool, { preferences: data.preferences, history: data.history, weather: app.ui.weather, random });
+        const nextDailyKey = `${localDateKey()}-${app.meal()}-${key}-${JSON.stringify(data.preferences)}-${app.ui.weather?.kind || ''}`;
+        if (nextDailyKey !== dailyKey) {
+            dailyKey = nextDailyKey;
+            const random = seededRandom(`${localDateKey()}-${app.meal()}-${key}`);
+            dailyFood = weightedPick(pool, { preferences: data.preferences, history: data.history, weather: app.ui.weather, random });
+        }
+        // Put the main photograph on the network before the tiny wheel images.
+        if (!app.ui.spinning) recommendation();
         if (!app.ui.spinning && (key !== signature || !wheel.foods.length)) {
             signature = key;
             wheel.setFoods(sampleDistinct(pool, BOARD_SIZE, seededRandom(key)));
         }
-        $('#meal-tabs').innerHTML = [...MEALS, { key: 'all', label: '不限' }].map(meal => `<button class="segment${meal.key === app.meal() ? ' active' : ''}" data-meal="${meal.key}" aria-pressed="${meal.key === app.meal()}" ${app.ui.spinning ? 'disabled' : ''}>${meal.label}</button>`).join('');
+        const nextMeals = `${app.meal()}-${app.ui.spinning}`;
+        if (nextMeals !== mealsKey) {
+            $('#meal-tabs').innerHTML = [...MEALS, { key: 'all', label: '不限' }].map(meal => `<button class="segment${meal.key === app.meal() ? ' active' : ''}" data-meal="${meal.key}" aria-pressed="${meal.key === app.meal()}" ${app.ui.spinning ? 'disabled' : ''}>${meal.label}</button>`).join('');
+            mealsKey = nextMeals;
+        }
         $('#meal-tabs').hidden = app.ui.useNearby;
-        $('#wheel-categories').innerHTML = ['', ...categories].map(category => `<button class="chip${category ? app.ui.categories.includes(category) ? ' active' : '' : !app.ui.categories.length ? ' active' : ''}" data-wheel-category="${attr(category)}" aria-pressed="${category ? app.ui.categories.includes(category) : !app.ui.categories.length}" ${app.ui.spinning ? 'disabled' : ''}>${escapeHtml(category || '全部分类')}</button>`).join('');
+        const nextCategories = `${categories.join('|')}|${app.ui.categories.join('|')}|${app.ui.spinning}`;
+        if (nextCategories !== categoriesKey) {
+            $('#wheel-categories').innerHTML = ['', ...categories].map(category => `<button class="chip${category ? app.ui.categories.includes(category) ? ' active' : '' : !app.ui.categories.length ? ' active' : ''}" data-wheel-category="${attr(category)}" aria-pressed="${category ? app.ui.categories.includes(category) : !app.ui.categories.length}" ${app.ui.spinning ? 'disabled' : ''}>${escapeHtml(category || '全部分类')}</button>`).join('');
+            categoriesKey = nextCategories;
+        }
         $('#filter-summary').textContent = app.ui.categories.length ? `已选 ${app.ui.categories.length} 个分类` : app.ui.useNearby ? '附近全部分类' : '所有分类';
         const preferenceCount = Object.entries(data.preferences).filter(([key, value]) => ['avoidSpicy', 'vegetarian', 'preferLight'].includes(key) && value).length + (data.preferences.excludedIds.length || data.preferences.excludedKeywords.length ? 1 : 0);
         $('#preference-shortcut').textContent = preferenceCount ? `${preferenceCount} 项饮食偏好已生效` : '饮食偏好';
@@ -54,10 +82,14 @@ export function initDecision(app) {
         $('.wheel-stage').classList.toggle('is-spinning', app.ui.spinning);
         $('#spin-btn').innerHTML = `${icon('wheel')}<span>${app.ui.spinning ? '正在挑选好滋味…' : '开始抽取'}</span>${icon('arrow')}`;
         $('#tournament-btn').disabled = pool.length < 2 || app.ui.spinning;
+        for (const button of root.querySelectorAll('#choose-daily, #shuffle-daily, #spin-again')) button.disabled = app.ui.spinning;
         $('.wheel-stage').hidden = !pool.length;
         $('#wheel-empty').hidden = !!pool.length;
-        if (!app.ui.spinning) recommendation();
-        $('#discovery-grid').innerHTML = sampleDistinct(pool, 4, seededRandom(`discovery-${localDateKey()}-${key}`)).map(food => foodCard(food, { favorites: data.favorites, excluded: data.preferences.excludedIds })).join('') || '<p class="muted">还没有合适的候选，调整筛选后再来看看。</p>';
+        const nextDiscovery = `${localDateKey()}-${key}`;
+        if (nextDiscovery !== discoveryKey) {
+            $('#discovery-grid').innerHTML = sampleDistinct(pool, 4, seededRandom(`discovery-${localDateKey()}-${key}`)).map(food => foodCard(food, { favorites: data.favorites, excluded: data.preferences.excludedIds })).join('') || '<p class="muted">还没有合适的候选，调整筛选后再来看看。</p>';
+            discoveryKey = nextDiscovery;
+        } else syncFavoriteButtons(root, data.favorites);
         wheel.refreshTheme();
     };
     async function spin() {
@@ -115,6 +147,15 @@ export function initDecision(app) {
     $('#tournament-btn').addEventListener('click', tournament);
     on(root, 'click', '#spin-again', spin);
     on(root, 'click', '#choose-daily', () => { if (dailyFood) app.pick(dailyFood, 'daily'); });
+    on(root, 'click', '#shuffle-daily', () => {
+        if (app.ui.spinning) return;
+        const pool = app.pool(), data = app.store.get();
+        const alternatives = pool.filter(food => food.id !== dailyFood?.id);
+        dailyFood = weightedPick(alternatives.length ? alternatives : pool, { preferences: data.preferences, history: data.history, weather: app.ui.weather });
+        recommendation();
+        if (dailyFood) announcement.textContent = `换个灵感：${dailyFood.name}`;
+        $('#shuffle-daily')?.focus({ preventScroll: true });
+    });
     on(root, 'click', '#result-eaten', () => { app.markResultEaten(); toast('已记为实际吃过'); });
     $('#wheel-source').addEventListener('click', () => { app.features.nearby.cancel(); app.ui.useNearby = false; app.ui.categories = []; render(); toast('已切回我的菜单'); });
     const sponsor = APP_CONFIG.sponsor;

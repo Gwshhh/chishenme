@@ -19,16 +19,16 @@ async function setup(page, fields = burger) {
 
 test('missing shop photos use matching real food in favorites, detail, plans and share', async ({ page }) => {
     await setup(page);
-    await expect(image(page)).toHaveAttribute('src', 'images_food/food_32.jpg');
+    await expect(image(page)).toHaveAttribute('src', 'images_food/optimized/food_32-480.webp');
     await expect(image(page)).toHaveAttribute('alt', /汉堡参考图/);
     await expect(kind(page).locator('.photo-credit')).toBeVisible();
     await page.locator('#favorites-grid [data-food-action="detail"]').click();
-    await expect(page.locator('#app-dialog img')).toHaveAttribute('src', 'images_food/food_32.jpg');
+    await expect(page.locator('#app-dialog img')).toHaveAttribute('src', 'images_food/optimized/food_32-480.webp');
     await page.locator('#app-dialog [data-food-action="plan"]').click();
-    await expect(page.locator('#app-dialog img')).toHaveAttribute('src', 'images_food/food_32.jpg');
+    await expect(page.locator('#app-dialog img')).toHaveAttribute('src', 'images_food/optimized/food_32-480.webp');
     await page.locator('#add-plan-form button[type="submit"]').click();
     await page.locator('[data-route="plan"]').click();
-    await expect(page.locator('.plan-food img')).toHaveAttribute('src', 'images_food/food_32.jpg');
+    await expect(page.locator('.plan-food img')).toHaveAttribute('src', 'images_food/optimized/food_32-480.webp');
     await page.locator('.plan-food').click();
     await page.locator('#app-dialog [data-food-action="share"]').click();
     await expect(page.locator('.share-preview')).toBeVisible();
@@ -66,7 +66,7 @@ test('failed originals retain a real reference and reconnecting retries the orig
     await page.route(first, route => available ? route.fulfill({ contentType: 'image/jpeg', body: photoBody }) : route.abort());
     await setup(page, { ...burger, image: first });
     await expect(image(page)).not.toHaveAttribute('data-loading', 'true');
-    await expect(image(page)).toHaveAttribute('src', 'images_food/food_32.jpg');
+    await expect(image(page)).toHaveAttribute('src', 'images_food/optimized/food_32-480.webp');
     available = true;
     await page.evaluate(() => dispatchEvent(new Event('online')));
     await expect(image(page)).toHaveAttribute('src', first);

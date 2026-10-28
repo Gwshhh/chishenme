@@ -55,12 +55,16 @@ function init() {
     };
     app.feedback = createFeedback(() => store.get().settings);
     const media = matchMedia('(prefers-color-scheme: dark)');
+    let settingsSignature = '';
     const applySettings = () => {
         const settings = store.get().settings;
         const dark = settings.theme === 'dark' || (settings.theme === 'system' && media.matches);
+        const signature = `${dark}-${settings.accent}-${settings.sound}`;
+        if (signature === settingsSignature) return;
+        settingsSignature = signature;
         document.documentElement.dataset.mode = dark ? 'dark' : 'light';
         document.documentElement.dataset.accent = settings.accent;
-        $('meta[name="theme-color"]').content = dark ? '#211e1b' : '#f8f5f0';
+        $('meta[name="theme-color"]').content = dark ? '#1b231e' : '#f6f7f3';
         $('#theme-toggle').innerHTML = icon(dark ? 'sun' : 'moon');
         $('#theme-toggle').setAttribute('aria-label', dark ? '切换浅色模式' : '切换深色模式');
         $('#theme-toggle').title = dark ? '切换浅色模式' : '切换深色模式';
@@ -70,10 +74,15 @@ function init() {
     };
     applySettings();
     app.features.actions = initFoodActions(app);
-    app.features.list = initMenu(app);
-    app.features.plan = initPlanner(app);
-    Object.assign(app.features, initCollections(app));
-    app.features.settings = initSettings(app);
+    const lazyFeature = (factory, methods) => {
+        let feature;
+        return Object.fromEntries(methods.map(method => [method, (...args) => (feature ??= factory(app))[method](...args)]));
+    };
+    app.features.list = lazyFeature(initMenu, ['render', 'openManager', 'openEditor']);
+    app.features.plan = lazyFeature(initPlanner, ['render', 'openAdd', 'openSlot']);
+    let collections;
+    for (const route of ['favorites', 'history']) app.features[route] = { render: (...args) => (collections ??= initCollections(app))[route].render(...args) };
+    app.features.settings = lazyFeature(initSettings, ['render']);
     app.features.wheel = initDecision(app);
     app.features.nearby = initNearby(app);
     $('#today-label').textContent = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });

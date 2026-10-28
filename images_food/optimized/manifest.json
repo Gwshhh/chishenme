@@ -1,0 +1,16 @@
+{
+  "count": 92,
+  "originalBytes": 19170015,
+  "variantBytes": {
+    "160": 381132,
+    "480": 2633922,
+    "960": 9163772
+  },
+  "format": "WebP",
+  "crop": "centered 4:3",
+  "widths": [
+    160,
+    480,
+    960
+  ]
+}

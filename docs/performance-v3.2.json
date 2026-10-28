@@ -1,0 +1,44 @@
+{
+  "methodology": {
+    "kind": "Single-run controlled lab comparison, not field Web Vitals",
+    "baseline": "f8ebc7f / v3.1.0, public files exported to an isolated server",
+    "state": "Complete fresh v1 state; lunch; light; sunset; no personal data",
+    "browser": "155.0.4283.62",
+    "viewport": "1440x980",
+    "bandwidthKbps": 1600,
+    "latencyMs": 150,
+    "cpuSlowdown": 4,
+    "meal": "lunch",
+    "cache": false,
+    "sw": false,
+    "observations": "Photo readiness is the real image load event, measured from navigation. Transfer includes completed requests up to 9 main photos ready; the redesigned page also loads 4 discovery photos. LCP omitted: sampled before its image paint callback. Frame sample includes startup and landing. Preliminary malformed-fixture runs are superseded."
+  },
+  "before": {
+    "version": "3.1.0",
+    "heroReadyMs": 11786.799999952316,
+    "mainPhotosReadyMs": 11799,
+    "transferBytes": 1846780,
+    "cls": 0.08003070655660646,
+    "frameSample": {
+      "frames": 191,
+      "p95": 16.80000000000109,
+      "max": 83.29999999999927,
+      "over50": 2,
+      "draws": 155
+    }
+  },
+  "after": {
+    "version": "3.2.0",
+    "heroReadyMs": 3813.100000023842,
+    "mainPhotosReadyMs": 3836.100000023842,
+    "transferBytes": 502462,
+    "cls": 0.002966424510623825,
+    "frameSample": {
+      "frames": 194,
+      "p95": 16.800000000000182,
+      "max": 66.5,
+      "over50": 1,
+      "draws": 2
+    }
+  }
+}

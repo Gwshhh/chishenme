@@ -6,7 +6,7 @@ import { HttpError, nearbyPlaces, weatherAt } from './providers.js';
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const publicFiles = new Set(['index.html', 'app.js', 'data.js', 'config.js', 'styles.css', 'sw.js', 'sw-assets.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png']);
-const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml' };
 
 export function coordinates(query) {
     const number = (name, min, max) => {
@@ -88,7 +88,7 @@ export function createApp({ root = defaultRoot, amapKey = '', allowedOrigin = ''
             // This small capability script is optional on static hosting (loaded only on request).
             if (pathname === '/runtime-config.json') { json(res, 200, { apiBase: '/api/', development }); return; }
             const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
-            const allowed = publicFiles.has(relative) || /^src\/(?:core|services|ui|features)\/[a-z0-9-]+\.js$/.test(relative) || /^images_food\/food_\d{2,3}\.jpg$/.test(relative);
+            const allowed = publicFiles.has(relative) || /^src\/(?:core|services|ui|features)\/[a-z0-9-]+\.js$/.test(relative) || /^images_food\/(?:food_\d{2,3}\.jpg|optimized\/food_\d{2,3}-(?:160|480|960)\.webp)$/.test(relative);
             if (!allowed) throw new HttpError(404, '文件不存在');
             const file = path.resolve(root, relative);
             const actual = await realpath(file).catch(() => null);

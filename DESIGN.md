@@ -1,46 +1,105 @@
 ---
 name: 今天吃什么
-description: 好好吃每一餐
+description: 实物照片与轻快选择
 colors:
-  primary: "#a64732"
-  primary-hover: "#8c3927"
-  primary-soft: "#f5e6df"
-  page: "#f8f5f0"
-  surface: "#fffdf9"
-  subtle: "#f0ebe3"
-  text: "#302922"
-  muted: "#74665b"
-  line: "#e5ddd2"
+  primary: "#b74428"
+  primary-hover: "#97361e"
+  primary-soft: "#f8e9e2"
+  page: "#f6f7f3"
+  surface: "#ffffff"
+  subtle: "#edf1e8"
+  feature: "#eaf0e4"
+  text: "#27352c"
+  muted: "#626e65"
+  line: "#dde4d9"
   success: "#37624e"
   danger: "#ae3735"
-  wheel-slice: "#f1e5d5"
-  wheel-alternate: "#faf4e9"
+  wheel-slice: "#e1e9d9"
+  wheel-alternate: "#f3f6ee"
+  dark-page: "#1b231e"
+  dark-surface: "#242f28"
+  dark-subtle: "#303e33"
+  dark-feature: "#2a382d"
+  dark-text: "#eff3eb"
+  dark-muted: "#b4c0b3"
+  dark-line: "#405044"
 typography:
   headline:
     fontFamily: "PingFang SC, Microsoft YaHei, Noto Sans CJK SC, system-ui, sans-serif"
-    fontSize: "2rem"
-    fontWeight: 700
+    fontSize: "2.125rem"
+    fontWeight: 750
     lineHeight: 1.4
-    letterSpacing: "-0.025em"
-  title:
-    fontSize: "1.15rem"
+    letterSpacing: "-0.03em"
+  mobile-headline:
+    fontSize: "1.625rem"
+    fontWeight: 750
+    lineHeight: 1.4
+  section:
+    fontSize: "1.2rem"
     fontWeight: 650
     lineHeight: 1.4
+  heading-small:
+    fontSize: "1rem"
+    fontWeight: 700
+  dish:
+    fontSize: "30px"
+    fontWeight: 700
+    letterSpacing: "-0.025em"
+  mobile-dish:
+    fontSize: "27px"
+    fontWeight: 700
+  card-title:
+    fontSize: "17px"
+    fontWeight: 650
+  brand:
+    fontSize: "18px"
+    fontWeight: 750
   body:
     fontSize: "15px"
+    lineHeight: 1.65
     fontWeight: 400
+  control:
+    fontSize: "14px"
+    fontWeight: 600
+  supporting:
+    fontSize: "13px"
     lineHeight: 1.65
   label:
-    fontSize: "13px"
+    fontSize: "12px"
     fontWeight: 550
+  caption:
+    fontSize: "11px"
+    lineHeight: 1.65
+  credit:
+    fontSize: "10px"
+    lineHeight: 1.5
+  small-credit:
+    fontSize: "9px"
+    lineHeight: 1.5
+  wheel-credit:
+    fontSize: "8px"
+    lineHeight: 1.5
 rounded:
+  credit: "4px"
+  tag: "5px"
+  tiny-photo: "6px"
+  plan-photo: "7px"
+  segment: "8px"
+  chip: "9px"
   control: "10px"
+  photo: "12px"
   surface: "16px"
-  dialog: "16px"
+  switch: "20px"
+  circle: "50%"
 spacing:
+  xs: "4px"
   small: "8px"
+  control: "12px"
   medium: "16px"
+  inset: "20px"
   large: "24px"
+  section: "36px"
+  shell: "44px"
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
@@ -53,66 +112,91 @@ components:
     textColor: "{colors.text}"
     rounded: "{rounded.control}"
     padding: "11px 18px"
-  food-card:
-    backgroundColor: "{colors.surface}"
+    height: "44px"
+  button-choice:
+    backgroundColor: "{colors.text}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.control}"
+    height: "48px"
+  navigation-active:
+    backgroundColor: "{colors.primary-soft}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.control}"
+    padding: "12px 15px"
+  feature-surface:
+    backgroundColor: "{colors.feature}"
     textColor: "{colors.text}"
     rounded: "{rounded.surface}"
+  search-field:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.photo}"
+    height: "48px"
 ---
 
 # Design System: 今天吃什么
 
 ## Overview
 
-**Creative North Star: "好好吃每一餐"**
+**Creative North Star: "鲜食菜单"**
 
-以现有产品文案「好好吃每一餐」作为记录名称，延续暖色美食身份。界面服务于日常选择任务，照片承载食物内容，转盘是主要动效。v3.1.0 按用户要求精修为奶油色盘面、陶土色强调和正向实物缩略图，保持原有功能和中文内容。
+v3.2.0 的视觉系统围绕真实食物和明确选择建立。白色内容区、植物色中性背景与珊瑚色交互强调形成层次，照片承担主要视觉内容。中文任务界面使用本机字体，保持快速加载与可读性。
 
 **Key Characteristics:**
-- 温暖中性色
-- 真实菜品图
-- 清楚的操作状态
-- 移动端底部导航
+
+- 菜品照片与直接选择动作相邻。
+- 页面依靠留白、背景和少量分隔线组织内容。
+- 主次操作、选中与等待状态可辨认。
+- 桌面、手机及深色模式保持同一套组件语言。
 
 ## Colors
 
-默认强调色用于主要按钮、选中状态和品牌碗形标志。页面、卡片、内嵌控件使用三层暖中性色。所有语义颜色由 styles.css 的变量管理。
+前面的颜色 token 对应 styles.css 的实际默认值。primary 用于转盘、导航选中、主要功能按钮与焦点；首页「就选这道」使用 text 与 surface 的强对比。feature 用于转盘与用餐计划提示，普通内容区使用 surface，背景使用 page。
 
-深色由 `html[data-mode="dark"]` 覆盖同一组 token。六种强调色由 `data-accent` 指定：sunset、celadon、indigo、violet、amber、rose；每种均有对应深色值。不要在页面模块里重复固定配色。
+六种强调色继续由 data-accent 指定：sunset、celadon、indigo、violet、amber、rose。data-mode="dark" 替换中性色与强调色；深色按钮文字使用专用 on-accent 值，不能假定主按钮始终白字。照片上的收藏浮钮与参考标注保持可读的固定底色。
 
-**The Semantic State Rule.** 强调、成功和错误颜色分别由同名 token 管理。
+**The Semantic State Rule.** 强调、成功和错误分别使用对应语义 token，不能只靠颜色表达状态。
 
 ## Typography
 
-使用项目现有中文系统字体栈，保持控件与内容同一语言。主标题为 2rem / 700，手机为 1.6rem；次标题 1.15rem / 650，推荐菜名为 26px（手机 24px）。正文基准为 15px / 1.65；控件与正文采用 12–18px，品牌名 19px、手机 17–18px。辅助说明 10–13px，菜品分类 10–11px。盘面菜名 12px，370px 以下为 11px，最多两行；盘面参考图角标为 8px，其余缩略图角标 9–10px，并有完整 alt/title。字号依职责和断点，不随视口连续缩放。
+使用中文系统界面字体栈，无外部字体下载。主标题、菜名、正文与辅助信息通过字号和字重区分；这不是装饰性展示字体系统。字号按前面的职责定义，保持控件与正文的中文语言一致。
+
+主标题桌面为 headline、手机为 mobile-headline；推荐菜名为 dish / mobile-dish，菜单标题为 card-title。正文一般为 15px，内容说明和控件为 12–14px。参考图标记在小照片上缩小，同时保留完整 alt/title；盘面菜名 12px，370px 以下 11px，最多两行。长名称允许换行，主选择按钮保持单行。
 
 ## Layout
 
-主容器最大 1248px，桌面左右内边距 32px。桌面决策区域两列比例 1.18:1，间距 28px；菜单为四列，间距 22px。760px 以下切换单列任务布局、双列菜品与底部五项导航，主容器内边距 18px。1080px 调整密度，370px 进一步压缩边距。转盘桌面最大 388px，中间尺寸 340px，手机 300px；旋转层裁切在盘面区域，允许指针 4px 外延。
+桌面外壳最大 1536px，208px 侧栏，内容间隔和右侧边距均为 44px。侧栏固定在可见窗口内，页面内容正常滚动。1159px 以下变为顶部导航与 28px 内边距；760px 以下使用 18px 内边距及固定五项底部导航；370px 以下为 12px 内边距。
 
-计划使用日期与三餐的内容结构；桌面 7 列，手机日期分组内仍保持三餐并列。手机分类条使用原生横向滚动。
+首页大图与辅助转盘并列，比例 1.6:1、间距 24px；手机按推荐、转盘、灵感菜单、计划与附近入口排列。推荐图桌面比例 1.8，手机 1.65，极窄屏恢复 1.8，使主动作完整出现在导航上方。低于 840px 的桌面降低图片上限与盘面尺寸。
+
+菜单桌面四列、手机两列；照片直接组成列表，不叠加外层卡片边框。菜单每次显示 24 道，搜索仍覆盖全部内容。周计划桌面七列，手机按日期分组，每组三餐并列。
+
+首屏在 HTML 中预留照片、正文、图标和餐次控件尺寸，内容就绪时保持布局稳定。
 
 ## Elevation & Depth
 
-普通内容使用一像素边框或分隔线。阴影仅用于弹窗与浮动提示；弹窗 token 为 `0 18px 60px rgba(43,29,18,.18)`。背景保持实色。盘面以原生 Canvas 绘制暖色扇区和细线外圈，不模拟纹理。菜单照片内缩 8px、推荐照片内缩 16px，保留内容间的呼吸空间。
+普通界面通过背景层次和一像素分隔线区分；弹窗、分类浮层使用 shadow token（0 20px 70px rgba(27,45,33,.16)），提示条使用较小阴影。照片与普通内容区不使用漂浮阴影。
 
 ## Shapes
 
-普通控件圆角 10px，主要内容表面和弹窗 16px；主抽取按钮 12px。紧凑标签 4–5px，嵌套的小图片 6–10px，分段按钮 8px、分类/导航项 9px，分段容器 11px、顶部导航容器 13px，品牌标志 14px。收藏按钮、照片缩略图、中心按钮和配色圆点保留圆形。偏好开关为 42×25px 的原生 checkbox，保持 switch 语义和键盘焦点。图标为统一 24 单位、1.7 描边的 SVG。
+主要区域与弹窗使用 surface 圆角，菜单照片使用 photo 圆角，按钮使用 control 圆角。标签与参考标记更紧凑。品牌碗形标志、收藏按钮、盘面照片和中心按钮保持圆形；开关使用胶囊形状。
 
 ## Components
 
-- 主按钮最小高度 44px，主抽取按钮 52px。次按钮使用表面色和边框。所有控件保留键盘聚焦样式。
-- 分类与餐次使用真实 button 和 `aria-pressed`；菜单筛选不承担导航职责。
-- 菜品卡使用固定图片比例，优先原图并尝试多张候选；缺图时展示匹配菜名/品类的实物参考图，角落明确标注“参考图”。全部照片不可用时才显示名称卡，未知品类不随意配图。
-- 表单有可见 label；错误文字与输入区域关联呈现。偏好开关使用原生 checkbox。
-- 弹窗使用原生 dialog，提供关闭按钮、Escape、焦点约束；异步内容按 generation 防止覆盖其他弹窗。
-- 转盘离屏缓存，最多展示 8 项；选中项来自全部合格候选。照片复用共享加载器，随盘面转动并反向旋转保持正向；中心「开饭」与下方抽取按钮共同锁定。落定后高亮照片边框、名称和对应扇区，保持指针一致。减少动态效果时立即落定同一结果，不改变算法。
-- 转盘动画为 2600ms 四次 ease-out；控件反馈约 180–200ms。抽取结果轻移 8px / 360ms，弹窗轻移 8px / 200ms，不安排页面入场序列。所有效果遵守减少动态设置。
-- 深色盘面使用 `#40372f` 与 `#302a24`；六种强调色同时驱动中心、指针、当前候选和按钮，从设置返回时刷新 Canvas 缓存。
+- **主动作：** 普通按钮至少 44px，首页选择与抽取按钮 48px；点击提供短促缩放反馈，保留清楚的 focus-visible 轮廓。极窄屏移除「换一道」的次要图标，保留文字与点击区域。
+- **导航：** 桌面显示图标和中文名称；手机底栏图标与文字上下排列，选中项带强调背景。保留真实链接和 aria-current。
+- **筛选：** 餐次使用分段按钮，分类在定位浮层中展开，手机分类列表使用原生横向滚动。按钮提供 aria-pressed 和键盘焦点。
+- **照片：** 共用响应式图片组件；转盘使用 160px，卡片/计划按显示大小选择 160/480px，推荐和详情可选 960px。图片固定比例，失败按顺序回退，参考图明确标注且不写回原图字段。
+- **转盘：** 最大 318px，手机最大 300px；几何扇区与正向实物照片、菜名同时呈现。静态 Canvas 缓存通过 Web Animations 合成层旋转，1750ms、cubic-bezier(.12,.76,.18,1)。照片节点按菜品复用。结果与指针一致；减少动态时立即落定。
+- **轻量更新：** 收藏、配色保留已显示照片；页面首次访问时初始化。搜索合并短时间输入，支持中文输入法。
+- **表单与弹窗：** 可见标签、原生输入和 dialog，错误与恢复方式靠近操作；开关有 switch 语义。异步内容不得覆盖后来打开的弹窗。
 
 ## Do's and Don'ts
 
-- Do 使用语义 token、真实按钮与统一 SVG 图标；保持照片、结果和计划的阅读顺序。
-- Do 明确标注未知口味、空候选、离线、加载失败与存储失败的恢复方式。
-- Don't 用页面装饰动画延迟操作，也不要把图片失败变成空白区域。
-- Don't 将抽取记录自动等同于实际吃过，或把参考标签当作食材保证。
+- Do 让照片、菜名和选择动作保持直接的阅读顺序。
+- Do 以共享语义 token 维护明暗与六色主题。
+- Do 同时保留键盘、减少动态效果、长名称和图片失败状态。
+- Do 把派生图片与原图一起发布，并检查缩略图大小预算。
+- Don't 将店铺参考图表达成本店实拍，或把口味标签当作食材保证。
+- Don't 在动画每一帧重建图片、重绘盘面或更新整页。
+- Don't 为背景装饰引入持续动画和额外网络依赖。

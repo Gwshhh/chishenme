@@ -29,7 +29,7 @@ export function initCollections(app) {
             const heading = day !== lastDay ? `<h2 class="history-day">${day === localDateKey() ? '今天' : escapeHtml(day)}</h2>` : '';
             lastDay = day;
             const source = { wheel: '转盘抽取', daily: '今日推荐', favorite: '收藏随机', tournament: '淘汰赛胜出', plan: '用餐计划', manual: '手动选择' }[item.source];
-            return `${heading}<article class="history-row"><button class="history-food" data-food-action="detail" data-food-id="${attr(item.food.id)}">${foodImage(item.food)}<span><strong>${escapeHtml(item.food.name)}</strong><small>${source} · ${formatDate(item.timestamp)}</small></span></button><div class="history-row-actions"><button class="eat-button${item.eaten ? ' eaten' : ''}" data-history-eat="${attr(item.id)}" aria-pressed="${item.eaten}">${icon('check')}${item.eaten ? '已吃' : '记为已吃'}</button><button class="icon-btn" data-history-delete="${attr(item.id)}" aria-label="删除${attr(item.food.name)}的记录">${icon('trash')}</button></div></article>`;
+            return `${heading}<article class="history-row"><button class="history-food" data-food-action="detail" data-food-id="${attr(item.food.id)}">${foodImage(item.food, { variant: 'small' })}<span><strong>${escapeHtml(item.food.name)}</strong><small>${source} · ${formatDate(item.timestamp)}</small></span></button><div class="history-row-actions"><button class="eat-button${item.eaten ? ' eaten' : ''}" data-history-eat="${attr(item.id)}" aria-pressed="${item.eaten}">${icon('check')}${item.eaten ? '已吃' : '记为已吃'}</button><button class="icon-btn" data-history-delete="${attr(item.id)}" aria-label="删除${attr(item.food.name)}的记录">${icon('trash')}</button></div></article>`;
         }).join('');
     };
     $('#pick-favorite').addEventListener('click', () => {

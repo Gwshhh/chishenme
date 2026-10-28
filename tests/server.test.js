@@ -33,6 +33,11 @@ test('server serves the app with correct MIME, HEAD and conditional caching', as
         assert.equal(head.status, 200); assert.equal(await head.text(), '');
         const cached = await fetch(base + '/src/core/model.js', { headers: { 'If-None-Match': module.headers.get('etag') } });
         assert.equal(cached.status, 304);
+        const thumbnail = await fetch(base + '/images_food/optimized/food_01-160.webp');
+        assert.equal(thumbnail.status, 200);
+        assert.equal(thumbnail.headers.get('content-type'), 'image/webp');
+        assert((await thumbnail.arrayBuffer()).byteLength < 18000);
+        assert.equal((await fetch(base + '/images_food/optimized/food_01-999.webp')).status, 404);
         const runtime = await fetch(base + '/runtime-config.json');
         assert.deepEqual(await runtime.json(), { apiBase: '/api/', development: false });
     });

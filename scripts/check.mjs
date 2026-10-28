@@ -1,4 +1,4 @@
-import { readdir, readFile, access } from 'node:fs/promises';
+import { readdir, readFile, access, stat } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
@@ -29,10 +29,20 @@ const assets = context.self.APP_ASSETS;
 for (const file of browserModules) assert(assets.includes('./' + file), `Offline shell missing ${file}`);
 for (const asset of assets) if (asset !== './') await access(asset);
 for (const food of catalog) await access(food.image);
+let thumbnailBytes = 0;
+for (const food of catalog) {
+    for (const width of [160, 480, 960]) {
+        const asset = food.image.replace(/(food_\d+)\.jpg$/, `optimized/$1-${width}.webp`);
+        const info = await stat(asset);
+        assert(info.size > 0, `Empty food photograph: ${asset}`);
+        if (width === 160) { thumbnailBytes += info.size; assert(info.size < 18000, `Wheel thumbnail exceeds 18 kB: ${asset}`); }
+    }
+}
+assert(thumbnailBytes < 450000, 'The complete wheel thumbnail set must stay under 450 kB');
 for (const script of ['app.js', 'data.js', 'config.js', ...browserModules]) {
     const text = await readFile(script, 'utf8');
     assert(!/AMAP_KEY\s*=\s*['"][a-z\d]+/i.test(text), 'Do not publish map credentials');
     assert(!/\bon(?:click|error|load|submit)\s*=\s*["']/.test(text), `Inline handler in ${script}`);
 }
 assert.equal(new Set(catalog.map(food => food.id)).size, catalog.length, 'Catalog ids must be unique');
-console.log(`Checked ${scripts.length} scripts, ${assets.length} offline resources and ${catalog.length} food images.`);
+console.log(`Checked ${scripts.length} scripts, ${assets.length} offline resources and ${catalog.length} food images with 3 WebP sizes (${Math.round(thumbnailBytes / 1024)} KiB of thumbnails).`);

@@ -20,12 +20,24 @@ export class Wheel {
         if (this.spinning) return;
         this.foods = [...foods]; this.rotation = 0; this.selected = -1; this.cache = null;
         if (this.photos) {
-            this.photos.innerHTML = foods.map((food, index) => {
+            const existing = new Map([...this.photos.children].map(slot => [slot.dataset.wheelFood, slot]));
+            const slots = foods.map((food, index) => {
                 const angle = (index + .5) * CIRCLE / foods.length - Math.PI / 2;
                 const left = (50 + Math.cos(angle) * 32).toFixed(3);
                 const top = (50 + Math.sin(angle) * 32).toFixed(3);
-                return `<div class="wheel-photo-slot" style="left:${left}%;top:${top}%" data-wheel-food="${attr(food.id)}">${foodImage(food, { eager: true })}<span class="wheel-food-label" title="${attr(food.name)}">${escapeHtml(food.name)}</span></div>`;
-            }).join('');
+                let slot = existing.get(food.id);
+                const identity = JSON.stringify(food);
+                if (!slot || slot.photoIdentity !== identity) {
+                    slot = document.createElement('div');
+                    slot.className = 'wheel-photo-slot'; slot.dataset.wheelFood = food.id;
+                    slot.innerHTML = `${foodImage(food, { eager: true, variant: 'thumb', priority: 'low' })}<span class="wheel-food-label" title="${attr(food.name)}">${escapeHtml(food.name)}</span>`;
+                    slot.photoIdentity = identity;
+                }
+                slot.style.left = left + '%'; slot.style.top = top + '%';
+                slot.classList.remove('is-selected');
+                return slot;
+            });
+            this.photos.replaceChildren(...slots);
         }
         this.canvas.setAttribute('aria-label', `美食转盘，盘面候选：${foods.map(food => food.name).join('、')}。使用中心开饭或下方开始抽取按钮`);
         this.draw();
@@ -82,36 +94,44 @@ export class Wheel {
         const { canvas, ctx: c, dpr } = this;
         if (canvas.width !== SIZE * dpr) canvas.width = canvas.height = SIZE * dpr;
         c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, canvas.width, canvas.height);
-        c.save(); c.translate(canvas.width / 2, canvas.height / 2); c.rotate(rotation); c.drawImage(this.cache, -canvas.width / 2, -canvas.height / 2); c.restore();
-        // Counter-rotation keeps every photo and name upright, including the landed dish.
+        c.drawImage(this.cache, 0, 0);
+        canvas.style.transform = `rotate(${rotation}rad)`;
+        // These end-state transforms also serve browsers without Web Animations.
         this.photos?.style.setProperty('--wheel-turn', `${rotation}rad`);
     }
     spin(foods, target, { onTick, reduced = false } = {}) {
         if (this.spinning) return Promise.resolve(null);
         this.setFoods(foods);
         const index = foods.findIndex(food => food.id === target.id);
-        const end = targetRotation(index, foods.length, 5);
+        const end = targetRotation(index, foods.length, 4);
         this.spinning = true;
         return new Promise(resolve => {
+            const animations = [], ticks = [];
             const finish = () => {
+                ticks.forEach(clearTimeout);
                 this.selected = index; this.cache = null; this.spinning = false;
                 this.photos?.children[index]?.classList.add('is-selected');
-                this.draw(end); resolve(target);
+                this.draw(end);
+                animations.forEach(animation => animation.cancel());
+                resolve(target);
             };
-            if (reduced) { finish(); return; }
-            const duration = 2600;
-            let start, lastSector = -1, lastTick = 0;
-            const animate = time => {
-                start ??= time;
-                const progress = Math.min(1, (time - start) / duration);
-                const rotation = end * (1 - (1 - progress) ** 4);
-                this.draw(rotation);
-                const sector = Math.floor(rotation / (2 * Math.PI / foods.length));
-                if (sector !== lastSector && time - lastTick > 70) { onTick?.(); lastTick = time; lastSector = sector; }
-                if (progress < 1) this.frame = requestAnimationFrame(animate);
-                else finish();
-            };
-            this.frame = requestAnimationFrame(animate);
+            if (reduced || !this.canvas.animate) { finish(); return; }
+            // Rotation belongs on compositor layers: no canvas painting, layout
+            // reads or inherited style-variable updates on animation frames.
+            const timing = { duration: 1750, easing: 'cubic-bezier(.12,.76,.18,1)', fill: 'forwards' };
+            const turn = [{ transform: 'rotate(0rad)' }, { transform: `rotate(${end}rad)` }];
+            animations.push(this.canvas.animate(turn, timing));
+            if (this.photos) {
+                animations.push(this.photos.animate(turn, timing));
+                for (const slot of this.photos.children) {
+                    animations.push(slot.animate([
+                        { transform: 'translate(-50%,-50%) rotate(0rad)' },
+                        { transform: `translate(-50%,-50%) rotate(${-end}rad)` },
+                    ], timing));
+                }
+            }
+            if (onTick) for (const delay of [0, 80, 165, 260, 375, 520, 710, 960, 1320]) ticks.push(setTimeout(onTick, delay));
+            animations[0].finished.then(finish, finish);
         });
     }
 }

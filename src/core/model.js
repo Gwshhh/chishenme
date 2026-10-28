@@ -1,4 +1,4 @@
-export const APP_VERSION = '3.1.0';
+export const APP_VERSION = '3.2.0';
 export const SCHEMA_VERSION = 1;
 export const STORAGE_KEY = 'chishenme:state:v1';
 export const LIMITS = Object.freeze({ foods: 500, history: 300, planDays: 366, fileBytes: 2 * 1024 * 1024 });
@@ -25,7 +25,7 @@ export function foodId(food) {
 
 export function safeImage(value) {
     if (typeof value !== 'string' || value.length > 2048) return '';
-    if (/^images_food\/food_\d{2,3}\.jpg$/.test(value)) return value;
+    if (/^images_food\/(?:food_\d{2,3}\.jpg|optimized\/food_\d{2,3}-(?:160|480|960)\.webp)$/.test(value)) return value;
     try {
         const url = new URL(value);
         return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';

@@ -56,3 +56,27 @@ export function photoCandidates(food) {
     if (reference && !candidates.some(candidate => candidate.src === reference.src)) candidates.push(reference);
     return candidates;
 }
+
+const photoProfiles = {
+    thumb: { widths: [160], sizes: '64px' },
+    small: { widths: [160, 480], sizes: '(max-width: 760px) 110px, 130px' },
+    card: { widths: [160, 480], sizes: '(max-width: 760px) calc((100vw - 48px) / 2), 250px' },
+    hero: { widths: [480, 960], sizes: '(max-width: 760px) calc(100vw - 36px), (max-width: 1159px) 54vw, 640px' },
+};
+
+// Display variants never replace original URLs in the user's saved data.
+// Keep each original immediately after its WebP so a failed optimized asset
+// can recover without mistaking a reference photo for an actual shop photo.
+export function displayPhotoCandidates(food, { variant = 'card', sizes } = {}) {
+    const profile = photoProfiles[variant] || photoProfiles.card;
+    return photoCandidates(food).flatMap(candidate => {
+        const match = /^images_food\/(food_\d{2,3})\.jpg$/.exec(candidate.src);
+        if (!match) return [candidate];
+        const source = width => `images_food/optimized/${match[1]}-${width}.webp`;
+        const preferred = profile.widths.includes(480) ? 480 : 160;
+        return [{ ...candidate, src: source(preferred),
+            srcset: profile.widths.length > 1 ? profile.widths.map(width => `${source(width)} ${width}w`).join(', ') : '',
+            sizes: sizes || profile.sizes,
+        }, candidate];
+    });
+}

@@ -1,6 +1,6 @@
 import { makeNameCard } from '../core/images.js';
 import { safeImage } from '../core/model.js';
-import { photoCandidates } from '../core/photos.js';
+import { displayPhotoCandidates } from '../core/photos.js';
 import { icon } from './icons.js';
 
 export const $ = (selector, root = document) => root.querySelector(selector);
@@ -19,10 +19,12 @@ function initialPhoto(candidates) {
         || candidates.find(candidate => candidate.src.startsWith('images_food/') && !isFailed(candidate.src));
 }
 
-export function foodImage(food, { className = '', eager = false } = {}) {
-    const candidates = photoCandidates(food), initial = initialPhoto(candidates);
+export function foodImage(food, { className = '', eager = false, variant = 'card', sizes, priority = 'auto' } = {}) {
+    const candidates = displayPhotoCandidates(food, { variant, sizes }), initial = initialPhoto(candidates);
     const label = initial?.label || '';
-    return `<span class="food-photo" data-photo-kind="${initial?.kind || 'placeholder'}"><img class="food-image ${className}" src="${attr(initial?.src || makeNameCard(food.name))}" data-photo-candidates="${attr(JSON.stringify(candidates))}" ${candidates.length ? 'data-photo-pending="true"' : ''} data-fallback-name="${attr(food.name)}" alt="${attr(food.name + (label ? `（${label}）` : ''))}" width="400" height="300" loading="${eager ? 'eager' : 'lazy'}" decoding="async" referrerpolicy="no-referrer"><span class="photo-credit" title="${attr(label ? `${label}，不代表该店实际出品` : '')}" aria-hidden="true" ${label ? '' : 'hidden'}>${label ? '参考图' : ''}</span></span>`;
+    const responsive = initial?.srcset ? ` srcset="${attr(initial.srcset)}" sizes="${attr(initial.sizes)}"` : '';
+    const remote = candidates.some(candidate => !candidate.src.startsWith('images_food/'));
+    return `<span class="food-photo" data-photo-kind="${initial?.kind || 'placeholder'}"><img class="food-image ${className}" src="${attr(initial?.src || makeNameCard(food.name))}"${responsive} data-photo-candidates="${attr(JSON.stringify(candidates))}" ${remote ? 'data-photo-pending="true"' : ''} data-fallback-name="${attr(food.name)}" alt="${attr(food.name + (label ? `（${label}）` : ''))}" width="400" height="300" loading="${eager ? 'eager' : 'lazy'}" fetchpriority="${priority}" decoding="async" referrerpolicy="no-referrer"><span class="photo-credit" title="${attr(label ? `${label}，不代表该店实际出品` : '')}" aria-hidden="true" ${label ? '' : 'hidden'}>${label ? '参考图' : ''}</span></span>`;
 }
 
 export function initImageFallback() {
@@ -66,13 +68,19 @@ export function initImageFallback() {
     const candidatesFor = image => {
         try {
             const parsed = JSON.parse(image.dataset.photoCandidates || '[]');
-            return Array.isArray(parsed) ? parsed.filter(candidate => candidate && safeImage(candidate.src)).slice(0, 6) : [];
+            return Array.isArray(parsed) ? parsed.filter(candidate => candidate && safeImage(candidate.src)).slice(0, 12) : [];
         } catch { return []; }
     };
     const applyPhoto = (image, candidate) => {
         const label = candidate?.kind === 'reference' ? candidate.label : '';
         const src = candidate?.src || makeNameCard(image.dataset.fallbackName);
         image.referrerPolicy = 'no-referrer';
+        if (candidate?.srcset) {
+            image.sizes = candidate.sizes;
+            image.srcset = candidate.srcset;
+        } else {
+            image.removeAttribute('srcset'); image.removeAttribute('sizes');
+        }
         if (image.getAttribute('src') !== src) image.src = src;
         image.alt = image.dataset.fallbackName + (label ? `（${label}）` : '');
         const wrapper = image.closest('.food-photo');
@@ -92,6 +100,14 @@ export function initImageFallback() {
         image.dataset.loading = 'true';
         try {
             for (const candidate of candidates) {
+                if (isFailed(candidate.src)) continue;
+                // Let the browser prioritize, lazy-load and decode local
+                // responsive images once. Only untrusted remote originals
+                // need a background probe before replacing a ready reference.
+                if (candidate.src.startsWith('images_food/')) {
+                    applyPhoto(image, candidate);
+                    return;
+                }
                 const loaded = await preload(candidate.src);
                 if (!image.isConnected || attempts.get(image) !== token) return;
                 if (loaded) {
@@ -112,7 +128,16 @@ export function initImageFallback() {
         const images = [...(root.matches('img[data-photo-pending]') ? [root] : []), ...root.querySelectorAll('img[data-photo-pending]')];
         for (const image of images) observer ? observer.observe(image) : hydrate(image);
     };
-    new MutationObserver(records => { for (const record of records) for (const node of record.addedNodes) observe(node); }).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(records => {
+        for (const record of records) {
+            for (const node of record.addedNodes) observe(node);
+            if (observer) for (const node of record.removedNodes) {
+                if (!(node instanceof Element)) continue;
+                if (node.matches('img')) observer.unobserve(node);
+                node.querySelectorAll('img').forEach(image => observer.unobserve(image));
+            }
+        }
+    }).observe(document.body, { childList: true, subtree: true });
     observe(document.body);
     window.addEventListener('online', () => {
         failedImages.clear();
@@ -135,6 +160,17 @@ export function initImageFallback() {
             hydrate(image);
         }
     }, true);
+}
+
+export function syncFavoriteButtons(root, favorites) {
+    const ids = new Set(favorites.map(food => food.id));
+    root.querySelectorAll('button[data-food-action="favorite"][aria-label]').forEach(button => {
+        const selected = ids.has(button.dataset.foodId);
+        button.classList.toggle('is-favorite', selected);
+        button.setAttribute('aria-pressed', String(selected));
+        const name = button.getAttribute('aria-label').replace(/^(取消收藏|收藏)/, '');
+        button.setAttribute('aria-label', `${selected ? '取消收藏' : '收藏'}${name}`);
+    });
 }
 
 let toastTimer;
