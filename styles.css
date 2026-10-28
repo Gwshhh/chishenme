@@ -183,15 +183,41 @@ summary::-webkit-details-marker { display: none; }
 .planning-nudge .text-button { margin-top: 10px; }
 .nudge-icon .icon { width: 42px; height: 42px; stroke-width: 1.2; color: var(--success); }
 .nudge-icon { width: 42px; height: 42px; }
-.nearby-panel { padding: 22px 24px; background: var(--surface); border-radius: var(--radius); }
+.nearby-panel { min-width: 0; padding: 0; }
 .nearby-panel h2 { display: flex; align-items: center; gap: 6px; font-size: 15px; }
 .nearby-panel h2 .icon { width: 18px; height: 18px; color: var(--accent); }
-.nearby-panel > p { color: var(--muted); font-size: 12px; margin: 8px 0 12px; line-height: 1.6; }
+.nearby-panel > p { color: var(--muted); font-size: 13px; margin: 14px 0 10px; line-height: 1.6; min-height: 21px; }
 .nearby-controls { display: flex; gap: 8px; flex-wrap: wrap; }
 .nearby-controls select { flex: 1; min-width: 0; width: 150px; font-size: 12px; }
+.nearby-controls select { appearance: none; -webkit-appearance: none; padding-right: 34px; background-image: linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%); background-position: calc(100% - 17px) 50%,calc(100% - 12px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
 .nearby-controls .button { font-size: 12px; padding: 9px 12px; }
 .nearby-panel .external-link { font-size: 12px; }
-.weather-status { color: var(--success) !important; }
+.nearby-panel > .section-inline-heading { margin-bottom: 12px; gap: 10px; }
+.nearby-panel .text-button { min-height: 44px; }
+/* Weather keeps its own sky colors in all accent themes; night follows real
+   weather data, not the app's appearance setting. No continuous animation. */
+.weather-card { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 1fr auto; gap: 26px 14px; min-height: 190px; padding: 25px 26px 21px; border-radius: 20px; color: #fff; background: linear-gradient(120deg,#315c87,#4c759b); font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; }
+.weather-card::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 80% 0,rgba(205,229,251,.18),transparent 68%); }
+.weather-card[data-scene="idle"] { background: linear-gradient(115deg,#334e65,#4b667a); }
+.weather-card[data-scene="clear"] { background: linear-gradient(120deg,#265992,#4275a4); }
+.weather-card[data-scene="cloudy"], .weather-card[data-scene="fog"] { background: linear-gradient(120deg,#405d78,#536d82); }
+.weather-card[data-scene="rain"], .weather-card[data-scene="storm"] { background: linear-gradient(120deg,#2f435d,#4d6279); }
+.weather-card[data-scene="snow"] { background: linear-gradient(120deg,#466078,#59758a); }
+.weather-card[data-scene="night"] { background: linear-gradient(120deg,#1b2948,#394569); }
+.weather-place { align-self: start; min-width: 0; position: relative; z-index: 1; }
+.weather-place h3 { font-size: clamp(24px,2.6vw,30px); line-height: 1.3; font-weight: 600; letter-spacing: -.025em; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.weather-place p { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 1.6; color: #f0f5fb; margin-top: 7px; }
+.weather-place .icon { width: 12px; height: 12px; flex: 0 0 auto; }
+.weather-degrees { display: flex; align-self: start; font-size: 76px; line-height: .95; font-weight: 300; letter-spacing: -.035em; position: relative; z-index: 1; }
+.weather-unit { font-size: .8em; line-height: 1; }
+.weather-art { position: absolute; right: 102px; top: 50px; width: 140px; height: 102px; opacity: .82; z-index: -1; pointer-events: none; }
+.weather-art > svg { width: 100%; height: 100%; }
+.weather-card[data-scene="idle"] .weather-art { right: 48px; top: 41px; width: 90px; height: 90px; opacity: .12; }
+.weather-art > .icon { stroke-width: .8; }
+.weather-current { grid-column: 1/-1; display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; position: relative; z-index: 1; }
+#weather-description { font-size: 15px; font-weight: 550; }
+#weather-range { font-size: 12px; color: #f0f5fb; }
+.weather-card[data-state="connecting"] .weather-degrees, .weather-card[data-state="locating"] .weather-degrees, .weather-card[data-state="loading"] .weather-degrees { opacity: .7; }
 .section-inline-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .section-inline-heading p { color: var(--muted); font-size: 13px; margin-top: 5px; }
 .discovery-section { margin-top: 36px; }
@@ -203,6 +229,7 @@ summary::-webkit-details-marker { display: none; }
 .food-card-main { display: block; width: 100%; border: 0; background: none; padding: 0; text-align: left; border-radius: var(--radius); overflow: hidden; }
 .food-image { object-fit: cover; background: var(--subtle); }
 .food-photo { display: block; position: relative; width: 100%; min-width: 0; overflow: hidden; flex-shrink: 0; }
+.food-photo > picture { display: block; width: 100%; height: 100%; }
 .photo-credit { position: absolute; left: 7px; bottom: 7px; padding: 2px 6px; border-radius: 4px; background: rgba(40,30,23,.86); color: #fff; font-size: 10px; line-height: 1.5; pointer-events: none; }
 .food-card-main > .food-photo { width: 100%; margin: 0; border-radius: 12px; aspect-ratio: 4/3; }
 .food-card-main .food-image { width: 100%; height: 100%; aspect-ratio: 4/3; transition: transform .25s var(--ease-out); }
@@ -356,6 +383,9 @@ input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; flex-sh
 .delivery-buttons .button { font-size: 12px; flex: 1; }
 .delivery-small { display: flex; flex-wrap: wrap; gap: 20px; font-size: 11px; color: var(--muted); margin-top: 12px; }
 .delivery-small a { text-decoration: underline; text-underline-offset: 4px; }
+.delivery-handoff { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.delivery-handoff p { margin: 0; }
+.delivery-handoff .text-button { min-height: 44px; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
 .keyword-list { font-size: 12px; margin-top: 12px; }
 .keyword-list button { margin-inline-end: 10px; }
 .share-preview { width: min(290px,100%); margin: 0 auto; border-radius: 10px; }
@@ -500,7 +530,10 @@ input[type="checkbox"], input[type="radio"] { width: 18px; height: 18px; flex-sh
     .recommendation-actions .icon-btn { width: 42px; }
     .decision-side { gap: 24px; }
     .support-grid { grid-template-columns: 1fr; gap: 16px; margin-top: 30px; }
-    .planning-nudge, .nearby-panel { padding: 20px; }
+    .planning-nudge { padding: 20px; }
+    .weather-card { padding: 23px 21px 19px; min-height: 180px; }
+    .weather-degrees { font-size: 68px; }
+    .weather-art { right: 66px; top: 58px; width: 119px; height: 87px; }
     .planning-nudge { gap: 14px; }
     .planning-nudge h2 { font-size: 16px; }
     .nudge-icon .icon { width: 34px; height: 34px; }

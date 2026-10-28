@@ -60,3 +60,16 @@ test('bad API addresses and invalid responses produce a retryable public error',
     assert.match(broken.connectionError, /连接不上/);
     assert(!broken.connectionError.includes('private'));
 });
+
+test('a stalled remote capability request does not block the local configuration needed by PWA', async () => {
+    let release;
+    const gate = new Promise(resolve => { release = resolve; });
+    const api = createApi({ config, fetchImpl: async () => { await gate; return Response.json({ nearby: true, weather: true }); } });
+    let servicesReady = false;
+    api.ready.then(() => { servicesReady = true; });
+    await api.configurationReady;
+    assert.equal(servicesReady, false);
+    release();
+    await api.ready;
+    assert.equal(servicesReady, true);
+});

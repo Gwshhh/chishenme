@@ -47,7 +47,9 @@ try {
             await unlink(secretFile).catch(error => { if (error.code !== 'ENOENT') throw error; });
             await rmdir(directory);
         }
-        const endpoint = output.match(/https:\/\/chishenme-api\.[a-z0-9-]+\.workers\.dev\b/i)?.[0];
+        const configuration = JSON.parse(await readFile(join(root, 'wrangler.jsonc'), 'utf8'));
+        const domain = configuration.routes?.find(route => route.custom_domain)?.pattern;
+        const endpoint = domain ? `https://${domain}` : output.match(/https:\/\/chishenme-api\.[a-z0-9-]+\.workers\.dev\b/i)?.[0];
         if (!endpoint) throw new Error('接口已上传，但未取得公开地址；线上配置保持原值。');
         const apiBase = endpoint + '/api/';
         const report = await verifyNearbyApi(apiBase);

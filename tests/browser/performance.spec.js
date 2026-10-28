@@ -1,13 +1,22 @@
 import { test, expect } from '@playwright/test';
 import { catalog } from '../../src/core/catalog.js';
 
-test('the first screen uses small local photos and small actions preserve the visible images', async ({ page }) => {
+test('cold startup requests one application bundle and the tiny theme bootstrap', async ({ page }) => {
+    const scripts = [];
+    page.on('request', request => { if (request.resourceType() === 'script') scripts.push(new URL(request.url()).pathname); });
+    await page.goto('/');
+    await expect(page.locator('#choose-daily')).toBeEnabled();
+    expect(scripts.sort()).toEqual(['/app.bundle.js', '/src/ui/theme-bootstrap.js']);
+});
+
+test('the first screen uses small local photos and small actions preserve the visible images', async ({ page, isMobile }) => {
     const originals = [];
     page.on('request', request => { if (/\/images_food\/food_\d+\.jpg$/.test(request.url())) originals.push(request.url()); });
     await page.goto('/');
     const hero = page.locator('#recommendation img');
     await expect(hero).toHaveAttribute('fetchpriority', 'high');
     await expect.poll(() => hero.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+    if (isMobile) expect(await hero.evaluate(img => img.currentSrc)).toMatch(/-(?:480|768)\.webp$/);
     await expect(page.locator('#wheel-photos img')).toHaveCount(8);
     for (const image of await page.locator('#wheel-photos img').all()) await expect(image).toHaveAttribute('src', /optimized\/food_\d+-160\.webp$/);
     await page.evaluate(() => { window.keptHero = document.querySelector('#recommendation img'); window.keptWheel = document.querySelector('#wheel-photos img'); window.keptDiscovery = document.querySelector('#discovery-grid img'); });

@@ -12,6 +12,18 @@ const provider = async url => {
     return Response.json({ status: '1', pois: [{ id: 'edge-test', name: '测试面馆', type: '餐饮服务;面馆', distance: '120', location: '116.4,39.9', photos: [] }] });
 };
 
+test('the custom-domain site discovers its same-origin API without exposing a credential', async () => {
+    const worker = createWorker();
+    const own = 'https://eat.zhouquanji.eu.cc';
+    const response = await worker(new Request(own + '/runtime-config.json', { headers: { Origin: own } }), env);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.deepEqual(await response.json(), { apiBase: '/api/' });
+    const config = await worker(new Request(own + '/api/config', { headers: { Origin: own } }), env);
+    assert.equal(config.headers.get('access-control-allow-origin'), own);
+    assert.equal((await config.json()).nearby, true);
+});
+
 test('edge API exposes capabilities without credentials and restricts the exact Pages origin', async () => {
     const worker = createWorker();
     const response = await worker(request('/api/config'), env);

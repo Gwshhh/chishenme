@@ -23,23 +23,28 @@ export function foodImage(food, { className = '', eager = false, variant = 'card
     const candidates = displayPhotoCandidates(food, { variant, sizes }), initial = initialPhoto(candidates);
     const label = initial?.label || '';
     const responsive = initial?.srcset ? ` srcset="${attr(initial.srcset)}" sizes="${attr(initial.sizes)}"` : '';
-    const remote = candidates.some(candidate => !candidate.src.startsWith('images_food/'));
-    return `<span class="food-photo" data-photo-kind="${initial?.kind || 'placeholder'}"><img class="food-image ${className}" src="${attr(initial?.src || makeNameCard(food.name))}"${responsive} data-photo-candidates="${attr(JSON.stringify(candidates))}" ${remote ? 'data-photo-pending="true"' : ''} data-fallback-name="${attr(food.name)}" alt="${attr(food.name + (label ? `（${label}）` : ''))}" width="400" height="300" loading="${eager ? 'eager' : 'lazy'}" fetchpriority="${priority}" decoding="async" referrerpolicy="no-referrer"><span class="photo-credit" title="${attr(label ? `${label}，不代表该店实际出品` : '')}" aria-hidden="true" ${label ? '' : 'hidden'}>${label ? '参考图' : ''}</span></span>`;
+    const mobileSource = variant === 'hero' && initial?.mobileSrcset ? `<source media="(max-width: 760px)" srcset="${attr(initial.mobileSrcset)}" sizes="calc(100vw - 36px)">` : '';
+    // A ready 160px wheel reference should not trigger a full-size shop photo
+    // download. Hero/detail cards still upgrade to the genuine supplied photo.
+    const remote = candidates.some(candidate => !candidate.src.startsWith('images_food/')) && initial?.kind !== 'original' && !(variant === 'thumb' && initial);
+    return `<span class="food-photo" data-photo-kind="${initial?.kind || 'placeholder'}">${variant === 'hero' ? `<picture>${mobileSource}` : ''}<img class="food-image ${className}" src="${attr(initial?.src || makeNameCard(food.name))}"${responsive} data-photo-candidates="${attr(JSON.stringify(candidates))}" ${remote ? 'data-photo-pending="true"' : ''} data-fallback-name="${attr(food.name)}" alt="${attr(food.name + (label ? `（${label}）` : ''))}" width="400" height="300" loading="${eager ? 'eager' : 'lazy'}" fetchpriority="${priority}" decoding="async" referrerpolicy="no-referrer">${variant === 'hero' ? '</picture>' : ''}<span class="photo-credit" title="${attr(label ? `${label}，不代表该店实际出品` : '')}" aria-hidden="true" ${label ? '' : 'hidden'}>${label ? '参考图' : ''}</span></span>`;
 }
 
 export function initImageFallback() {
     const pending = new Map(), queue = [], attempts = new WeakMap();
     let active = 0;
     const pump = () => {
-        while (active < 6 && queue.length) { active++; queue.shift()(); }
+        while (active < 3 && queue.length) { active++; queue.shift().run(); }
     };
-    const preload = url => {
+    const preload = (url, priority = 'low') => {
         if (isFailed(url)) return Promise.resolve(false);
         if (loadedImages.has(url)) return Promise.resolve(true);
         if (!pending.has(url)) {
             const promise = new Promise(resolve => {
-                queue.push(() => {
+                queue.push({ priority, run: () => {
                     const image = new Image();
+                    image.fetchPriority = priority;
+                    image.decoding = 'async';
                     let done = false;
                     const finish = success => {
                         if (done) return; done = true; clearTimeout(timer);
@@ -57,7 +62,8 @@ export function initImageFallback() {
                     const timer = setTimeout(() => finish(false), 8000);
                     image.referrerPolicy = 'no-referrer';
                     image.onload = () => finish(true); image.onerror = () => finish(false); image.src = url;
-                });
+                } });
+                queue.sort((a, b) => Number(b.priority === 'high') - Number(a.priority === 'high'));
             });
             pending.set(url, promise);
             promise.finally(() => pending.delete(url));
@@ -75,6 +81,15 @@ export function initImageFallback() {
         const label = candidate?.kind === 'reference' ? candidate.label : '';
         const src = candidate?.src || makeNameCard(image.dataset.fallbackName);
         image.referrerPolicy = 'no-referrer';
+        if (image.parentElement?.tagName === 'PICTURE') {
+            let source = image.parentElement.querySelector('source');
+            if (candidate?.mobileSrcset) {
+                if (!source) { source = document.createElement('source'); image.before(source); }
+                source.media = '(max-width: 760px)';
+                source.sizes = 'calc(100vw - 36px)';
+                source.srcset = candidate.mobileSrcset;
+            } else source?.remove();
+        }
         if (candidate?.srcset) {
             image.sizes = candidate.sizes;
             image.srcset = candidate.srcset;
@@ -108,7 +123,7 @@ export function initImageFallback() {
                     applyPhoto(image, candidate);
                     return;
                 }
-                const loaded = await preload(candidate.src);
+                const loaded = await preload(candidate.src, image.getAttribute('fetchpriority') === 'high' ? 'high' : 'low');
                 if (!image.isConnected || attempts.get(image) !== token) return;
                 if (loaded) {
                     resolvedImages.set(photoKey(candidates), candidate);

@@ -37,7 +37,7 @@ export async function verifyDeployment(site = 'https://gwshhh.github.io/chishenm
     const htmlResponse = await fetch(base, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
     assert.equal(htmlResponse.status, 200);
     const html = await htmlResponse.text();
-    assert(html.includes(`app.js?v=${APP_VERSION}`), 'Published page is not the current release');
+    assert(html.includes(`app.bundle.js?v=${APP_VERSION}`), 'Published page is not the current release');
     return { site: base.href, ...api, verifiedAt: new Date().toISOString(), testLocation: '固定公开测试地点（北京），未使用用户定位' };
 }
 

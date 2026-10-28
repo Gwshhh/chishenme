@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-28T10:48:55.707928+00:00",
+  "generatedAt": "2026-10-28T18:48:24.685Z",
   "title": "Design System: 今天吃什么",
   "extensions": {
     "colorMeta": {
@@ -318,6 +318,126 @@
           "oklch(83.6% 0.0283 152.7)",
           "oklch(95.0% 0.0283 152.7)"
         ]
+      },
+      "weather-start": {
+        "role": "secondary",
+        "displayName": "weather-start",
+        "canonical": "#315c87"
+      },
+      "weather-end": {
+        "role": "secondary",
+        "displayName": "weather-end",
+        "canonical": "#4c759b"
+      },
+      "weather-idle-start": {
+        "role": "secondary",
+        "displayName": "weather-idle-start",
+        "canonical": "#334e65"
+      },
+      "weather-idle-end": {
+        "role": "secondary",
+        "displayName": "weather-idle-end",
+        "canonical": "#4b667a"
+      },
+      "weather-clear-start": {
+        "role": "secondary",
+        "displayName": "weather-clear-start",
+        "canonical": "#265992"
+      },
+      "weather-clear-end": {
+        "role": "secondary",
+        "displayName": "weather-clear-end",
+        "canonical": "#4275a4"
+      },
+      "weather-cloud-start": {
+        "role": "secondary",
+        "displayName": "weather-cloud-start",
+        "canonical": "#405d78"
+      },
+      "weather-cloud-end": {
+        "role": "secondary",
+        "displayName": "weather-cloud-end",
+        "canonical": "#536d82"
+      },
+      "weather-rain-start": {
+        "role": "secondary",
+        "displayName": "weather-rain-start",
+        "canonical": "#2f435d"
+      },
+      "weather-rain-end": {
+        "role": "secondary",
+        "displayName": "weather-rain-end",
+        "canonical": "#4d6279"
+      },
+      "weather-snow-start": {
+        "role": "secondary",
+        "displayName": "weather-snow-start",
+        "canonical": "#466078"
+      },
+      "weather-snow-end": {
+        "role": "secondary",
+        "displayName": "weather-snow-end",
+        "canonical": "#59758a"
+      },
+      "weather-night-start": {
+        "role": "secondary",
+        "displayName": "weather-night-start",
+        "canonical": "#1b2948"
+      },
+      "weather-night-end": {
+        "role": "secondary",
+        "displayName": "weather-night-end",
+        "canonical": "#394569"
+      },
+      "weather-secondary-text": {
+        "role": "secondary",
+        "displayName": "weather-secondary-text",
+        "canonical": "#f0f5fb"
+      },
+      "weather-sky-light": {
+        "role": "secondary",
+        "displayName": "weather-sky-light",
+        "canonical": "rgba(205,229,251,.18)"
+      },
+      "photo-favorite": {
+        "role": "neutral",
+        "displayName": "photo-favorite",
+        "canonical": "#a64732"
+      },
+      "accent-celadon": {
+        "role": "primary",
+        "displayName": "accent-celadon",
+        "canonical": "#216959"
+      },
+      "accent-indigo": {
+        "role": "primary",
+        "displayName": "accent-indigo",
+        "canonical": "#4454a1"
+      },
+      "accent-violet": {
+        "role": "primary",
+        "displayName": "accent-violet",
+        "canonical": "#794486"
+      },
+      "accent-amber": {
+        "role": "primary",
+        "displayName": "accent-amber",
+        "canonical": "#906011"
+      },
+      "accent-rose": {
+        "role": "primary",
+        "displayName": "accent-rose",
+        "canonical": "#a03f60"
+      },
+      "toast-background": {
+        "role": "neutral",
+        "displayName": "toast-background",
+        "canonical": "#322a24"
+      },
+      "toast-text": {
+        "role": "neutral",
+        "displayName": "toast-text",
+        "canonical": "#fff8ed"
       }
     },
     "shadows": [
@@ -325,6 +445,11 @@
         "name": "dialog-and-popover",
         "value": "0 20px 70px rgba(27,45,33,.16)",
         "purpose": "弹窗与分类浮层"
+      },
+      {
+        "name": "toast",
+        "value": "0 8px 24px rgba(26,17,10,.18)",
+        "purpose": "既有短时提示条的轻阴影。"
       }
     ],
     "motion": [
@@ -356,7 +481,21 @@
         "name": "short-desktop-height",
         "value": "840px"
       }
-    ]
+    ],
+    "typographyMeta": {
+      "weather-city": {
+        "displayName": "天气城市",
+        "purpose": "城市标题；单行省略并保留完整地区名称。"
+      },
+      "weather-temperature": {
+        "displayName": "天气温度",
+        "purpose": "轻字重大号摄氏温度，不替换全站标题。"
+      },
+      "weather-temperature-mobile": {
+        "displayName": "手机温度",
+        "purpose": "手机天气卡片的紧凑显示。"
+      }
+    }
   },
   "components": [
     {
@@ -422,6 +561,14 @@
       "description": "Fixed-color bowl and chopsticks mark. 42px desktop, 38px mobile; v3.2.2.",
       "html": "<span class=\"ds-brand-mark\"><svg aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" width=\"512\" height=\"512\" viewBox=\"0 0 512 512\" fill=\"none\">\n  <defs>\n    <linearGradient id=\"tomato\" x1=\"64\" y1=\"0\" x2=\"432\" y2=\"512\" gradientUnits=\"userSpaceOnUse\">\n      <stop stop-color=\"#F0784E\"/>\n      <stop offset=\".46\" stop-color=\"#E55936\"/>\n      <stop offset=\"1\" stop-color=\"#C83C28\"/>\n    </linearGradient>\n    <linearGradient id=\"porcelain\" x1=\"175\" y1=\"274\" x2=\"309\" y2=\"401\" gradientUnits=\"userSpaceOnUse\">\n      <stop stop-color=\"#FFFDF5\"/>\n      <stop offset=\".54\" stop-color=\"#F9EEDB\"/>\n      <stop offset=\"1\" stop-color=\"#EACEAF\"/>\n    </linearGradient>\n    <linearGradient id=\"rim\" x1=\"256\" y1=\"237\" x2=\"256\" y2=\"292\" gradientUnits=\"userSpaceOnUse\">\n      <stop stop-color=\"#FFFDF5\"/>\n      <stop offset=\"1\" stop-color=\"#F3DDC0\"/>\n    </linearGradient>\n    <linearGradient id=\"inside\" x1=\"256\" y1=\"235\" x2=\"256\" y2=\"290\" gradientUnits=\"userSpaceOnUse\">\n      <stop stop-color=\"#B85029\"/>\n      <stop offset=\"1\" stop-color=\"#EA9B54\"/>\n    </linearGradient>\n    <linearGradient id=\"chopsticks\" x1=\"363\" y1=\"124\" x2=\"271\" y2=\"245\" gradientUnits=\"userSpaceOnUse\">\n      <stop stop-color=\"#FFF8E7\"/>\n      <stop offset=\"1\" stop-color=\"#F1D7AD\"/>\n    </linearGradient>\n    <linearGradient id=\"gold\" x1=\"268\" y1=\"205\" x2=\"313\" y2=\"272\" gradientUnits=\"userSpaceOnUse\">\n      <stop stop-color=\"#FFD36F\"/>\n      <stop offset=\".65\" stop-color=\"#F4B13E\"/>\n      <stop offset=\"1\" stop-color=\"#DE872B\"/>\n    </linearGradient>\n    <linearGradient id=\"leaf\" x1=\"154\" y1=\"180\" x2=\"195\" y2=\"248\" gradientUnits=\"userSpaceOnUse\">\n      <stop stop-color=\"#819B59\"/>\n      <stop offset=\"1\" stop-color=\"#3F6949\"/>\n    </linearGradient>\n    <filter id=\"soft-shadow\" x=\"-.3\" y=\"-.25\" width=\"1.6\" height=\"1.65\" color-interpolation-filters=\"sRGB\">\n      <feDropShadow dx=\"0\" dy=\"12\" stdDeviation=\"10\" flood-color=\"#852C1E\" flood-opacity=\".2\"/>\n    </filter>\n    <clipPath id=\"tile-clip\"><rect id=\"tile-shape\" width=\"512\" height=\"512\" rx=\"112\"/></clipPath>\n  </defs>\n  <g id=\"background\" clip-path=\"url(#tile-clip)\">\n    <path fill=\"url(#tomato)\" d=\"M0 0h512v512H0z\"/>\n  </g>\n  <g id=\"mark\" filter=\"url(#soft-shadow)\">\n    <g stroke=\"url(#chopsticks)\" stroke-linecap=\"round\">\n      <path d=\"m270 235 96-108\" stroke-width=\"17\"/>\n      <path d=\"m297 250 96-97\" stroke-width=\"17\"/>\n    </g>\n    <path d=\"m217 373-7 16c-2 6 2 11 9 11h74c7 0 11-5 9-11l-7-16\" fill=\"url(#porcelain)\"/>\n    <path d=\"M112 266c6 67 66 120 144 120s138-53 144-120H112Z\" fill=\"url(#porcelain)\"/>\n    <ellipse cx=\"256\" cy=\"264\" rx=\"144\" ry=\"38\" fill=\"url(#rim)\"/>\n    <ellipse cx=\"256\" cy=\"260\" rx=\"126\" ry=\"26\" fill=\"url(#inside)\"/>\n    <path d=\"M160 261c2-37 25-61 57-61 37-1 65 28 66 63-37 15-85 14-123-2Z\" fill=\"#FFF4DE\"/>\n    <circle cx=\"288\" cy=\"240\" r=\"43\" fill=\"url(#gold)\"/>\n    <path d=\"M268 215c8-6 18-8 28-5\" stroke=\"#FFE8A2\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".7\"/>\n    <path d=\"M195 253c-36-5-55-36-44-73 34 7 59 35 49 64l-5 9Z\" fill=\"url(#leaf)\"/>\n    <path d=\"M157 192c6 21 16 38 32 50\" stroke=\"#B6C580\" stroke-width=\"4\" stroke-linecap=\"round\" opacity=\".65\"/>\n    <path d=\"M115 267c31 32 251 32 282 0-10 66-68 119-141 119S125 333 115 267Z\" fill=\"url(#porcelain)\"/>\n    <path d=\"M117 267c38 31 240 31 278 0\" stroke=\"#FFF9ED\" stroke-width=\"8\" stroke-linecap=\"round\"/>\n    <path d=\"M146 310c15 23 40 40 67 47\" stroke=\"#FFFEF9\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".6\"/>\n  </g>\n</svg></span>",
       "css": ".ds-brand-mark { display: inline-flex; width: 42px; height: 42px; } .ds-brand-mark svg { display: block; width: 100%; height: 100%; } @media (max-width: 760px) { .ds-brand-mark { width: 38px; height: 38px; } }"
+    },
+    {
+      "name": "天气地区卡片",
+      "kind": "custom",
+      "refersTo": "weather-card",
+      "description": "用户指定的天气样式；此面板为示例，生产值来自实时接口。",
+      "html": "<div class=\"ds-weather-card\" data-scene=\"partly-cloudy\"><div class=\"ds-weather-place\"><h3>天气示例</h3><p>示例地区</p></div><div class=\"ds-weather-degrees\">20<span class=\"ds-weather-unit\">°</span></div><div class=\"ds-weather-current\"><span id=\"ds-weather-description\">多云</span><span id=\"ds-weather-range\">最高 25° · 最低 17°</span></div></div>",
+      "css": ".ds-weather-card { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 1fr auto; gap: 26px 14px; min-height: 190px; padding: 25px 26px 21px; border-radius: 20px; color: #fff; background: linear-gradient(120deg,#315c87,#4c759b); font-family: -apple-system,BlinkMacSystemFont,\"PingFang SC\",\"Microsoft YaHei\",sans-serif; }\n.ds-weather-card::before { content: \"\"; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 80% 0,rgba(205,229,251,.18),transparent 68%); }\n.ds-weather-card[data-scene=\"idle\"] { background: linear-gradient(115deg,#334e65,#4b667a); }\n.ds-weather-card[data-scene=\"clear\"] { background: linear-gradient(120deg,#265992,#4275a4); }\n.ds-weather-card[data-scene=\"cloudy\"], .ds-weather-card[data-scene=\"fog\"] { background: linear-gradient(120deg,#405d78,#536d82); }\n.ds-weather-card[data-scene=\"rain\"], .ds-weather-card[data-scene=\"storm\"] { background: linear-gradient(120deg,#2f435d,#4d6279); }\n.ds-weather-card[data-scene=\"snow\"] { background: linear-gradient(120deg,#466078,#59758a); }\n.ds-weather-card[data-scene=\"night\"] { background: linear-gradient(120deg,#1b2948,#394569); }\n.ds-weather-place { align-self: start; min-width: 0; position: relative; z-index: 1; }\n.ds-weather-place h3 { font-size: clamp(24px,2.6vw,30px); line-height: 1.3; font-weight: 600; letter-spacing: -.025em; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }\n.ds-weather-place p { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 1.6; color: #f0f5fb; margin-top: 7px; }\n.ds-weather-place .icon { width: 12px; height: 12px; flex: 0 0 auto; }\n.ds-weather-degrees { display: flex; align-self: start; font-size: 76px; line-height: .95; font-weight: 300; letter-spacing: -.035em; position: relative; z-index: 1; }\n.ds-weather-unit { font-size: .8em; line-height: 1; }\n.ds-weather-art { position: absolute; right: 102px; top: 50px; width: 140px; height: 102px; opacity: .82; z-index: -1; pointer-events: none; }\n.ds-weather-art > svg { width: 100%; height: 100%; }\n.ds-weather-card[data-scene=\"idle\"] .ds-weather-art { right: 48px; top: 41px; width: 90px; height: 90px; opacity: .12; }\n.ds-weather-art > .icon { stroke-width: .8; }\n.ds-weather-current { grid-column: 1/-1; display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; position: relative; z-index: 1; }\n#ds-weather-description { font-size: 15px; font-weight: 550; }\n#ds-weather-range { font-size: 12px; color: #f0f5fb; }\n.ds-weather-card[data-state=\"connecting\"] .ds-weather-degrees, .ds-weather-card[data-state=\"locating\"] .ds-weather-degrees, .ds-weather-card[data-state=\"loading\"] .ds-weather-degrees { opacity: .7; }\n.ds-weather-place h3,.ds-weather-place p{margin:0}.ds-weather-place p{margin-top:7px}"
     }
   ],
   "narrative": {
@@ -438,6 +585,16 @@
         "name": "Semantic State",
         "body": "强调、成功和错误分别使用对应语义 token，不能只靠颜色表达状态。",
         "section": "colors"
+      },
+      {
+        "name": "天气与外观分开",
+        "body": "卡片昼夜由天气数据决定，不由深色主题决定；旧天气保留时明确标注。",
+        "section": "colors"
+      },
+      {
+        "name": "手机图片预算",
+        "body": "原生 picture 在手机使用 480/768px，768px 低于 90 kB；桌面保留 960px，原图用于分享与回退。",
+        "section": "components"
       }
     ],
     "dos": [

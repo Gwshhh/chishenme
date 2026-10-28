@@ -6,23 +6,13 @@
     <meta name="description" content="转一转，决定这一餐。按喜好挑美食，安排一周用餐，收藏每一次好选择。">
     <meta name="theme-color" content="#f6f7f3">
     <meta name="color-scheme" content="light dark">
-    <link rel="manifest" href="manifest.json?v=3.2.3">
-    <link rel="icon" href="favicon.ico?v=3.2.3" sizes="16x16 32x32 48x48">
-    <link rel="icon" href="favicon-32.png?v=3.2.3" type="image/png" sizes="32x32">
-    <link rel="icon" href="icon.svg?v=3.2.3" type="image/svg+xml" sizes="any">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3.2.3" sizes="180x180">
-    <link rel="stylesheet" href="styles.css?v=3.2.3">
-    <link rel="modulepreload" href="app.js?v=3.2.3">
-    <link rel="modulepreload" href="data.js">
-    <link rel="modulepreload" href="src/core/model.js">
-    <link rel="modulepreload" href="src/core/catalog.js">
-    <link rel="modulepreload" href="src/core/storage.js">
-    <link rel="modulepreload" href="src/core/selection.js">
-    <link rel="modulepreload" href="src/core/photos.js">
-    <link rel="modulepreload" href="src/ui/dom.js">
-    <link rel="modulepreload" href="src/ui/icons.js">
-    <link rel="modulepreload" href="src/ui/wheel.js">
-    <link rel="modulepreload" href="src/features/decision.js">
+    <link rel="manifest" href="manifest.json?v=3.2.4">
+    <link rel="icon" href="favicon.ico?v=3.2.4" sizes="16x16 32x32 48x48">
+    <link rel="icon" href="favicon-32.png?v=3.2.4" type="image/png" sizes="32x32">
+    <link rel="icon" href="icon.svg?v=3.2.4" type="image/svg+xml" sizes="any">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3.2.4" sizes="180x180">
+    <link rel="stylesheet" href="styles.css?v=3.2.4">
+    <link rel="modulepreload" href="app.bundle.js?v=3.2.4">
     <script src="src/ui/theme-bootstrap.js"></script>
     <title>今天吃什么 · 好好吃每一餐</title>
 </head>
@@ -41,7 +31,7 @@
     <div class="app-shell">
         <header class="site-header">
             <a class="brand" href="#wheel" aria-label="今天吃什么首页">
-                <img class="brand-mark" src="icon.svg?v=3.2.3" width="42" height="42" alt="" decoding="async">
+                <img class="brand-mark" src="icon.svg?v=3.2.4" width="42" height="42" alt="" decoding="async">
                 <span><strong>今天吃什么</strong><small>好好吃每一餐</small></span>
             </a>
             <nav class="main-nav" aria-label="主要导航">
@@ -79,7 +69,19 @@
                 <section class="discovery-section" aria-labelledby="discovery-heading"><div class="section-inline-heading"><div><h2 id="discovery-heading">换个口味，也不错</h2><p>从当前候选里，给你一点灵感。</p></div><a href="#list" class="text-button">逛逛完整菜单<span data-icon="arrow"></span></a></div><div id="discovery-grid" class="food-grid compact-grid"></div></section>
                 <div class="support-grid">
                     <section class="planning-nudge"><span class="nudge-icon" data-icon="calendar" aria-hidden="true"></span><div><h2>把一周，安排得有滋有味。</h2><p>喜欢的放进计划，下一餐就有了着落。</p><a href="#plan" class="text-button">去安排一周<span data-icon="arrow"></span></a></div></section>
-                    <section class="nearby-panel" aria-labelledby="nearby-heading"><div class="section-inline-heading"><h2 id="nearby-heading"><span data-icon="pin"></span>附近有什么好吃的</h2><a class="text-button external-link" href="https://waimai.meituan.com" target="_blank" rel="noopener noreferrer">去美团看看<span data-icon="external"></span></a></div><p id="nearby-status" role="status">定位后看看身边的真实店铺。</p><p id="weather-status" class="weather-status" hidden></p><div class="nearby-controls"><label class="sr-only" for="nearby-level">附近搜索范围</label><select id="nearby-level"><option value="1">1.5 公里 · 最多 60 家</option><option value="2">3 公里 · 最多 180 家</option><option value="3">5 公里 · 最多 360 家</option></select><button class="button secondary" id="locate-btn">定位找店</button><button class="text-button" id="cancel-nearby" hidden>取消</button></div></section>
+                    <section class="nearby-panel" aria-labelledby="nearby-heading">
+                        <div class="section-inline-heading"><h2 id="nearby-heading"><span data-icon="pin"></span>附近有什么好吃的</h2><a class="text-button external-link" href="https://i.meituan.com/" target="_blank" rel="noopener noreferrer" data-open-meituan>去美团看看<span data-icon="external"></span></a></div>
+                        <!-- Local extension: an Apple Weather-style location card. Real conditions,
+                        a clear temperature hierarchy, static sky artwork, no extra image request. -->
+                        <div id="weather-status" class="weather-card" data-scene="idle" data-state="idle" role="group" aria-label="当地天气，定位后查看">
+                            <div class="weather-place"><h3 id="weather-city">身边的天气</h3><p><span data-icon="pin"></span><span id="weather-district">定位后，看看此刻的天空</span></p></div>
+                            <div class="weather-degrees" aria-hidden="true"><span id="weather-temperature">--</span><span class="weather-unit">°</span></div>
+                            <div id="weather-art" class="weather-art" aria-hidden="true"></div>
+                            <div class="weather-current"><span id="weather-description">天气随你所在</span><span id="weather-range">找一家店，好好吃饭</span></div>
+                        </div>
+                        <p id="nearby-status" role="status">定位后看看身边的真实店铺。</p>
+                        <div class="nearby-controls"><label class="sr-only" for="nearby-level">附近搜索范围</label><select id="nearby-level"><option value="1">1.5 公里 · 最多 60 家</option><option value="2">3 公里 · 最多 180 家</option><option value="3">5 公里 · 最多 360 家</option></select><button class="button secondary" id="locate-btn">定位找店</button><button class="text-button" id="cancel-nearby" hidden>取消</button></div>
+                    </section>
                 </div>
             </section>
             <section id="list-view" class="view" aria-labelledby="list-heading" hidden></section>
@@ -88,11 +90,11 @@
             <section id="history-view" class="view" aria-labelledby="history-heading" hidden></section>
             <section id="settings-view" class="view" aria-labelledby="settings-heading" hidden></section>
         </main>
-        <footer class="site-footer"><span>认真吃饭，小事也值得期待。</span><div><span id="app-version">v3.2.3</span><button class="text-button" id="install-btn" hidden>安装到桌面</button><button class="text-button" id="update-btn" hidden>有新版本，点击更新</button><a class="text-button" href="#settings">数据与偏好</a></div></footer>
+        <footer class="site-footer"><span>认真吃饭，小事也值得期待。</span><div><span id="app-version">v3.2.4</span><button class="text-button" id="install-btn" hidden>安装到桌面</button><button class="text-button" id="update-btn" hidden>有新版本，点击更新</button><a class="text-button" href="#settings">数据与偏好</a></div></footer>
     </div>
     <dialog class="dialog" id="app-dialog" aria-labelledby="dialog-title"></dialog>
     <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
     <noscript><div class="notice">请启用 JavaScript 后使用美食转盘与用餐计划。</div></noscript>
-    <script type="module" src="app.js?v=3.2.3"></script>
+    <script type="module" src="app.bundle.js?v=3.2.4"></script>
 </body>
 </html>

@@ -53,3 +53,86 @@ test('Pages-style hosting uses its configured cross-origin nearby API', async ({
     await expect(page.locator('#nearby-status')).toContainText('找到 1 家店');
     await expect(page.locator('#wheel-source')).toBeVisible();
 });
+
+test('nearby weather card displays real location, temperature and daily range', async ({ page }) => {
+    await page.addInitScript(stubLocation);
+    await page.route('**/api/config', route => route.fulfill({ json: { nearby: true, weather: true } }));
+    await page.route('**/api/nearby?**', route => route.fulfill({ json: { ...result, city: '桂林市 · 雁山区' } }));
+    await page.route('**/api/weather?**', route => route.fulfill({ json: { tempC: 20, description: '多云', kind: 'mild', condition: 'partly-cloudy', isDay: true, highC: 25, lowC: 17 } }));
+    await page.goto('/');
+    await expect(page.locator('#weather-temperature')).toHaveText('--');
+    await page.locator('#locate-btn').click();
+    await expect(page.locator('#nearby-status')).toContainText('找到 1 家店');
+    await expect(page.locator('#weather-city')).toHaveText('桂林市');
+    await expect(page.locator('#weather-district')).toHaveText('雁山区');
+    await expect(page.locator('#weather-temperature')).toHaveText('20');
+    await expect(page.locator('#weather-range')).toHaveText('最高 25° · 最低 17°');
+    await expect(page.locator('#weather-status')).toHaveAttribute('data-scene', 'partly-cloudy');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('weather failure keeps restaurant results usable and does not invent a temperature', async ({ page }) => {
+    await page.addInitScript(stubLocation);
+    await page.route('**/api/config', route => route.fulfill({ json: { nearby: true, weather: true } }));
+    await page.route('**/api/nearby?**', route => route.fulfill({ json: result }));
+    await page.route('**/api/weather?**', route => route.fulfill({ status: 502, json: { error: '天气暂不可用' } }));
+    await page.goto('/');
+    await page.locator('#locate-btn').click();
+    await expect(page.locator('#nearby-status')).toContainText('找到 1 家店');
+    await expect(page.locator('#weather-temperature')).toHaveText('--');
+    await expect(page.locator('#weather-status')).toHaveAttribute('data-state', 'error');
+    await page.locator('#spin-btn').click();
+    await expect(page.locator('#recommendation h3')).toHaveText('测试面馆');
+});
+
+test('a failed weather refresh clearly labels the last known temperature', async ({ page }) => {
+    let available = true;
+    await page.addInitScript(stubLocation);
+    await page.route('**/api/config', route => route.fulfill({ json: { nearby: true, weather: true } }));
+    await page.route('**/api/nearby?**', route => route.fulfill({ json: result }));
+    await page.route('**/api/weather?**', route => route.fulfill(available ? { json: { tempC: 20, description: '多云', kind: 'mild' } } : { status: 502, json: { error: '天气暂不可用' } }));
+    await page.goto('/');
+    await page.locator('#locate-btn').click();
+    await expect(page.locator('#weather-temperature')).toHaveText('20');
+    await expect(page.locator('#locate-btn')).toBeEnabled();
+    available = false;
+    await page.locator('#locate-btn').click();
+    await expect(page.locator('#weather-description')).toHaveText('多云 · 上次天气');
+    await expect(page.locator('#weather-temperature')).toHaveText('20');
+    await expect(page.locator('#nearby-status')).toContainText('找到 1 家店');
+});
+
+test('unreachable nearby service never requests GPS and the error can be retried', async ({ page }) => {
+    await page.addInitScript(stubLocation);
+    await page.route('**/api/config', route => route.abort('failed'));
+    await page.goto('/');
+    await expect(page.locator('#nearby-status')).toContainText('连接不上');
+    await page.locator('#locate-btn').click();
+    await expect(page.locator('#nearby-status')).toContainText('连接不上');
+    expect(await page.evaluate(() => window.locationRequests)).toBe(0);
+    await expect(page.locator('#locate-btn')).toBeEnabled();
+    await expect(page.locator('#cancel-nearby')).toBeHidden();
+});
+
+test('Meituan handoff keeps the iPhone click synchronous and provides an explicit web fallback', async ({ page, isMobile }) => {
+    // Observe the real click's final destination, then stop OS navigation. Desktop
+    // automation cannot attest whether Meituan is installed on a physical iPhone.
+    await page.addInitScript(() => {
+        window.addEventListener('click', event => {
+            const link = event.target.closest('[data-open-meituan]');
+            if (link) { window.meituanClick = { href: link.href, target: link.target, trusted: event.isTrusted }; event.preventDefault(); }
+        });
+    });
+    await page.goto('/');
+    await page.locator('.nearby-panel [data-open-meituan]').click();
+    const click = await page.evaluate(() => window.meituanClick);
+    expect(click.trusted).toBe(true);
+    if (isMobile) {
+        expect(click.href).toMatch(/^imeituan:\/\/www\.meituan\.com\/search\?/);
+        expect(click.target).toBe('_self');
+        await expect(page.getByRole('link', { name: '使用美团网页版' })).toHaveAttribute('href', 'https://i.meituan.com/');
+    } else {
+        expect(click.href).toBe('https://waimai.meituan.com/');
+        expect(click.target).toBe('_blank');
+    }
+});

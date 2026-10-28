@@ -1,5 +1,6 @@
 import { APP_CONFIG } from '../../config.js';
 import { normalizeFood } from '../core/model.js';
+import { appBase, appUrl } from '../core/urls.js';
 
 async function fetchJson(url, { signal, timeout = 10000, fetchImpl = fetch } = {}) {
     const controller = new AbortController();
@@ -25,16 +26,19 @@ export function createApi({ config: appConfig = APP_CONFIG, fetchImpl = fetch } 
     let development = false;
     let capabilities = { nearby: false, weather: false };
     let pending = null, settled = false, connectionError = '';
+    let configurationLoaded;
+    const configurationReady = new Promise(resolve => { configurationLoaded = resolve; });
     const discover = async () => {
         try {
-            const config = appConfig.apiBase ? appConfig : await fetchJson(new URL('../../runtime-config.json', import.meta.url), { timeout: 5000, fetchImpl });
+            const config = appConfig.apiBase ? appConfig : await fetchJson(appUrl('runtime-config.json'), { timeout: 5000, fetchImpl });
             development = config.development === true;
+            configurationLoaded();
             base = null;
             capabilities = { nearby: false, weather: false };
             connectionError = '';
             if (!config.apiBase) return capabilities;
-            const parsed = new URL(config.apiBase, new URL('../../', import.meta.url));
-            if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Invalid API address');
+            const parsed = new URL(config.apiBase, appBase);
+            if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) throw new Error('Invalid API address');
             base = parsed.href.endsWith('/') ? parsed : new URL(`${parsed.href}/`);
             const data = await fetchJson(new URL('config', base), { timeout: 8000, fetchImpl });
             capabilities = { nearby: data.nearby === true, weather: data.weather === true };
@@ -42,7 +46,7 @@ export function createApi({ config: appConfig = APP_CONFIG, fetchImpl = fetch } 
             base = null;
             capabilities = { nearby: false, weather: false };
             connectionError = '暂时连接不上附近店铺服务，请稍后重试';
-        } finally { settled = true; }
+        } finally { configurationLoaded(); settled = true; }
         return capabilities;
     };
     const ensureReady = ({ retry = false } = {}) => {
@@ -63,6 +67,7 @@ export function createApi({ config: appConfig = APP_CONFIG, fetchImpl = fetch } 
     };
     return {
         ready,
+        configurationReady,
         ensureReady,
         get capabilities() { return capabilities; },
         get connectionError() { return connectionError; },

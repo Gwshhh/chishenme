@@ -117,13 +117,21 @@ export function normalizeWeather(data) {
     const current = data?.current;
     if (!current || !Number.isFinite(current.temperature_2m) || !Number.isFinite(current.weather_code)) throw new HttpError(502, '天气数据暂不可用');
     const temp = current.temperature_2m, code = current.weather_code;
-    const rain = (code >= 51 && code <= 86) || code >= 95;
-    const description = code === 0 ? '晴' : code <= 3 ? '多云' : code <= 48 ? '雾' : code >= 95 ? '雷雨' : (code >= 71 && code <= 77) || code >= 85 ? '雪' : '雨';
-    return { tempC: Math.round(temp), kind: rain ? 'rain' : temp >= 30 ? 'hot' : temp <= 8 ? 'cold' : 'mild', description };
+    const snow = (code >= 71 && code <= 77) || code === 85 || code === 86;
+    const rain = !snow && ((code >= 51 && code <= 82) || code >= 95);
+    const condition = code === 0 ? 'clear' : code <= 2 ? 'partly-cloudy' : code === 3 ? 'cloudy' : code <= 48 ? 'fog' : code >= 95 ? 'storm' : snow ? 'snow' : 'rain';
+    const description = { clear: '晴', 'partly-cloudy': '多云', cloudy: '阴', fog: '雾', storm: '雷雨', snow: '雪', rain: '雨' }[condition];
+    const degree = value => Number.isFinite(value) ? Math.round(value) : null;
+    return {
+        tempC: Math.round(temp), kind: rain ? 'rain' : temp >= 30 ? 'hot' : temp <= 8 || snow ? 'cold' : 'mild', description, condition,
+        isDay: current.is_day === 0 ? false : current.is_day === 1 ? true : null,
+        highC: degree(data.daily?.temperature_2m_max?.[0]), lowC: degree(data.daily?.temperature_2m_min?.[0]),
+        updatedTime: typeof current.time === 'string' ? current.time.match(/T(\d{2}:\d{2})/)?.[1] || '' : '',
+    };
 }
 
 export async function weatherAt({ lat, lon, fetchImpl, signal }) {
     const url = new URL('https://api.open-meteo.com/v1/forecast');
-    url.search = new URLSearchParams({ latitude: String(lat), longitude: String(lon), current: 'temperature_2m,weather_code', timezone: 'auto' }).toString();
+    url.search = new URLSearchParams({ latitude: String(lat), longitude: String(lon), current: 'temperature_2m,weather_code,is_day', daily: 'temperature_2m_max,temperature_2m_min', forecast_days: '1', timezone: 'auto' }).toString();
     return normalizeWeather(await fetchJson(url, { fetchImpl, signal }));
 }

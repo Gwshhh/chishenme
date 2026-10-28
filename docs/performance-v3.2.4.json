@@ -1,0 +1,416 @@
+{
+  "baselineRevision": "e25651ad9181c1be3cf987fba70ba60ecbcdb4ff",
+  "scenario": "Fresh iPhone-sized Chromium contexts, local gzip server, 150ms RTT, 1.6Mbps down, 4x CPU slowdown; not a real carrier benchmark",
+  "summary": {
+    "before": {
+      "ready": 1850.6000000238419,
+      "hero": 4161.5,
+      "lcp": 1096,
+      "cls": 0,
+      "scripts": 28,
+      "scriptTransferBytes": 71224,
+      "interactionMs": 42.800000071525574
+    },
+    "after": {
+      "ready": 989,
+      "hero": 2436.7000000476837,
+      "lcp": 812,
+      "cls": 0,
+      "scripts": 2,
+      "scriptTransferBytes": 42202,
+      "interactionMs": 32.200000047683716
+    }
+  },
+  "results": [
+    {
+      "version": "before",
+      "round": 1,
+      "lcp": 1124,
+      "cls": 0,
+      "ready": 1856.3999999761581,
+      "hero": 4161.5,
+      "scripts": 28,
+      "scriptTransferBytes": 71224,
+      "firstPhotos": [
+        {
+          "url": "optimized/food_75-960.webp",
+          "bytes": 239960
+        },
+        {
+          "url": "optimized/food_07-160.webp",
+          "bytes": 5122
+        },
+        {
+          "url": "optimized/food_33-160.webp",
+          "bytes": 4430
+        },
+        {
+          "url": "optimized/food_89-160.webp",
+          "bytes": 3736
+        },
+        {
+          "url": "optimized/food_92-160.webp",
+          "bytes": 4872
+        },
+        {
+          "url": "optimized/food_37-160.webp",
+          "bytes": 3328
+        },
+        {
+          "url": "optimized/food_65-160.webp",
+          "bytes": 4536
+        },
+        {
+          "url": "optimized/food_11-160.webp",
+          "bytes": 2970
+        },
+        {
+          "url": "optimized/food_85-160.webp",
+          "bytes": 4558
+        },
+        {
+          "url": "optimized/food_09-480.webp",
+          "bytes": 35588
+        },
+        {
+          "url": "optimized/food_81-480.webp",
+          "bytes": 39748
+        },
+        {
+          "url": "optimized/food_26-480.webp",
+          "bytes": 50364
+        },
+        {
+          "url": "optimized/food_34-480.webp",
+          "bytes": 22412
+        }
+      ],
+      "interactionMs": 43.299999952316284
+    },
+    {
+      "version": "after",
+      "round": 1,
+      "lcp": 812,
+      "cls": 0,
+      "ready": 994.2999999523163,
+      "hero": 2468.1999999284744,
+      "scripts": 2,
+      "scriptTransferBytes": 42202,
+      "firstPhotos": [
+        {
+          "url": "optimized/food_75-768.webp",
+          "bytes": 79956
+        },
+        {
+          "url": "optimized/food_07-160.webp",
+          "bytes": 5122
+        },
+        {
+          "url": "optimized/food_33-160.webp",
+          "bytes": 4430
+        },
+        {
+          "url": "optimized/food_89-160.webp",
+          "bytes": 3736
+        },
+        {
+          "url": "optimized/food_92-160.webp",
+          "bytes": 4872
+        },
+        {
+          "url": "optimized/food_37-160.webp",
+          "bytes": 3328
+        },
+        {
+          "url": "optimized/food_65-160.webp",
+          "bytes": 4536
+        },
+        {
+          "url": "optimized/food_11-160.webp",
+          "bytes": 2970
+        },
+        {
+          "url": "optimized/food_85-160.webp",
+          "bytes": 4558
+        },
+        {
+          "url": "optimized/food_09-480.webp",
+          "bytes": 35588
+        },
+        {
+          "url": "optimized/food_81-480.webp",
+          "bytes": 39748
+        },
+        {
+          "url": "optimized/food_26-480.webp",
+          "bytes": 50364
+        },
+        {
+          "url": "optimized/food_34-480.webp",
+          "bytes": 22412
+        }
+      ],
+      "interactionMs": 38.39999997615814
+    },
+    {
+      "version": "before",
+      "round": 2,
+      "lcp": 1072,
+      "cls": 0,
+      "ready": 1803.7999999523163,
+      "hero": 4131.299999952316,
+      "scripts": 28,
+      "scriptTransferBytes": 71224,
+      "firstPhotos": [
+        {
+          "url": "optimized/food_75-960.webp",
+          "bytes": 239960
+        },
+        {
+          "url": "optimized/food_07-160.webp",
+          "bytes": 5122
+        },
+        {
+          "url": "optimized/food_33-160.webp",
+          "bytes": 4430
+        },
+        {
+          "url": "optimized/food_89-160.webp",
+          "bytes": 3736
+        },
+        {
+          "url": "optimized/food_92-160.webp",
+          "bytes": 4872
+        },
+        {
+          "url": "optimized/food_37-160.webp",
+          "bytes": 3328
+        },
+        {
+          "url": "optimized/food_65-160.webp",
+          "bytes": 4536
+        },
+        {
+          "url": "optimized/food_11-160.webp",
+          "bytes": 2970
+        },
+        {
+          "url": "optimized/food_85-160.webp",
+          "bytes": 4558
+        },
+        {
+          "url": "optimized/food_09-480.webp",
+          "bytes": 35588
+        },
+        {
+          "url": "optimized/food_81-480.webp",
+          "bytes": 39748
+        },
+        {
+          "url": "optimized/food_26-480.webp",
+          "bytes": 50364
+        },
+        {
+          "url": "optimized/food_34-480.webp",
+          "bytes": 22412
+        }
+      ],
+      "interactionMs": 42.800000071525574
+    },
+    {
+      "version": "after",
+      "round": 2,
+      "lcp": 780,
+      "cls": 0,
+      "ready": 947.5,
+      "hero": 2436.7000000476837,
+      "scripts": 2,
+      "scriptTransferBytes": 42202,
+      "firstPhotos": [
+        {
+          "url": "optimized/food_75-768.webp",
+          "bytes": 79956
+        },
+        {
+          "url": "optimized/food_07-160.webp",
+          "bytes": 5122
+        },
+        {
+          "url": "optimized/food_33-160.webp",
+          "bytes": 4430
+        },
+        {
+          "url": "optimized/food_89-160.webp",
+          "bytes": 3736
+        },
+        {
+          "url": "optimized/food_92-160.webp",
+          "bytes": 4872
+        },
+        {
+          "url": "optimized/food_37-160.webp",
+          "bytes": 3328
+        },
+        {
+          "url": "optimized/food_65-160.webp",
+          "bytes": 4536
+        },
+        {
+          "url": "optimized/food_11-160.webp",
+          "bytes": 2970
+        },
+        {
+          "url": "optimized/food_85-160.webp",
+          "bytes": 4558
+        },
+        {
+          "url": "optimized/food_09-480.webp",
+          "bytes": 35588
+        },
+        {
+          "url": "optimized/food_81-480.webp",
+          "bytes": 39748
+        },
+        {
+          "url": "optimized/food_26-480.webp",
+          "bytes": 50364
+        },
+        {
+          "url": "optimized/food_34-480.webp",
+          "bytes": 22412
+        }
+      ],
+      "interactionMs": 25.5
+    },
+    {
+      "version": "before",
+      "round": 3,
+      "lcp": 1096,
+      "cls": 0,
+      "ready": 1850.6000000238419,
+      "hero": 4175.100000023842,
+      "scripts": 28,
+      "scriptTransferBytes": 71224,
+      "firstPhotos": [
+        {
+          "url": "optimized/food_75-960.webp",
+          "bytes": 239960
+        },
+        {
+          "url": "optimized/food_07-160.webp",
+          "bytes": 5122
+        },
+        {
+          "url": "optimized/food_33-160.webp",
+          "bytes": 4430
+        },
+        {
+          "url": "optimized/food_89-160.webp",
+          "bytes": 3736
+        },
+        {
+          "url": "optimized/food_92-160.webp",
+          "bytes": 4872
+        },
+        {
+          "url": "optimized/food_37-160.webp",
+          "bytes": 3328
+        },
+        {
+          "url": "optimized/food_65-160.webp",
+          "bytes": 4536
+        },
+        {
+          "url": "optimized/food_11-160.webp",
+          "bytes": 2970
+        },
+        {
+          "url": "optimized/food_85-160.webp",
+          "bytes": 4558
+        },
+        {
+          "url": "optimized/food_09-480.webp",
+          "bytes": 35588
+        },
+        {
+          "url": "optimized/food_81-480.webp",
+          "bytes": 39748
+        },
+        {
+          "url": "optimized/food_26-480.webp",
+          "bytes": 50364
+        },
+        {
+          "url": "optimized/food_34-480.webp",
+          "bytes": 22412
+        }
+      ],
+      "interactionMs": 41.5
+    },
+    {
+      "version": "after",
+      "round": 3,
+      "lcp": 2464,
+      "cls": 0,
+      "ready": 989,
+      "hero": 2436.6999999284744,
+      "scripts": 2,
+      "scriptTransferBytes": 42202,
+      "firstPhotos": [
+        {
+          "url": "optimized/food_75-768.webp",
+          "bytes": 79956
+        },
+        {
+          "url": "optimized/food_07-160.webp",
+          "bytes": 5122
+        },
+        {
+          "url": "optimized/food_33-160.webp",
+          "bytes": 4430
+        },
+        {
+          "url": "optimized/food_89-160.webp",
+          "bytes": 3736
+        },
+        {
+          "url": "optimized/food_92-160.webp",
+          "bytes": 4872
+        },
+        {
+          "url": "optimized/food_37-160.webp",
+          "bytes": 3328
+        },
+        {
+          "url": "optimized/food_65-160.webp",
+          "bytes": 4536
+        },
+        {
+          "url": "optimized/food_11-160.webp",
+          "bytes": 2970
+        },
+        {
+          "url": "optimized/food_85-160.webp",
+          "bytes": 4558
+        },
+        {
+          "url": "optimized/food_09-480.webp",
+          "bytes": 35588
+        },
+        {
+          "url": "optimized/food_81-480.webp",
+          "bytes": 39748
+        },
+        {
+          "url": "optimized/food_34-480.webp",
+          "bytes": 22412
+        }
+      ],
+      "interactionMs": 32.200000047683716
+    }
+  ],
+  "measurementNotes": [
+    "Only readiness, actual hero image load, script requests/bytes and interaction-to-next-paint are used for comparisons. LCP entries are early candidates captured when the probe ends and are not final LCP guarantees.",
+    "The measured build includes the final mobile image optimization. The subsequent stale-weather label does not change initial loading."
+  ]
+}

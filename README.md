@@ -2,9 +2,11 @@
 
 一个可以离线使用的美食决策与用餐计划工具。保留原来的转盘、收藏、淘汰赛与附近店铺，新增一周计划、统一饮食偏好和完整数据备份。
 
-[打开应用](https://gwshhh.github.io/chishenme/)
+[打开应用](https://eat.zhouquanji.eu.cc/) · [原 GitHub Pages 地址](https://gwshhh.github.io/chishenme/)
 
-v3.2.1 更新 APP 图标：暖珊瑚色背景、奶油白餐碗与问号形蒸汽，统一网页标志、浏览器图标及 iOS / Android 安装图标。[查看图标与导出说明](docs/app-icon.md)。
+v3.2.4 加入苹果天气风格的地区卡片、手机美团 App 唤起与网页退路；使用自有域名提供页面、图片和同源接口，修复 iPhone 无法连接原 workers.dev 接口的问题。启动脚本从 28 次请求降为 2 次，手机主图使用最大 768px、每张小于 90 kB 的 WebP。验证范围见 [v3.2.4 验收](docs/release-v3.2.4.md)。
+
+当前 APP 图标是番茄红底、暖白餐碗与斜置双筷，没有问号。[查看图标与导出说明](docs/app-icon.md)。
 
 v3.2.0 以实物大图和快速选择为首页重心，采用桌面侧导航与手机底部导航。可以直接「就选这道」或「换一道」灵感；实物转盘继续保留。图片提供 160 / 480 / 960px 的 WebP，收藏与切换主题保留已显示图片，菜单按 24 道分批展示。
 
@@ -14,13 +16,13 @@ v3.2.0 以实物大图和快速选择为首页重心，采用桌面侧导航与�
 
 ## 启动
 
-需要 **Node.js 22.9 或更新版本**，推荐 Node.js 24。应用运行不依赖第三方服务包，也不需要打包：
+需要 **Node.js 22.9 或更新版本**，推荐 Node.js 24。仓库包含已构建的前端包，本地服务不需要生产运行依赖：
 
 ```sh
 npm start
 ```
 
-打开 **http://127.0.0.1:4173**。前端使用 ES modules，请通过 HTTP 服务打开，不能直接双击 `index.html`。
+打开 **http://127.0.0.1:4173**。请通过 HTTP 服务打开，不能直接双击 `index.html`。修改后发布前运行 `npm ci` 和 `npm run build`，更新启动包与公开静态目录。
 
 修改代码时使用：
 
@@ -73,11 +75,11 @@ HOST=127.0.0.1
 
 GitHub Pages 地址为 [https://gwshhh.github.io/chishenme/](https://gwshhh.github.io/chishenme/)，由仓库 `master` 分支根目录自动发布；`.nojekyll` 保证静态模块和资源按原样提供。
 
-**纯静态托管**：发布 `index.html`、`app.js`、`data.js`、`config.js`、`runtime-config.json`、`styles.css`、`src/`、`images_food/`、`sw.js`、`sw-assets.js`、manifest 与图标。相对路径支持 GitHub Pages 子目录；默认启用全部本地功能。
+**纯静态托管**：运行 `npm run build`，发布生成的 `dist/` 并配置其中的 API 地址。生产页面加载单个 `app.bundle.js`；相对路径支持 GitHub Pages 子目录。静态输出由固定公开白名单生成，不能把整个仓库上传为公开目录。
 
 **静态站点 + 独立 API**：在 `runtime-config.json` 中配置公开的 `apiBase: 'https://你的服务/api/'`；Node 托管会自动返回同源配置。`config.js` 的 `apiBase` 可作为明确的覆盖值，通常保持空白。后端允许来源须为网页来源（本站是 `https://gwshhh.github.io`），不带项目路径。`apiBase` 是地址，不是密钥。
 
-**Cloudflare 接口部署**：`npm run deploy:api` 把地图配置保存为 Worker Secret，真实查询通过后自动写入运行配置；发布前端后用 `npm run verify:live` 检查完整链路。首次使用需要 `npx wrangler login`。步骤与验证范围见 [附近店铺部署](docs/nearby-deployment.md)。
+**Cloudflare 一体部署**：`npm run deploy:api` 构建并上传公开静态资源、接口与 Worker Secret，通过真实查询后自动写入 GitHub Pages 的运行配置。主站 `https://eat.zhouquanji.eu.cc/` 使用同源 `/api/`。发布后用 `npm run verify:live -- https://eat.zhouquanji.eu.cc/` 和默认的 `npm run verify:live` 分别检查两个入口。首次使用需要 `npx wrangler login`。步骤与验证范围见 [附近店铺部署](docs/nearby-deployment.md)。
 
 **Node 一体托管**：运行 `npm start`，生产环境放在 HTTPS 反向代理后；静态文件和 API 同源。服务端只提供允许公开的文件，不提供 `.env`、证书、Git 元数据或服务端源码。
 
@@ -115,6 +117,8 @@ python -m unittest discover -s tests -p "test_*.py"
 
 Windows 浏览器测试默认使用已安装的 Edge。其他平台先运行 `npx playwright install chromium`；也可用 `PLAYWRIGHT_CHANNEL` 指定浏览器。测试服务使用 4174 端口，不加载真实密钥，不调用真实地图。
 
+新增的 `webkit-iphone` 项目使用 WebKit 检查 iPhone 相关行为，首次运行前执行 `npx playwright install webkit`。它仍是桌面测试引擎，不能证明手机已安装的美团 App 能被系统实际打开。
+
 需要明确执行真实地图/天气联调时：
 
 ```sh
@@ -131,10 +135,10 @@ npm run smoke:providers
 
 `fetch_real_images.py` 是可选素材下载工具，`generate_images.py` 是旧版离线名称卡导出工具；应用运行时不依赖它们。现有照片沿用项目资产。
 
-更新 JPEG 后，使用支持 WebP 的 Pillow 运行 `python scripts/optimize_images.py`，生成 `images_food/optimized/` 下的三个尺寸并一起发布。160px 用于转盘，菜单/计划按显示尺寸加载，主推荐/详情使用大图；原始 JPEG 保留用于分享与优化图失败兜底。`npm run check` 检查所有派生文件和缩略图大小预算。发布时应包含完整 `images_food/` 目录。
+更新 JPEG 后，使用支持 WebP 的 Pillow 运行 `python scripts/optimize_images.py`，生成 160 / 480 / 768 / 960px 四个尺寸；可用 `--width 768` 仅重建一个尺寸。160px 用于转盘，菜单/计划按显示尺寸加载，手机主推荐/详情最高使用 768px，桌面保留 960px；原始 JPEG 用于分享与失败兜底。`npm run check` 检查全部派生文件及缩略图/手机主图体积预算。
 
 `src/core/photos.js` 统一卡片、详情、收藏、计划与分享的图片候选。参考图不写回店铺原图字段，也不代表该店实际出品；无法识别的店铺不会随意配不相关菜品图。返回的多张照片会随收藏和备份保留，恢复联网后会重试失败原图。
 
-发布应用代码时，同步更新 `src/core/model.js` 的 `APP_VERSION`、`sw-assets.js` 的版本、package 版本，以及 `index.html` 中入口脚本/样式的 `?v=`；校验命令会检查它们是否一致。新增浏览器模块加入 `APP_ASSETS`。运行校验和测试后再部署。Service Worker 以版本和站点路径隔离缓存，确保旧页面不会混用新模块。
+发布应用代码时，同步更新 `src/core/model.js` 的 `APP_VERSION`、`sw-assets.js` 的版本、package 版本，以及 `index.html` 中入口脚本/样式的 `?v=`，并运行 `npm run build`。模块由 esbuild 合并，离线壳保存启动包与必需静态资源；检查命令验证每个源码模块都进入启动包或离线清单。Service Worker 以版本和站点路径隔离缓存，旧页面不会混用新版本。
 
 本轮参考 [Mealie](https://github.com/mealie-recipes/mealie) 的照片菜单组织、[shadcn/ui](https://github.com/shadcn-ui/ui) 的控件与状态细节，以及 [Anthropic frontend-design](https://github.com/anthropics/skills/tree/main/skills/frontend-design) 的设计方法。实现保留原生 ES modules，没有引入这些项目的运行时代码。

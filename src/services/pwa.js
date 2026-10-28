@@ -1,4 +1,5 @@
 import { $, toast } from '../ui/dom.js';
+import { appBase, appUrl } from '../core/urls.js';
 
 export async function initPwa(api) {
     let installEvent, registration, applying = false;
@@ -11,9 +12,10 @@ export async function initPwa(api) {
     });
     window.addEventListener('appinstalled', () => { $('#install-btn').hidden = true; });
     if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
-    await api?.ready;
+    // A slow remote restaurant API must not delay installation of the local shell.
+    await api?.configurationReady;
     if (api?.development) {
-        const scope = new URL('../../', import.meta.url).href;
+        const scope = appBase.href;
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(registrations.filter(item => item.scope === scope).map(item => item.unregister()));
         if (navigator.serviceWorker.controller && registrations.some(item => item.scope === scope)) location.reload();
@@ -22,7 +24,7 @@ export async function initPwa(api) {
     $('#update-btn').addEventListener('click', () => { if (registration?.waiting) { applying = true; registration.waiting.postMessage({ type: 'ACTIVATE_UPDATE' }); } });
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (applying) location.reload(); });
     try {
-        registration = await navigator.serviceWorker.register(new URL('../../sw.js', import.meta.url), { updateViaCache: 'none' });
+        registration = await navigator.serviceWorker.register(appUrl('sw.js'), { updateViaCache: 'none' });
         if (registration.waiting) $('#update-btn').hidden = false;
         registration.addEventListener('updatefound', () => {
             const worker = registration.installing;

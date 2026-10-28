@@ -23,6 +23,30 @@ colors:
   dark-text: "#eff3eb"
   dark-muted: "#b4c0b3"
   dark-line: "#405044"
+  weather-start: "#315c87"
+  weather-end: "#4c759b"
+  weather-idle-start: "#334e65"
+  weather-idle-end: "#4b667a"
+  weather-clear-start: "#265992"
+  weather-clear-end: "#4275a4"
+  weather-cloud-start: "#405d78"
+  weather-cloud-end: "#536d82"
+  weather-rain-start: "#2f435d"
+  weather-rain-end: "#4d6279"
+  weather-snow-start: "#466078"
+  weather-snow-end: "#59758a"
+  weather-night-start: "#1b2948"
+  weather-night-end: "#394569"
+  weather-secondary-text: "#f0f5fb"
+  weather-sky-light: "rgba(205,229,251,.18)"
+  photo-favorite: "#a64732"
+  accent-celadon: "#216959"
+  accent-indigo: "#4454a1"
+  accent-violet: "#794486"
+  accent-amber: "#906011"
+  accent-rose: "#a03f60"
+  toast-background: "#322a24"
+  toast-text: "#fff8ed"
 typography:
   headline:
     fontFamily: "PingFang SC, Microsoft YaHei, Noto Sans CJK SC, system-ui, sans-serif"
@@ -79,6 +103,21 @@ typography:
   wheel-credit:
     fontSize: "8px"
     lineHeight: 1.5
+  weather-city:
+    fontSize: "clamp(24px,2.6vw,30px)"
+    fontWeight: 600
+    lineHeight: 1.3
+    letterSpacing: "-0.025em"
+  weather-temperature:
+    fontFamily: "-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif"
+    fontSize: "76px"
+    fontWeight: 300
+    lineHeight: 0.95
+    letterSpacing: "-0.035em"
+  weather-temperature-mobile:
+    fontSize: "68px"
+    fontWeight: 300
+    lineHeight: 0.95
 rounded:
   credit: "4px"
   tag: "5px"
@@ -89,6 +128,7 @@ rounded:
   control: "10px"
   photo: "12px"
   surface: "16px"
+  weather: "20px"
   switch: "20px"
   circle: "50%"
 spacing:
@@ -135,6 +175,10 @@ components:
     textColor: "{colors.text}"
     rounded: "{rounded.photo}"
     height: "48px"
+  weather-card:
+    textColor: "{colors.surface}"
+    rounded: "{rounded.weather}"
+    padding: "25px 26px 21px"
 ---
 
 # Design System: 今天吃什么
@@ -160,11 +204,17 @@ v3.2.0 的视觉系统围绕真实食物和明确选择建立。白色内容区�
 
 **The Semantic State Rule.** 强调、成功和错误分别使用对应语义 token，不能只靠颜色表达状态。
 
+v3.2.4 的天气组件使用独立的天空色阶。多云、晴、阴/雾、雨/雷雨、雪、夜间和未定位分别使用对应 weather 色值；这些颜色只属于天气区域，不替换全站六种强调色。天空高光是静态局部色面，白色主信息和偏蓝白的辅助文字保持可读。
+
+**天气与外观分开。** 夜景取决于接口的真实昼夜字段，切换应用深色模式不会把白天改成夜晚。照片收藏色与深色提示条颜色固定，来自已有组件。
+
 ## Typography
 
 使用中文系统界面字体栈，无外部字体下载。主标题、菜名、正文与辅助信息通过字号和字重区分；这不是装饰性展示字体系统。字号按前面的职责定义，保持控件与正文的中文语言一致。
 
 主标题桌面为 headline、手机为 mobile-headline；推荐菜名为 dish / mobile-dish，菜单标题为 card-title。正文一般为 15px，内容说明和控件为 12–14px。参考图标记在小照片上缩小，同时保留完整 alt/title；盘面菜名 12px，370px 以下 11px，最多两行。长名称允许换行，主选择按钮保持单行。
+
+天气城市标题使用 weather-city，温度使用 weather-temperature / weather-temperature-mobile。大号轻字重只表达温度，不推广到普通功能标题；区县与温度范围使用 12px，天气描述使用 15px。仍使用本机字体，不下载展示字体。
 
 ## Layout
 
@@ -176,6 +226,8 @@ v3.2.0 的视觉系统围绕真实食物和明确选择建立。白色内容区�
 
 首屏在 HTML 中预留照片、正文、图标和餐次控件尺寸，内容就绪时保持布局稳定。
 
+天气卡片保留在原附近区域：桌面与计划提示并列，手机垂直排列。天空内容与下方搜索状态、范围选择器和定位按钮分组；桌面天空最小高度 190px，手机 180px，手机内边距 23px 21px 19px。地区过长时标题省略并保留完整 title，底部信息允许换行。
+
 ## Elevation & Depth
 
 普通界面通过背景层次和一像素分隔线区分；弹窗、分类浮层使用 shadow token（0 20px 70px rgba(27,45,33,.16)），提示条使用较小阴影。照片与普通内容区不使用漂浮阴影。
@@ -184,6 +236,8 @@ v3.2.0 的视觉系统围绕真实食物和明确选择建立。白色内容区�
 
 主要区域与弹窗使用 surface 圆角，菜单照片使用 photo 圆角，按钮使用 control 圆角。标签与参考标记更紧凑。收藏按钮、盘面照片和中心按钮保持圆形；开关使用胶囊形状。
 
+天气卡片使用 weather 圆角，天空色面与云、日、月的几何图标组成独立区域，不添加外层漂浮阴影或连续装饰动画。
+
 v3.2.2 品牌标志采用番茄红方形底、暖白瓷碗与斜置双筷，以少量金色食材和青绿叶片形成识别。用户明确要求不用问号，也不使用问号形蒸汽。源文件为 assets/brand/app-icon-master.svg，所有位图均从同一矢量母版导出。浏览器与网页品牌使用圆角 SVG，桌面品牌 42px、手机 38px；颜色固定，不随界面强调色或明暗模式变化。安装用 PNG 全出血、不预裁圆角，主体置于中央 80% 安全圆内。普通导航和功能图标继续使用原有线性图标。导出规格与预览见 docs/app-icon.md。
 
 ## Components
@@ -191,10 +245,12 @@ v3.2.2 品牌标志采用番茄红方形底、暖白瓷碗与斜置双筷，以�
 - **主动作：** 普通按钮至少 44px，首页选择与抽取按钮 48px；点击提供短促缩放反馈，保留清楚的 focus-visible 轮廓。极窄屏移除「换一道」的次要图标，保留文字与点击区域。
 - **导航：** 桌面显示图标和中文名称；手机底栏图标与文字上下排列，选中项带强调背景。保留真实链接和 aria-current。
 - **筛选：** 餐次使用分段按钮，分类在定位浮层中展开，手机分类列表使用原生横向滚动。按钮提供 aria-pressed 和键盘焦点。
-- **照片：** 共用响应式图片组件；转盘使用 160px，卡片/计划按显示大小选择 160/480px，推荐和详情可选 960px。图片固定比例，失败按顺序回退，参考图明确标注且不写回原图字段。
+- **照片：** 共用响应式图片组件；转盘使用 160px，卡片/计划按显示大小选择 160/480px。推荐与详情通过原生 picture 在手机选择 480/768px、桌面选择 480/960px；768px 文件保持小于 90 kB。图片固定比例，失败按顺序回退，参考图明确标注且不写回原图字段。转盘已有参考缩略图时不抢先下载整张店铺原图。
 - **转盘：** 最大 318px，手机最大 300px；几何扇区与正向实物照片、菜名同时呈现。静态 Canvas 缓存通过 Web Animations 合成层旋转，1750ms、cubic-bezier(.12,.76,.18,1)。照片节点按菜品复用。结果与指针一致；减少动态时立即落定。
 - **轻量更新：** 收藏、配色保留已显示照片；页面首次访问时初始化。搜索合并短时间输入，支持中文输入法。
 - **表单与弹窗：** 可见标签、原生输入和 dialog，错误与恢复方式靠近操作；开关有 switch 语义。异步内容不得覆盖后来打开的弹窗。
+- **天气与位置：** 未定位与加载时使用占位温度，不虚构天气；仅展示接口提供的最高/最低温，更新失败但保留旧值时明确写「上次天气」。获取天气失败不会删除已找到的餐馆。城市、天气和温度不保存到长期业务数据。
+- **外部 App：** 手机美团入口在用户点击内直接使用原生唤起链接，不等待复制或网络请求；未打开时提供可见的网页版入口。使用系统选择器功能与至少 44px 的附近操作目标。
 
 ## Do's and Don'ts
 

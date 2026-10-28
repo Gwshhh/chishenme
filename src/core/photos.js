@@ -76,6 +76,7 @@ export function displayPhotoCandidates(food, { variant = 'card', sizes } = {}) {
         const preferred = profile.widths.includes(480) ? 480 : 160;
         return [{ ...candidate, src: source(preferred),
             srcset: profile.widths.length > 1 ? profile.widths.map(width => `${source(width)} ${width}w`).join(', ') : '',
+            mobileSrcset: variant === 'hero' ? [480, 768].map(width => `${source(width)} ${width}w`).join(', ') : '',
             sizes: sizes || profile.sizes,
         }, candidate];
     });

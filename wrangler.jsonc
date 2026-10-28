@@ -7,6 +7,14 @@
   "placement": { "region": "aws:ap-east-1" },
   "workers_dev": true,
   "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/runtime-config.json"]
+  },
+  "routes": [
+    { "pattern": "eat.zhouquanji.eu.cc", "custom_domain": true, "zone_id": "dcf0e77ae3f25e3899e1c79a1e7288eb" }
+  ],
   "vars": {
     "ALLOWED_ORIGIN": "https://gwshhh.github.io"
   },

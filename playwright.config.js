@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+const chromiumChannel = process.env.PLAYWRIGHT_CHANNEL || (process.platform === 'win32' ? 'msedge' : undefined);
 
 export default defineConfig({
     testDir: './tests/browser',
@@ -9,7 +10,6 @@ export default defineConfig({
     reporter: 'list',
     use: {
         baseURL: 'http://127.0.0.1:4174',
-        channel: process.env.PLAYWRIGHT_CHANNEL || (process.platform === 'win32' ? 'msedge' : undefined),
         headless: true,
         timezoneId: 'Asia/Shanghai',
         locale: 'zh-CN',
@@ -19,8 +19,9 @@ export default defineConfig({
         screenshot: 'only-on-failure',
     },
     projects: [
-        { name: 'desktop', use: { viewport: { width: 1365, height: 900 } } },
-        { name: 'mobile', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium', browserName: 'chromium' } },
+        { name: 'desktop', use: { channel: chromiumChannel, viewport: { width: 1365, height: 900 } } },
+        { name: 'mobile', use: { channel: chromiumChannel, ...devices['iPhone 13'], defaultBrowserType: 'chromium', browserName: 'chromium' } },
+        { name: 'webkit-iphone', testMatch: ['**/nearby.spec.js', '**/performance.spec.js'], use: { ...devices['iPhone 13'], browserName: 'webkit' } },
     ],
     webServer: { command: 'node tests/serve.js', url: 'http://127.0.0.1:4174/api/health', reuseExistingServer: false, timeout: 10000 },
 });

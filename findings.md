@@ -78,6 +78,17 @@
 - 本地工具浏览器保留了 v3.1.0 的旧 shell，首次采样读到 span 而不是新版 img；点击已有更新按钮后显示 v3.2.2，清理旧 shell 并保留既有 images-v2 策略。不能把首次旧页截图当作新版证据。
 - v3.2.2 线上验收：7 个图标返回值与本地哈希逐一一致；实际 v3.2.1 浏览器接受更新后，6 个使用中图标均进入新 shell，旧 shell 被移除，images-v2 保留。生产上下文前后为空状态，验证边界已明确记录。
 
+## 2026-10-29 · iPhone 连接与天气/美团入口
+- 用户实际 iPhone 已确认 https://eat.zhouquanji.eu.cc/api/config 可访问，nearby/weather 均为 true；本机直连特定 Cloudflare IP 的限制不等同于用户手机情况。
+- v3.2.4 Cloudflare 部署成功，版本 5c0d2e75-8cfe-420c-9d11-7a1ff700879b。新域名页面、同源 API、真实 60 家店、天气和实际抽取已在桌面与 WebKit iPhone 上通过；这些浏览器使用公开固定坐标，不宣称获取了用户真实 GPS。
+- 用户提供自有域名 zhouquanji.eu.cc；选用未占用的 eat 子域名。Cloudflare 当前登录能管理 Worker 自定义域名，不需要再次登录。域名绑定后使用 Worker domains/records 完成 DNS/证书配置。
+- 新域名权威 DNS 返回 104.21.81.103 和 172.67.141.166。本机两者 TCP 直连仍超时，而百度直连 200；等待实际 iPhone 的网络反馈，保留问题的验证边界。
+- GitHub 公开的 Apple-Automation URL Scheme Collect.md 列有美团全局搜索 imeituan://www.meituan.com/search?q=...；实现只传搜索词，不把高德 POI id 误当美团门店 id。来源：https://github.com/JamesHopbourn/Apple-Automation/blob/master/URL%20Scheme%20Collect.md 。
+- 用户的 iPhone 错误发生在 createApi 的 /api/config 探测，早于 navigator.geolocation。当前生产地址仅有 workers.dev。
+- 沙箱外 curl --noproxy '*' 访问生产 /api/config 在 8 秒连接超时；使用现有 127.0.0.1:10808 代理返回 200，内容为 nearby=true/weather=true。这是本机线路的对照，不是 iPhone 真机验证，后续需要可直连的入口。
+- 首页美团链接为 waimai.meituan.com，菜品详情在手机上为 i.waimai.meituan.com；均只打开网页，没有 App 唤起。
+- 天气来自 Open-Meteo，当前只请求温度和 WMO 天气码。新的卡片不得虚构最高/最低温、湿度等字段，若展示必须扩展真实数据。
+
 ## v3.2.3 线上附近店铺回归修复
 - 旧版 d0f8ec7 的 app.js 直接访问高德 place/around、geocode/regeo 和坐标转换，前端存在地图配置；核对过程仅输出端点和配置存在与否，未输出密钥。
 - 当前线上 config.js 和 runtime-config.json 的 apiBase 均为空，createApi().ready 返回 nearby=false/weather=false；Node 只在本机提供同源配置。用户指出这是重构造成的功能回退，要求修复。

@@ -49,8 +49,8 @@ export function createWorker({ fetchImpl = fetch, now = Date.now, pageDelay = 35
         const json = (status, value) => new Response(request.method === 'HEAD' ? null : JSON.stringify(value), { status, headers });
         try {
             if (origin && origin !== url.origin && origin !== env.ALLOWED_ORIGIN) throw new HttpError(403, '此来源未获允许');
-            if (origin && origin === env.ALLOWED_ORIGIN) headers.set('Access-Control-Allow-Origin', origin);
-            if (!['/api/config', '/api/health', '/api/nearby', '/api/weather'].includes(url.pathname)) throw new HttpError(404, '接口不存在');
+            if (origin && (origin === env.ALLOWED_ORIGIN || origin === url.origin)) headers.set('Access-Control-Allow-Origin', origin);
+            if (!['/runtime-config.json', '/api/config', '/api/health', '/api/nearby', '/api/weather'].includes(url.pathname)) throw new HttpError(404, '接口不存在');
             if (request.method === 'OPTIONS') {
                 headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
                 return new Response(null, { status: 204, headers });
@@ -60,6 +60,7 @@ export function createWorker({ fetchImpl = fetch, now = Date.now, pageDelay = 35
                 throw new HttpError(405, '不支持此请求方式');
             }
             if (url.pathname === '/api/health') return json(200, { status: 'ok', version: APP_VERSION });
+            if (url.pathname === '/runtime-config.json') return json(200, { apiBase: '/api/' });
             if (url.pathname === '/api/config') return json(200, { version: APP_VERSION, nearby: Boolean(env.AMAP_KEY), weather: true });
             const coords = coordinates(url.searchParams), level = searchLevel(url.searchParams);
             if (url.pathname === '/api/nearby' && !env.AMAP_KEY) throw new HttpError(503, '附近店铺服务尚未启用，可继续使用菜单或前往外卖平台');

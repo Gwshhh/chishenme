@@ -7,7 +7,7 @@ import { coordinates, searchLevel } from './validation.js';
 export { coordinates } from './validation.js';
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const publicFiles = new Set(['index.html', 'app.js', 'data.js', 'config.js', 'styles.css', 'sw.js', 'sw-assets.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-1024.png', 'apple-touch-icon.png', 'favicon.ico', 'favicon-32.png']);
+const publicFiles = new Set(['index.html', 'app.js', 'app.bundle.js', 'data.js', 'config.js', 'styles.css', 'sw.js', 'sw-assets.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-1024.png', 'apple-touch-icon.png', 'favicon.ico', 'favicon-32.png']);
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/vnd.microsoft.icon' };
 
 export function createApp({ root = defaultRoot, amapKey = '', allowedOrigin = '', fetchImpl = fetch, now = Date.now, pageDelay = 350, development = false } = {}) {
@@ -78,7 +78,7 @@ export function createApp({ root = defaultRoot, amapKey = '', allowedOrigin = ''
             // This small capability script is optional on static hosting (loaded only on request).
             if (pathname === '/runtime-config.json') { json(res, 200, { apiBase: '/api/', development }); return; }
             const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
-            const allowed = publicFiles.has(relative) || /^src\/(?:core|services|ui|features)\/[a-z0-9-]+\.js$/.test(relative) || /^images_food\/(?:food_\d{2,3}\.jpg|optimized\/food_\d{2,3}-(?:160|480|960)\.webp)$/.test(relative);
+            const allowed = publicFiles.has(relative) || /^src\/(?:core|services|ui|features)\/[a-z0-9-]+\.js$/.test(relative) || /^images_food\/(?:food_\d{2,3}\.jpg|optimized\/food_\d{2,3}-(?:160|480|768|960)\.webp)$/.test(relative);
             if (!allowed) throw new HttpError(404, '文件不存在');
             const file = path.resolve(root, relative);
             const actual = await realpath(file).catch(() => null);
@@ -90,8 +90,11 @@ export function createApp({ root = defaultRoot, amapKey = '', allowedOrigin = ''
             const headers = { 'Content-Type': mime[path.extname(file)] || 'application/octet-stream', 'Cache-Control': relative.startsWith('images_food/') ? 'public, max-age=86400' : 'no-cache', ETag: etag };
             if (relative === 'sw.js') headers['Service-Worker-Allowed'] = '/';
             if (req.headers['if-none-match'] === etag) { res.writeHead(304, headers); res.end(); return; }
-            const body = req.method === 'HEAD' ? null : await readFile(actual);
-            res.writeHead(200, { ...headers, 'Content-Length': info.size });
+            let body = req.method === 'HEAD' ? null : await readFile(actual);
+            // Development uses unbundled modules, so editing a source file is
+            // visible immediately and does not depend on a stale build artifact.
+            if (development && relative === 'index.html' && body) body = Buffer.from(body.toString().replaceAll('app.bundle.js?', 'app.js?'));
+            res.writeHead(200, { ...headers, 'Content-Length': body?.length ?? info.size });
             res.end(body);
         } catch (error) {
             if (!res.headersSent) json(res, error instanceof HttpError ? error.status : 500, { error: error instanceof HttpError ? error.message : '服务暂时不可用，请重试' });

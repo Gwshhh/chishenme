@@ -1,6 +1,6 @@
 {
   "name": "chishenme",
-  "version": "3.2.3",
+  "version": "3.2.4",
   "private": true,
   "type": "module",
   "description": "今天吃什么：离线美食决策与一周用餐计划",
@@ -8,18 +8,20 @@
     "node": ">=22.9.0"
   },
   "scripts": {
+    "build": "node scripts/build.mjs",
     "start": "node --env-file-if-exists=.env server/index.js",
     "dev": "node --watch --env-file-if-exists=.env server/index.js --dev",
-    "check": "node scripts/check.mjs",
+    "check": "npm run build && node scripts/check.mjs",
     "test": "node --test tests/*.test.js",
-    "test:browser": "playwright test",
+    "test:browser": "npm run build && playwright test",
     "smoke:providers": "node --env-file-if-exists=.env scripts/smoke-providers.mjs",
-    "deploy:api": "node --env-file-if-exists=.env scripts/deploy-nearby.mjs",
+    "deploy:api": "npm run build && node --env-file-if-exists=.env scripts/deploy-nearby.mjs",
     "verify:live": "node scripts/verify-deployment.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.58.2",
+    "esbuild": "0.28.1",
     "wrangler": "4.104.0"
   }
 }
