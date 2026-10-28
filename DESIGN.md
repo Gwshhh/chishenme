@@ -101,6 +101,9 @@ spacing:
   section: "36px"
   shell: "44px"
 components:
+  brand-mark:
+    width: "42px"
+    height: "42px"
   button-primary:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.surface}"
@@ -181,7 +184,7 @@ v3.2.0 的视觉系统围绕真实食物和明确选择建立。白色内容区�
 
 主要区域与弹窗使用 surface 圆角，菜单照片使用 photo 圆角，按钮使用 control 圆角。标签与参考标记更紧凑。收藏按钮、盘面照片和中心按钮保持圆形；开关使用胶囊形状。
 
-v3.2.1 品牌标志采用暖珊瑚色方形底、奶油白餐碗与问号形蒸汽，源文件为 assets/brand/app-icon-master.svg。浏览器与网页品牌使用圆角 SVG，桌面品牌 42px、手机 38px；颜色固定，不随界面强调色或明暗模式变化。安装用 PNG 全出血、不预裁圆角，主体置于中央 80% 安全圆内。普通导航和功能图标继续使用原有线性图标。导出规格与预览见 docs/app-icon.md。
+v3.2.2 品牌标志采用番茄红方形底、暖白瓷碗与斜置双筷，以少量金色食材和青绿叶片形成识别。用户明确要求不用问号，也不使用问号形蒸汽。源文件为 assets/brand/app-icon-master.svg，所有位图均从同一矢量母版导出。浏览器与网页品牌使用圆角 SVG，桌面品牌 42px、手机 38px；颜色固定，不随界面强调色或明暗模式变化。安装用 PNG 全出血、不预裁圆角，主体置于中央 80% 安全圆内。普通导航和功能图标继续使用原有线性图标。导出规格与预览见 docs/app-icon.md。
 
 ## Components
 

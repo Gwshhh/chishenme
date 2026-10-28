@@ -1,57 +1,68 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none">
   <title>今天吃什么</title>
-  <desc>暖珊瑚色背景上的奶油白餐碗，升起一缕问号形蒸汽。</desc>
+  <desc>番茄红底色上的暖白瓷碗，配以斜置双筷、金色食材和一片青绿叶。</desc>
+  <!-- THESIS: A welcoming meal, recognized through a generous bowl silhouette.
+       OWN-WORLD: Tomato red, warm porcelain, golden food, a single green leaf.
+       STORY: Recognize food and open the app to choose a meal.
+       FIRST VIEWPORT: One centered mark, diagonal chopsticks, no lettering.
+       FORM: Local brand-asset replacement within the established food interface.
+       FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md -->
   <defs>
-    <linearGradient id="coral" x1="64" y1="0" x2="428" y2="512" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FA8054"/>
-      <stop offset=".48" stop-color="#F15A3B"/>
-      <stop offset="1" stop-color="#D83D2D"/>
+    <linearGradient id="tomato" x1="64" y1="0" x2="432" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F0784E"/>
+      <stop offset=".46" stop-color="#E55936"/>
+      <stop offset="1" stop-color="#C83C28"/>
     </linearGradient>
-    <radialGradient id="light" cx="0" cy="0" r="1" gradientTransform="translate(100 30) rotate(58) scale(478 432)" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFC68B" stop-opacity=".26"/>
-      <stop offset="1" stop-color="#FFC68B" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="ceramic" x1="184" y1="295" x2="298" y2="424" gradientUnits="userSpaceOnUse">
+    <linearGradient id="porcelain" x1="175" y1="274" x2="309" y2="401" gradientUnits="userSpaceOnUse">
       <stop stop-color="#FFFDF5"/>
-      <stop offset=".55" stop-color="#FFF2DA"/>
-      <stop offset="1" stop-color="#EDCCAB"/>
+      <stop offset=".54" stop-color="#F9EEDB"/>
+      <stop offset="1" stop-color="#EACEAF"/>
     </linearGradient>
-    <linearGradient id="rim" x1="256" y1="262" x2="256" y2="325" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFCF1"/>
-      <stop offset="1" stop-color="#F7DFBC"/>
+    <linearGradient id="rim" x1="256" y1="237" x2="256" y2="292" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF5"/>
+      <stop offset="1" stop-color="#F3DDC0"/>
     </linearGradient>
-    <linearGradient id="inside" x1="247" y1="271" x2="261" y2="309" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#B73F2B"/>
-      <stop offset=".48" stop-color="#E57846"/>
-      <stop offset="1" stop-color="#F5A365"/>
+    <linearGradient id="inside" x1="256" y1="235" x2="256" y2="290" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B85029"/>
+      <stop offset="1" stop-color="#EA9B54"/>
     </linearGradient>
-    <linearGradient id="steam" x1="220" y1="106" x2="289" y2="257" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFEF7"/>
-      <stop offset="1" stop-color="#FFF0D6"/>
+    <linearGradient id="chopsticks" x1="363" y1="124" x2="271" y2="245" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF8E7"/>
+      <stop offset="1" stop-color="#F1D7AD"/>
     </linearGradient>
-    <filter id="bowl-shadow" x="-.3" y="-.4" width="1.6" height="1.9" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#81291D" flood-opacity=".21"/>
-    </filter>
-    <filter id="steam-shadow" x="-.5" y="-.3" width="2" height="1.7" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#9D3622" flood-opacity=".1"/>
+    <linearGradient id="gold" x1="268" y1="205" x2="313" y2="272" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD36F"/>
+      <stop offset=".65" stop-color="#F4B13E"/>
+      <stop offset="1" stop-color="#DE872B"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="154" y1="180" x2="195" y2="248" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#819B59"/>
+      <stop offset="1" stop-color="#3F6949"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-.3" y="-.25" width="1.6" height="1.65" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#852C1E" flood-opacity=".2"/>
     </filter>
     <clipPath id="tile-clip"><rect id="tile-shape" width="512" height="512" rx="0"/></clipPath>
   </defs>
   <g id="background" clip-path="url(#tile-clip)">
-    <path fill="url(#coral)" d="M0 0h512v512H0z"/>
-    <path fill="url(#light)" d="M0 0h512v512H0z"/>
+    <path fill="url(#tomato)" d="M0 0h512v512H0z"/>
   </g>
-  <g id="mark">
-    <g filter="url(#steam-shadow)" transform="translate(0 -10)">
-      <path d="M216 146c0-23 18-39 42-39 25 0 43 15 43 36 0 19-13 29-29 38-12 7-17 15-17 23" stroke="url(#steam)" stroke-width="29" stroke-linecap="round"/>
-      <circle cx="255" cy="248" r="12" fill="url(#steam)"/>
+  <g id="mark" filter="url(#soft-shadow)">
+    <g stroke="url(#chopsticks)" stroke-linecap="round">
+      <path d="m270 235 96-108" stroke-width="17"/>
+      <path d="m297 250 96-97" stroke-width="17"/>
     </g>
-    <g filter="url(#bowl-shadow)">
-      <path d="M108 297c8 62 68 110 148 110s140-48 148-110H108Z" fill="url(#ceramic)"/>
-      <ellipse cx="256" cy="296" rx="148" ry="33" fill="url(#rim)"/>
-      <ellipse cx="256" cy="289" rx="124" ry="20" fill="url(#inside)"/>
-      <path d="M136 288c15-12 60-21 120-21s105 9 120 21" stroke="#FFFEF4" stroke-width="4" stroke-linecap="round" opacity=".85"/>
-      <path d="M151 333c17 26 46 44 78 51" stroke="#FFFDF6" stroke-width="5" stroke-linecap="round" opacity=".6"/>
-    </g>
+    <path d="m217 373-7 16c-2 6 2 11 9 11h74c7 0 11-5 9-11l-7-16" fill="url(#porcelain)"/>
+    <path d="M112 266c6 67 66 120 144 120s138-53 144-120H112Z" fill="url(#porcelain)"/>
+    <ellipse cx="256" cy="264" rx="144" ry="38" fill="url(#rim)"/>
+    <ellipse cx="256" cy="260" rx="126" ry="26" fill="url(#inside)"/>
+    <path d="M160 261c2-37 25-61 57-61 37-1 65 28 66 63-37 15-85 14-123-2Z" fill="#FFF4DE"/>
+    <circle cx="288" cy="240" r="43" fill="url(#gold)"/>
+    <path d="M268 215c8-6 18-8 28-5" stroke="#FFE8A2" stroke-width="5" stroke-linecap="round" opacity=".7"/>
+    <path d="M195 253c-36-5-55-36-44-73 34 7 59 35 49 64l-5 9Z" fill="url(#leaf)"/>
+    <path d="M157 192c6 21 16 38 32 50" stroke="#B6C580" stroke-width="4" stroke-linecap="round" opacity=".65"/>
+    <path d="M115 267c31 32 251 32 282 0-10 66-68 119-141 119S125 333 115 267Z" fill="url(#porcelain)"/>
+    <path d="M117 267c38 31 240 31 278 0" stroke="#FFF9ED" stroke-width="8" stroke-linecap="round"/>
+    <path d="M146 310c15 23 40 40 67 47" stroke="#FFFEF9" stroke-width="5" stroke-linecap="round" opacity=".6"/>
   </g>
 </svg>

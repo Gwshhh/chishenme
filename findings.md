@@ -67,3 +67,12 @@
 - 增加 favicon / ICO 时同步 Node 静态资源白名单和 ICO MIME，否则本地 Node 服务会拒绝新图标。高清 1024px 母版不进 shell 预缓存。
 - 本地页面品牌在桌面为 42px、手机为 38px；明暗主题都加载新 SVG，品牌固定珊瑚色与现有界面协调。
 - 线上更新已验证：7 个图标哈希匹配，旧 SVG 哈希被新设计替换，v3.2.0 缓存移除，新版 6 个使用中图标离线可取；1024px 文件仅按需请求。系统已安装的桌面图标仍由系统安排刷新，不能承诺所有真机立即换图。
+
+## v3.2.2 无问号图标重做
+- 用户明确否定上一版问号，要求全新图标；不能把弯曲蒸汽变相保留为问号。
+- GitHub 参考：phosphor-icons/core 的 bowl-food 填充及双色 SVG（MIT），学习主体的大轮廓、简洁的食物分区；bytedance/IconPark 的 Foods/rice.svg、bowl-one.svg 和中文说明（Apache-2.0），学习双筷斜线、碗身曲面与填充/描边分层。没有复制参考路径、标志或引入第三方图标运行时。
+- 新构图：番茄红底、暖白瓷碗、斜置双筷、金色食材和一片青绿叶。保留既有食物品牌的暖色归属，替换符号和重心，而不是删除旧问号了事。
+- 来源：https://github.com/phosphor-icons/core/blob/main/assets/fill/bowl-food-fill.svg ；https://github.com/phosphor-icons/core/blob/main/assets/duotone/bowl-food-duotone.svg ；https://github.com/bytedance/IconPark/blob/master/source/Foods/rice.svg ；https://github.com/bytedance/IconPark/blob/master/README.zh-CN.md 。
+- 使用现有 SVG/Playwright/Pillow 导出链；没有可用的图片生成工具，且原生品牌矢量适合本次局部替换，不新增图片 API 或生产依赖。
+- 实际图标预览中，碗筷大轮廓在 16px 仍可辨识，叶脉与高光属于可丢失的细节；圆形裁切不碰主体。桌面和手机品牌与既有白/深绿页面协调，没有新增页面布局改动。
+- 本地工具浏览器保留了 v3.1.0 的旧 shell，首次采样读到 span 而不是新版 img；点击已有更新按钮后显示 v3.2.2，清理旧 shell 并保留既有 images-v2 策略。不能把首次旧页截图当作新版证据。
