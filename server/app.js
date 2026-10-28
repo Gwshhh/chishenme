@@ -5,8 +5,8 @@ import { APP_VERSION } from '../src/core/model.js';
 import { HttpError, nearbyPlaces, weatherAt } from './providers.js';
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const publicFiles = new Set(['index.html', 'app.js', 'data.js', 'config.js', 'styles.css', 'sw.js', 'sw-assets.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png']);
-const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const publicFiles = new Set(['index.html', 'app.js', 'data.js', 'config.js', 'styles.css', 'sw.js', 'sw-assets.js', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-1024.png', 'apple-touch-icon.png', 'favicon.ico', 'favicon-32.png']);
+const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/vnd.microsoft.icon' };
 
 export function coordinates(query) {
     const number = (name, min, max) => {

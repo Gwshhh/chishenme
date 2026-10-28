@@ -1,45 +1,67 @@
 # -*- coding: utf-8 -*-
-"""生成 PWA / iOS 所需的 PNG 图标。
+"""Export every app icon from assets/brand/app-icon-master.svg.
 
-iOS 的 apple-touch-icon 不支持 SVG，必须提供 PNG，否则"添加到主屏幕"
-会显示网页截图。本脚本用 PIL 重绘 icon.svg 的品牌图（对角渐变 + 白线碗），
-输出三个尺寸。改动品牌色后重跑一次即可：python gen_icon.py
+Run: python gen_icon.py
+Build dependencies: Pillow, npm ci, and a Playwright browser (Edge on Windows).
+PNG app icons are opaque and full bleed; the OS supplies its own corner mask.
+SVG / ICO / favicon PNG use the same artwork with browser-friendly corners.
+No image-generation API or production dependency is needed.
 """
-from PIL import Image, ImageDraw
+import base64
+import io
+import json
+import subprocess
+import sys
+from pathlib import Path
 
-S = 1024
-C1, C2, C3 = (255, 138, 76), (240, 67, 90), (217, 38, 103)  # 与 CSS --brand-grad 一致
+from PIL import Image
+
+ROOT = Path(__file__).resolve().parent
+SOURCE = ROOT / "assets/brand/app-icon-master.svg"
 
 
-def lerp(a, b, t):
-    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+def decoded_image(data):
+    return Image.open(io.BytesIO(base64.b64decode(data))).convert("RGBA")
 
 
-img = Image.new('RGB', (S, S), C2)
-dr = ImageDraw.Draw(img)
+def main():
+    try:
+        result = subprocess.run(
+            ["node", "scripts/render-icon.mjs"], cwd=ROOT, check=True,
+            capture_output=True, text=True, encoding="utf-8",
+        )
+    except subprocess.CalledProcessError as error:
+        sys.stderr.write(error.stderr or str(error))
+        raise SystemExit(error.returncode) from error
+    rendered = json.loads(result.stdout)
+    native = decoded_image(rendered["native"])
+    rounded = decoded_image(rendered["rounded"])
+    foreground = decoded_image(rendered["foreground"])
+    assert native.getchannel("A").getextrema() == (255, 255), "App icons must be opaque"
+    # All essential foreground pixels must fit the central 80% safe-area circle.
+    alpha = foreground.getchannel("A")
+    for y in range(1024):
+        for x in range(1024):
+            if alpha.getpixel((x, y)) >= 128:
+                assert (x - 511.5) ** 2 + (y - 511.5) ** 2 <= 409.6 ** 2, "Artwork exceeds maskable safe area"
+    source = SOURCE.read_text(encoding="utf-8")
+    browser_svg = source.replace('width="1024" height="1024"', 'width="512" height="512"', 1)
+    browser_svg = browser_svg.replace('id="tile-shape" width="512" height="512" rx="0"', 'id="tile-shape" width="512" height="512" rx="112"')
+    (ROOT / "icon.svg").write_text(browser_svg, encoding="utf-8", newline="\n")
+    for size, name in [
+        (1024, "icon-1024.png"), (512, "icon-512.png"),
+        (192, "icon-192.png"), (180, "apple-touch-icon.png"),
+    ]:
+        output = native.convert("RGB").resize((size, size), Image.Resampling.LANCZOS)
+        if size < 1024:
+            output = output.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+        output.save(ROOT / name, optimize=True)
+        print(f"OK {name}: {size} x {size}, opaque, {(ROOT / name).stat().st_size:,} bytes")
+    rounded.resize((32, 32), Image.Resampling.LANCZOS).save(ROOT / "favicon-32.png", optimize=True)
+    rounded.save(ROOT / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
+    print("OK icon.svg, favicon-32.png, favicon.ico (16 / 32 / 48)")
+    print("PASS: foreground fits Android maskable safe area; all native icons are opaque")
 
-# 135° 对角渐变：沿 (x+y) 方向逐对角线着色（58% 处过渡，与 CSS 渐变一致）
-N = 2 * S - 1
-for d in range(N):
-    t = d / (N - 1)
-    col = lerp(C1, C2, t / 0.58) if t < 0.58 else lerp(C2, C3, (t - 0.58) / 0.42)
-    dr.line([(0, d), (d, 0)], fill=col, width=2)
 
-# 白线碗（下半圆 + 碗口横线，端点补圆头）+ 两缕蒸汽
-W = 52
-WHITE = (255, 255, 255)
-cx, cy, r = 512, 540, 290
-dr.arc([cx - r, cy - r, cx + r, cy + r], start=0, end=180, fill=WHITE, width=W)
-dr.line([(cx - r, cy), (cx + r, cy)], fill=WHITE, width=W)
-for px in (cx - r, cx + r):
-    dr.ellipse([px - W // 2, cy - W // 2, px + W // 2, cy + W // 2], fill=WHITE)
-dr.arc([420 - 58, 205, 420 + 58, 335], start=300, end=60, fill=WHITE, width=44)
-dr.arc([604 - 58, 205, 604 + 58, 335], start=300, end=60, fill=WHITE, width=44)
-
-# 全出血方形（不做圆角）：iOS/安卓启动器会自己套圆角/遮罩，
-# 透明圆角反而会让 iOS 垫黑底。碗体已控制在中央安全区内。
-for size, name in [(180, 'apple-touch-icon.png'), (192, 'icon-192.png'), (512, 'icon-512.png')]:
-    img.resize((size, size), Image.LANCZOS).save(name)
-    print('OK', name)
-
-print('完成：三个 PNG 图标已生成')
+if __name__ == "__main__":
+    main()

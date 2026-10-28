@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none">
+  <title>今天吃什么</title>
+  <desc>暖珊瑚色背景上的奶油白餐碗，升起一缕问号形蒸汽。</desc>
+  <defs>
+    <linearGradient id="coral" x1="64" y1="0" x2="428" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FA8054"/>
+      <stop offset=".48" stop-color="#F15A3B"/>
+      <stop offset="1" stop-color="#D83D2D"/>
+    </linearGradient>
+    <radialGradient id="light" cx="0" cy="0" r="1" gradientTransform="translate(100 30) rotate(58) scale(478 432)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFC68B" stop-opacity=".26"/>
+      <stop offset="1" stop-color="#FFC68B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ceramic" x1="184" y1="295" x2="298" y2="424" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF5"/>
+      <stop offset=".55" stop-color="#FFF2DA"/>
+      <stop offset="1" stop-color="#EDCCAB"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="256" y1="262" x2="256" y2="325" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFCF1"/>
+      <stop offset="1" stop-color="#F7DFBC"/>
+    </linearGradient>
+    <linearGradient id="inside" x1="247" y1="271" x2="261" y2="309" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B73F2B"/>
+      <stop offset=".48" stop-color="#E57846"/>
+      <stop offset="1" stop-color="#F5A365"/>
+    </linearGradient>
+    <linearGradient id="steam" x1="220" y1="106" x2="289" y2="257" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFEF7"/>
+      <stop offset="1" stop-color="#FFF0D6"/>
+    </linearGradient>
+    <filter id="bowl-shadow" x="-.3" y="-.4" width="1.6" height="1.9" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#81291D" flood-opacity=".21"/>
+    </filter>
+    <filter id="steam-shadow" x="-.5" y="-.3" width="2" height="1.7" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#9D3622" flood-opacity=".1"/>
+    </filter>
+    <clipPath id="tile-clip"><rect id="tile-shape" width="512" height="512" rx="0"/></clipPath>
+  </defs>
+  <g id="background" clip-path="url(#tile-clip)">
+    <path fill="url(#coral)" d="M0 0h512v512H0z"/>
+    <path fill="url(#light)" d="M0 0h512v512H0z"/>
+  </g>
+  <g id="mark">
+    <g filter="url(#steam-shadow)" transform="translate(0 -10)">
+      <path d="M216 146c0-23 18-39 42-39 25 0 43 15 43 36 0 19-13 29-29 38-12 7-17 15-17 23" stroke="url(#steam)" stroke-width="29" stroke-linecap="round"/>
+      <circle cx="255" cy="248" r="12" fill="url(#steam)"/>
+    </g>
+    <g filter="url(#bowl-shadow)">
+      <path d="M108 297c8 62 68 110 148 110s140-48 148-110H108Z" fill="url(#ceramic)"/>
+      <ellipse cx="256" cy="296" rx="148" ry="33" fill="url(#rim)"/>
+      <ellipse cx="256" cy="289" rx="124" ry="20" fill="url(#inside)"/>
+      <path d="M136 288c15-12 60-21 120-21s105 9 120 21" stroke="#FFFEF4" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+      <path d="M151 333c17 26 46 44 78 51" stroke="#FFFDF6" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+    </g>
+  </g>
+</svg>
